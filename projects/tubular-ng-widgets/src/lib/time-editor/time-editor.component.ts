@@ -564,9 +564,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         if (hasIntl && opts.eraSeparator == null) {
           const era = convertDigitsToAscii(new Intl.DateTimeFormat(opts.locale, { era: 'short' }).format(0));
           const sample = convertDigitsToAscii(new Intl.DateTimeFormat(opts.locale,
-                            { year: 'numeric', era: 'short' }).format(0)).replace(era, 'x');
+                            { year: 'numeric', era: 'short' }).format(0)).replace(era, 'xxx');
 
-          es = (/\d(.+)x/.exec(sample) ?? ['', NO_BREAK_SPACE])[1].replace(/\s+/g, NO_BREAK_SPACE);
+          es = (/\d([\Dx]+)xxx/.exec(sample) ?? ['', NO_BREAK_SPACE])[1].replace(/\s+/g, NO_BREAK_SPACE);
         }
 
         if (isArray(opts.yearStyle))
@@ -658,6 +658,18 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         dateSteps.push('era');
     }
 
+    if (hasIntl && hasTime && hasDate && opts.dateTimeSeparator == null) {
+      const sample = convertDigitsToAscii(new Intl.DateTimeFormat(opts.locale,
+                        { day: 'numeric', hour: 'numeric' }).format(0));
+
+      dts = (/\d(\D+)\d/.exec(sample) ?? ['', NO_BREAK_SPACE])[1];
+
+      if (!new DateTime(0, 'UTC', locale).format('ISS').includes(dts))
+        dts = NO_BREAK_SPACE
+      else
+        dts = dts.replace(/\s+/g, NO_BREAK_SPACE);
+    }
+
     if (opts.timeFirst && hasTime && hasDate)
       steps.push(...timeSteps, 'dts', ...dateSteps);
     else {
@@ -691,7 +703,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         case 'ds': this.items.push({ value: ds, bidi: true, static: true }); break;
         case 'month': this.monthIndex = i; addDigits(2); break;
         case 'day': this.dayIndex = i; addDigits(2); break;
-        case 'dts': this.items.push({ value: dts, static: true, width: '0.6em' }); break;
+        case 'dts': this.items.push({ value: dts, static: true,
+          width: dts === NO_BREAK_SPACE ?  '0.6em' : undefined }); break;
         case 'hour': this.hourIndex = i; addDigits(2); break;
         case 'amPm':
           this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' });
