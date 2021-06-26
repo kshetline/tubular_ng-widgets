@@ -3,5 +3,140 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-  }
+    "tubular-ng-widgets": {
+      "projectType": "library",
+      "root": "projects/tubular-ng-widgets",
+      "sourceRoot": "projects/tubular-ng-widgets/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/tubular-ng-widgets/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/tubular-ng-widgets/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/tubular-ng-widgets/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/tubular-ng-widgets/src/test.ts",
+            "tsConfig": "projects/tubular-ng-widgets/tsconfig.spec.json",
+            "karmaConfig": "projects/tubular-ng-widgets/karma.conf.js"
+          }
+        }
+      }
+    },
+    "ng-widgets-showcase": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        },
+        "@schematics/angular:application": {
+          "strict": true
+        }
+      },
+      "root": "projects/ng-widgets-showcase",
+      "sourceRoot": "projects/ng-widgets-showcase/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/ng-widgets-showcase",
+            "index": "projects/ng-widgets-showcase/src/index.html",
+            "main": "projects/ng-widgets-showcase/src/main.ts",
+            "polyfills": "projects/ng-widgets-showcase/src/polyfills.ts",
+            "tsConfig": "projects/ng-widgets-showcase/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              "projects/ng-widgets-showcase/src/favicon.ico",
+              "projects/ng-widgets-showcase/src/assets"
+            ],
+            "styles": [
+              "projects/ng-widgets-showcase/src/styles.scss"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "projects/ng-widgets-showcase/src/environments/environment.ts",
+                  "with": "projects/ng-widgets-showcase/src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "browserTarget": "ng-widgets-showcase:build:production"
+            },
+            "development": {
+              "browserTarget": "ng-widgets-showcase:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "ng-widgets-showcase:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/ng-widgets-showcase/src/test.ts",
+            "polyfills": "projects/ng-widgets-showcase/src/polyfills.ts",
+            "tsConfig": "projects/ng-widgets-showcase/tsconfig.spec.json",
+            "karmaConfig": "projects/ng-widgets-showcase/karma.conf.js",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              "projects/ng-widgets-showcase/src/favicon.ico",
+              "projects/ng-widgets-showcase/src/assets"
+            ],
+            "styles": [
+              "projects/ng-widgets-showcase/src/styles.scss"
+            ],
+            "scripts": []
+          }
+        }
+      }
+    }
+  },
+  "defaultProject": "tubular-ng-widgets"
 }

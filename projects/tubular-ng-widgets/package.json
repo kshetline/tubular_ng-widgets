@@ -1,0 +1,14 @@
+{
+  "name": "tubular-ng-widgets",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "^12.0.4",
+    "@angular/core": "^12.0.4"
+  },
+  "dependencies": {
+    "@tubular/math": "^3.0.1",
+    "@tubular/time": "^3.0.3",
+    "@tubular/util": "^4.0.2",
+    "tslib": "^2.1.0"
+  }
+}
