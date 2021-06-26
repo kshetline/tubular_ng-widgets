@@ -17,6 +17,7 @@ export interface TimeEditorOptions {
   dateTimeSeparator?: string;
   dateTimeStyle?: DateTimeStyle;
   decimal?: string;
+  eraSeparator?: string;
   hourStyle?: HourStyle | string[];
   locale?: string | string[];
   millisDigits?: number;
@@ -33,6 +34,7 @@ export interface TimeEditorOptions {
 const OCC2 = '\u200A\u2082\u200A';
 const NO_BREAK_SPACE = '\u00A0';
 const platformNativeDateTime = (isIOS() || (isAndroid() && isChrome()));
+const RTL_CHECK = /[\u0590-\u077F\u200F]/
 
 export const OPTIONS_DATE_ONLY: TimeEditorOptions = {
   dateTimeStyle: DateTimeStyle.DATE_ONLY,
@@ -511,8 +513,6 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     this.offsetIndex = -1;
     this.dstIndex = -1;
 
-    this.rtl = false;
-
     const steps: string[] = [];
     const dateSteps: string[] = [];
     const timeSteps: string[] = [];
@@ -522,20 +522,26 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const locale = opts.locale;
     const decimal = opts.decimal ||
       (hasIntl && convertDigitsToAscii(Intl.NumberFormat(opts.locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
-    let ds = '/';
-    let ts = ':';
+    let es = opts.eraSeparator ?? NO_BREAK_SPACE;
+    let ds = opts.dateFieldSeparator ?? '/';
+    let ts = opts.timeFieldSeparator ?? ':';
+    let dts = opts.dateTimeSeparator ?? NO_BREAK_SPACE;
     const baseDigit: string[] = [];
+
+    this.rtl = RTL_CHECK.test(new Date().toLocaleString(opts.locale, { month: 'long'}));
 
     if (hasDate) {
       if (opts.yearStyle === YearStyle.SIGNED)
         dateSteps.push('sign');
 
-      const sampleDate = new DateTime('3333-11-22Z', 'UTC', locale).format('IS');
+      let sampleDate = new DateTime('3333-11-22Z', 'UTC', locale).format('IS');
       let dfo = opts.dateFieldOrder ?? DateFieldOrder.PER_LOCALE;
 
-      this.rtl = /[\u0590-\u077F\u200F]/.test(sampleDate);
+      this.rtl = this.rtl || RTL_CHECK.test(sampleDate);
       ds = opts.dateFieldSeparator ||
         convertDigitsToAscii(sampleDate, baseDigit).replace(/(^\D+)|[\d\s\u2000-\u200F]/g, '').charAt(0) || '/';
+
+      sampleDate = convertDigitsToAscii(sampleDate);
 
       if (dfo === DateFieldOrder.PER_LOCALE) {
         if (/3.*1.*2/.test(sampleDate))
@@ -554,6 +560,14 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
 
       if (opts.yearStyle === YearStyle.AD_BC || isArray(opts.yearStyle)) {
         dateSteps.push('era');
+
+        if (hasIntl && opts.eraSeparator == null) {
+          const era = convertDigitsToAscii(new Intl.DateTimeFormat(opts.locale, { era: 'short' }).format(0));
+          const sample = convertDigitsToAscii(new Intl.DateTimeFormat(opts.locale,
+                            { year: 'numeric', era: 'short' }).format(0)).replace(era, 'x');
+
+          es = (/\d(.+)x/.exec(sample) ?? ['', NO_BREAK_SPACE])[1].replace(/\s+/g, NO_BREAK_SPACE);
+        }
 
         if (isArray(opts.yearStyle))
           this.eraStrings = clone(opts.yearStyle);
@@ -576,10 +590,13 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       }
     }
 
+    let dateRtl = false;
+
     if (hasTime) {
       const sampleTime = new DateTime(0, 'UTC', locale).format('IxS');
 
-      this.rtl = this.rtl || /[\u0590-\u077F\u200F]/.test(sampleTime);
+      dateRtl = RTL_CHECK.test(sampleTime);
+      this.rtl = this.rtl || dateRtl;
       ts = opts.timeFieldSeparator ||
         convertDigitsToAscii(sampleTime, baseDigit).replace(/(^\D+)|[\d\s\u2000-\u200F]/g, '').charAt(0) || ':';
       timeSteps.push('hour', 'ts', 'minute');
@@ -629,8 +646,17 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         timeSteps.push('dst');
     }
 
-    if (this.rtl)
+    if (this.rtl && dateRtl) {
+      const hasEra = dateSteps.includes('era');
+
+      if (hasEra)
+        dateSteps.splice(-1, 1);
+
       dateSteps.reverse();
+
+      if (hasEra)
+        dateSteps.push('era');
+    }
 
     if (opts.timeFirst && hasTime && hasDate)
       steps.push(...timeSteps, 'dts', ...dateSteps);
@@ -654,7 +680,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       switch (step) {
         case 'year': this.yearIndex = i; addDigits(4); break;
         case 'era':
-          this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' });
+          this.items.push({ value: es, static: true, width: '0.25em' });
           this.eraIndex = i + 1;
           this.items.push({ value: this.eraStrings[1], editable: true, sizer: this.eraStrings.join('\n') });
           break;
@@ -665,7 +691,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         case 'ds': this.items.push({ value: ds, bidi: true, static: true }); break;
         case 'month': this.monthIndex = i; addDigits(2); break;
         case 'day': this.dayIndex = i; addDigits(2); break;
-        case 'dts': this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.6em' }); break;
+        case 'dts': this.items.push({ value: dts, static: true, width: '0.6em' }); break;
         case 'hour': this.hourIndex = i; addDigits(2); break;
         case 'amPm':
           this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' });
@@ -724,6 +750,18 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         this.sizerDigit = digit;
       }
     }
+  }
+
+  getAlignmentForItem(item: SequenceItemInfo): string {
+    if (this.rtl && ((this.amPmIndex >= 0 && item.index === this.amPmIndex) ||
+                     (this.eraIndex >= 0 && item.index === this.eraIndex))) {
+      const displayIndex = this.displayItems.findIndex(i => item === i);
+
+      if (displayIndex >= 0 && this.displayItems[displayIndex + 1]?.digit)
+        return 'flex-end';
+    }
+
+    return super.getAlignmentForItem(item);
   }
 
   getClassForItem(item: SequenceItemInfo): string {
@@ -879,7 +917,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         if (this.baseDigit === '0')
           (item as any)[alt_value] = undefined;
         else
-          (item as any)[alt_value] = convertDigits(item.value.toString(), this.baseDigit);
+          (item as any)[alt_value] = convertDigits((item as any)[value].toString(), this.baseDigit);
       }
     });
 

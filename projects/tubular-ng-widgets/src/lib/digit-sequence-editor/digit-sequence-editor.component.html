@@ -19,7 +19,7 @@
       [ngClass]="getClassForItem(item)"
       [class.spinner]="item.spinner"
       contenteditable=false
-      [style.align-items]="item.digit ? 'center' : 'start'"
+      [style.align-items]="getAlignmentForItem(item)"
       [style.background-color]="getBackgroundColorForItem(item)"
       [style.color]="getColorForItem(item)"
       [style.cursor]="item.editable && !disabled && !viewOnly ? 'pointer' : 'default'"

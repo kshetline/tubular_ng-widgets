@@ -284,6 +284,10 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     this.wrapper.setAttribute('tabindex', '-1');
   }
 
+  getAlignmentForItem(item: SequenceItemInfo): string {
+    return item.digit ? 'center' : 'flex-start';
+  }
+
   getClassForItem(item: SequenceItemInfo): string {
     if (item.monospaced && item.indicator)
       return 'mono-indicator-font';
