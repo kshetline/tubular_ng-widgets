@@ -103,3 +103,12 @@
   color: #C00 !important;
   text-decoration: line-through !important;
 }
+
+.dse-rtl {
+  direction: rtl;
+
+  .spinner {
+    margin-left: -0.1em;
+    margin-right: 0;
+  }
+}

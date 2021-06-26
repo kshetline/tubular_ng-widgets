@@ -11,7 +11,13 @@ export class AppComponent {
   time = new DateTime().taiMillis;
   title = 'tz-explorer';
 
-  now(): void {
+  setCurrentTime(): void {
     this.time = new DateTime().taiMillis;
+  }
+
+  now(zone: string = null, locale: string = null): DateTime {
+    const dt = new DateTime(null, zone, locale);
+    dt.taiMillis = this.time;
+    return dt;
   }
 }

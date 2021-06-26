@@ -2,7 +2,7 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { abs, max, min, mod, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isNumber, isString, processMillis, toBoolean, toNumber
+  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isString, processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
@@ -11,12 +11,16 @@ export interface SequenceItemInfo {
   alt_swipeAbove?: string;
   alt_swipeBelow?: string;
   alt_value?: string;
+  bidi?: boolean;
+  digit?: true;
   divider?: boolean;
   editable?: boolean;
+  index?: number;
   indicator?: boolean;
   monospaced?: boolean;
   name?: string;
   selected?: boolean;
+  sign?: boolean;
   sizer?: string;
   spinner?: boolean;
   static?: boolean;
@@ -88,7 +92,6 @@ document.addEventListener('touchstart', touchListener);
 export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   addFocusOutline = addFocusOutline;
   disableContentEditable = disableContentEditable;
-  isNumber = isNumber;
   SPIN_DOWN = SPIN_DOWN;
   SPIN_UP = SPIN_UP;
 
@@ -130,9 +133,11 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   protected static addFocusOutline = isEdge() || isIOS();
 
   digitHeight = 17;
+  displayItems: SequenceItemInfo[] = [];
   displayState = 'normal';
   hasFocus = false;
   items: SequenceItemInfo[] = [];
+  rtl = false;
   selection = 0;
   smoothedDeltaY = 0;
   useAlternateTouchHandling = false;
@@ -202,6 +207,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.wrapper = this.wrapperRef.nativeElement;
     this.createDigits();
+    this.createDisplayOrder();
     this.createHiddenInput();
   }
 
@@ -219,6 +225,34 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
 
     this.items.push({ divider: true });
     this.items.push({ spinner: true });
+  }
+
+  protected createDisplayOrder(): void {
+    this.items.forEach((item, i) => item.index = i);
+
+    if (!this.rtl) {
+      this.displayItems = this.items;
+      return;
+    }
+
+    const deferred: SequenceItemInfo[] = [];
+    let ltr = false;
+
+    this.displayItems = [];
+    this.items.forEach(item => {
+      if (item.digit || item.sign || (ltr && item.bidi)) {
+        ltr = true;
+        deferred.push(item);
+      }
+      else {
+        ltr = false;
+        this.displayItems.push(...deferred.reverse());
+        deferred.length = 0;
+        this.displayItems.push(item);
+      }
+    });
+
+    this.displayItems.push(...deferred.reverse());
   }
 
   protected createHiddenInput(): void {
@@ -250,7 +284,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     this.wrapper.setAttribute('tabindex', '-1');
   }
 
-  getClassForItem(item: SequenceItemInfo, _index?: number): string {
+  getClassForItem(item: SequenceItemInfo): string {
     if (item.monospaced && item.indicator)
       return 'mono-indicator-font';
     else if (item.indicator)
@@ -270,7 +304,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
       return NORMAL_BACKGROUND;
   }
 
-  getBackgroundColorForItem(item?: SequenceItemInfo, index?: number): string {
+  getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
     if (!this._disabled && this.showFocus && !this.selectionHidden &&
         ((item && index === this.selection) || (!item && this.activeSpinner === index)))
       return NORMAL_TEXT;
@@ -280,7 +314,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
       return 'transparent';
   }
 
-  getColorForItem(item?: SequenceItemInfo, index?: number): string {
+  getColorForItem(item?: SequenceItemInfo, index = item?.index): string {
     if (this._disabled)
       return DISABLED_TEXT;
     else if (item && this._viewOnly)
@@ -295,19 +329,17 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
       return NORMAL_TEXT;
   }
 
-  protected canSwipe(index: number): boolean {
-    const item = this.items[index];
-
+  protected canSwipe(item: SequenceItemInfo): boolean {
     return item?.editable && !item.indicator;
   }
 
-  swipeable(item: SequenceItemInfo, index: number, delta: number): boolean {
+  swipeable(item: SequenceItemInfo, delta: number): boolean {
     if (this.swipeIndex < 0)
       return false;
 
     const nextValue = this.smoothedDeltaY < 0 ? item.swipeBelow : item.swipeAbove;
 
-    return index === this.swipeIndex ||
+    return item.index === this.swipeIndex ||
       (sign(delta || this.smoothedDeltaY) === sign(this.smoothedDeltaY) && nextValue != null && item.value !== nextValue);
   }
 
@@ -315,7 +347,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     const item = this.items[index];
     const value = toNumber(item.value);
 
-    if (this.canSwipe(index)) {
+    if (this.canSwipe(item)) {
       if (index !== 0 || value < 9)
         item.swipeAbove = mod(toNumber(item.value) + 1, 10).toString();
 
@@ -404,7 +436,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     this.clearDeltaYSwiping();
     this.initialTouchTime = processMillis();
 
-    if (this.canSwipe(index)) {
+    if (this.canSwipe(this.items[index])) {
       this.createSwipeValues(index);
       this.swipeIndex = index;
     }
@@ -659,14 +691,20 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
         break;
 
       case 'Backspace':
+        this.cursorBackward();
+        break;
+
       case 'ArrowLeft':
         this.cursorLeft();
         break;
 
-      case ' ':
       case 'ArrowRight':
-      case 'Enter':
         this.cursorRight();
+        break;
+
+      case ' ':
+      case 'Enter':
+        this.cursorForward();
         break;
 
       default:
@@ -686,12 +724,21 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   }
 
   protected cursorLeft(): void {
+    this.rtl ? this.cursorBackward() : this.cursorForward();
+  }
+
+  protected cursorRight(): void {
+    this.rtl ? this.cursorForward() : this.cursorBackward();
+  }
+
+  protected cursorForward(): void {
     let nextSelection = NO_SELECTION;
-    const start = (this.selection >= 0 ? this.selection : this.items.length);
+    const selection = this.displayItems.findIndex(item => item.index === this.selection);
+    const start = (selection >= 0 ? selection : this.displayItems.length);
 
     for (let i = start - 1; i >= 0; --i) {
-      if (this.items[i].editable) {
-        nextSelection = i;
+      if (this.displayItems[i].editable) {
+        nextSelection = this.displayItems[i].index;
         break;
       }
     }
@@ -705,13 +752,14 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected cursorRight(): void {
+  protected cursorBackward(): void {
     let nextSelection = -1;
-    const start = (this.selection >= 0 ? this.selection : -1);
+    const selection = this.displayItems.findIndex(item => item.index === this.selection);
+    const start = (selection >= 0 ? selection : -1);
 
     for (let i = start + 1; i < this.items.length; ++i) {
-      if (this.items[i].editable) {
-        nextSelection = i;
+      if (this.displayItems[i].editable) {
+        nextSelection = this.displayItems[i].index;
         break;
       }
     }
@@ -736,7 +784,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   protected digitTyped(charCode: number, _key: string): void {
     if (48 <= charCode && charCode < 58) {
       this.items[this.selection].value = charCode - 48;
-      this.cursorRight();
+      this.cursorForward();
     }
   }
 

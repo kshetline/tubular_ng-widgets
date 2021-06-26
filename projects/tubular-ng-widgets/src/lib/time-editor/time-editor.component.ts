@@ -157,6 +157,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     if (!isEqual(this._options, newValue)) {
       this._options = clone(newValue);
       this.createDigits();
+      this.createDisplayOrder();
     }
   }
 
@@ -510,6 +511,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     this.offsetIndex = -1;
     this.dstIndex = -1;
 
+    this.rtl = false;
+
     const steps: string[] = [];
     const dateSteps: string[] = [];
     const timeSteps: string[] = [];
@@ -527,9 +530,10 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       if (opts.yearStyle === YearStyle.SIGNED)
         dateSteps.push('sign');
 
-      const sampleDate = new DateTime('3333-11-22Z', 'UTC', locale).format('l');
+      const sampleDate = new DateTime('3333-11-22Z', 'UTC', locale).format('IS');
       let dfo = opts.dateFieldOrder ?? DateFieldOrder.PER_LOCALE;
 
+      this.rtl = /[\u0590-\u077F\u200F]/.test(sampleDate);
       ds = opts.dateFieldSeparator ||
         convertDigitsToAscii(sampleDate, baseDigit).replace(/(^\D+)|[\d\s\u2000-\u200F]/g, '').charAt(0) || '/';
 
@@ -573,8 +577,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     }
 
     if (hasTime) {
-      const sampleTime = new DateTime(0, 'UTC', locale).format('LT');
+      const sampleTime = new DateTime(0, 'UTC', locale).format('IxS');
 
+      this.rtl = this.rtl || /[\u0590-\u077F\u200F]/.test(sampleTime);
       ts = opts.timeFieldSeparator ||
         convertDigitsToAscii(sampleTime, baseDigit).replace(/(^\D+)|[\d\s\u2000-\u200F]/g, '').charAt(0) || ':';
       timeSteps.push('hour', 'ts', 'minute');
@@ -624,6 +629,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         timeSteps.push('dst');
     }
 
+    if (this.rtl)
+      dateSteps.reverse();
+
     if (opts.timeFirst && hasTime && hasDate)
       steps.push(...timeSteps, 'dts', ...dateSteps);
     else {
@@ -638,7 +646,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       }
     }
 
-    const addDigits = (n: number): void => repeat(n, () => this.items.push({ value: 0, editable: true }));
+    const addDigits = (n: number): void => repeat(n, () => this.items.push({ value: 0, digit: true, editable: true }));
 
     for (const step of steps) {
       const i = this.items.length;
@@ -652,9 +660,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
           break;
         case 'sign':
           this.signIndex = i;
-          this.items.push({ value: NO_BREAK_SPACE, editable: true, monospaced: true, sizer: '-' });
+          this.items.push({ value: NO_BREAK_SPACE, editable: true, monospaced: true, sign: true, sizer: '-' });
           break;
-        case 'ds': this.items.push({ value: ds, static: true }); break;
+        case 'ds': this.items.push({ value: ds, bidi: true, static: true }); break;
         case 'month': this.monthIndex = i; addDigits(2); break;
         case 'day': this.dayIndex = i; addDigits(2); break;
         case 'dts': this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.6em' }); break;
@@ -664,7 +672,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
           this.amPmIndex = i + 1;
           this.items.push({ value: this.amPmStrings[0], editable: true, sizer: this.amPmStrings.join('\n') });
           break;
-        case 'ts': this.items.push({ value: ts, static: true }); break;
+        case 'ts': this.items.push({ value: ts, bidi: true, static: true }); break;
         case 'minute': this.minuteIndex = i; addDigits(2); break;
         case 'second': this.secondIndex = i; addDigits(2); break;
         case 'millis':
@@ -718,21 +726,22 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     }
   }
 
-  getClassForItem(item: SequenceItemInfo, index?: number): string {
+  getClassForItem(item: SequenceItemInfo): string {
     let qlass: string;
 
     if (item?.name === '2occ')
       qlass = 'subscript';
     else
-      qlass = super.getClassForItem(item, index);
+      qlass = super.getClassForItem(item);
 
     // Bad timezone?
     if ((this.timezone as Timezone).error &&
-        ((this.offsetIndex >= 0 && index === this.offsetIndex) || (this.dstIndex >= 0 && index === this.dstIndex)))
+        ((this.offsetIndex >= 0 && item.index === this.offsetIndex) ||
+         (this.dstIndex >= 0 && item.index === this.dstIndex)))
       qlass += ' bad-value';
     // Year out of displayable range?
     else if (this.yearIndex >= 0 && this.signIndex < 0 && this.eraIndex < 0 &&
-             this.yearIndex <= index && index < this.yearIndex + 4 && this.dateTime.wallTime.y < 1)
+             this.yearIndex <= item.index && item.index < this.yearIndex + 4 && this.dateTime.wallTime.y < 1)
       qlass += ' bad-value';
 
     return qlass?.trim();
@@ -1184,6 +1193,6 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         this.items[sel].value = newValue;
     }
 
-    this.cursorRight();
+    this.cursorForward();
   }
 }
