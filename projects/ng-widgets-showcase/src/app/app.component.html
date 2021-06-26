@@ -17,16 +17,17 @@
 <tz-time-editor tai style="font-size: 1.5em"
     [options]="{ hourStyle: 2, locale: 'ar', yearStyle: 1 }"
     [(ngModel)]="time"></tz-time-editor><br>
-<span dir="rtl">{{ now(null, 'ar').format('ISS')}}</span><br><br>
+<span dir="rtl">{{ format(null, 'ar', { minute: '2-digit', hour: '2-digit', hourCycle: 'h12', year: 'numeric',
+  month: '2-digit', day: '2-digit', era: 'short' })}}</span><br><br>
 <tz-time-editor tai style="font-size: 1.5em"
     [options]="{ hourStyle: 2, locale: 'ar-EG' }"
     [(ngModel)]="time"></tz-time-editor><br>
-<span dir="rtl">{{ now(null, 'ar-EG').format('ISS')}}</span><br><br>
+<span dir="rtl">{{ format(null, 'ar-EG', 'ISS')}}</span><br><br>
 <tz-time-editor tai style="font-size: 1.5em"
     [options]="{ hourStyle: 2, locale: 'he' }"
     [(ngModel)]="time"></tz-time-editor><br>
-<span dir="rtl">{{ now(null, 'he').format('ISS')}}</span><br><br>
+<span dir="rtl">{{ format(null, 'he', { dateStyle: 'short', timeStyle: 'short', hourCycle: 'h12'})}}</span><br><br>
 <tz-time-editor tai style="font-size: 1.5em"
     [options]="{ locale: 'bn' }"
     [(ngModel)]="time"></tz-time-editor><br>
-<span dir="rtl">{{ now(null, 'bn').format('ISS')}}</span><br><br>
+<span dir="rtl">{{ format(null, 'bn', 'ISS')}}</span><br><br>

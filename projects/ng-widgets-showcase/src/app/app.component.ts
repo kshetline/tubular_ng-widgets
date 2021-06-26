@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { DateTime } from '@tubular/time';
+import { isString } from '@tubular/util';
 
 @Component({
   selector: 'app-root',
@@ -15,9 +16,16 @@ export class AppComponent {
     this.time = new DateTime().taiMillis;
   }
 
-  now(zone: string = null, locale: string = null): DateTime {
+  format(zone: string = null, locale: string = null, fmt: string | Intl.DateTimeFormatOptions): string {
     const dt = new DateTime(null, zone, locale);
     dt.taiMillis = this.time;
-    return dt;
+
+    if (isString(fmt))
+      return dt.format(fmt);
+
+    if (zone)
+      fmt.timeZone = zone;
+
+    return new Intl.DateTimeFormat(locale, fmt).format(dt.utcMillis);
   }
 }
