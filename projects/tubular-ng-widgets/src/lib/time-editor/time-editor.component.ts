@@ -32,9 +32,10 @@ export interface TimeEditorOptions {
 }
 
 const OCC2 = '\u200A\u2082\u200A';
+const ISO_T = '\u200AT\u200A';
 const NO_BREAK_SPACE = '\u00A0';
 const platformNativeDateTime = (isIOS() || (isAndroid() && isChrome()));
-const RTL_CHECK = /[\u0590-\u077F\u200F]/
+const RTL_CHECK = /[\u0590-\u07BF\u0860-\u08FF\u200F\u2067\u202B\u202E\uFB1D-\uFDCF\uFDF0-\uFDFF\uFE70-\uFEFF]/
 
 export const OPTIONS_DATE_ONLY: TimeEditorOptions = {
   dateTimeStyle: DateTimeStyle.DATE_ONLY,
@@ -44,7 +45,7 @@ export const OPTIONS_ISO: TimeEditorOptions = {
   hourStyle: HourStyle.HOURS_24,
   dateFieldOrder: DateFieldOrder.YMD,
   dateFieldSeparator: '-',
-  dateTimeSeparator: NO_BREAK_SPACE,
+  dateTimeSeparator: ISO_T,
   decimal: '.',
   showSeconds: true,
   timeFieldSeparator: ':',
@@ -113,6 +114,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   private _nativeDateTime = false;
   private onChangeCallback: (_: any) => void = noop;
   private onTouchedCallback: () => void = noop;
+  private outOfRange = false;
   private _options: TimeEditorOptions = {};
   private readonly originalMinYear: number;
   private sizerDigit = '0';
@@ -527,15 +529,16 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const hasDate = (opts.dateTimeStyle !== DateTimeStyle.TIME_ONLY);
     const hasTime = (opts.dateTimeStyle !== DateTimeStyle.DATE_ONLY);
     const locale = opts.locale;
+    const localeExt = isArray(locale) ? locale.map(l => l + '-u-ca-gregory') : (locale && locale + '-u-ca-gregory');
     const decimal = opts.decimal ||
-      (hasIntl && convertDigitsToAscii(Intl.NumberFormat(opts.locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
+      (hasIntl && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
     let es = opts.eraSeparator ?? NO_BREAK_SPACE;
     let ds = opts.dateFieldSeparator ?? '/';
     let ts = opts.timeFieldSeparator ?? ':';
     let dts = opts.dateTimeSeparator ?? NO_BREAK_SPACE;
     const baseDigit: string[] = [];
 
-    this.rtl = RTL_CHECK.test(new Date().toLocaleString(opts.locale, { month: 'long'}));
+    this.rtl = RTL_CHECK.test(new Date().toLocaleString(locale, { month: 'long'}));
 
     if (hasDate) {
       if (opts.yearStyle === YearStyle.SIGNED)
@@ -569,8 +572,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         dateSteps.push('era');
 
         if (hasIntl && opts.eraSeparator == null) {
-          const era = convertDigitsToAscii(new Intl.DateTimeFormat(opts.locale, { era: 'short' }).format(0));
-          const sample = convertDigitsToAscii(new Intl.DateTimeFormat(opts.locale,
+          const era = convertDigitsToAscii(new Intl.DateTimeFormat(localeExt, { era: 'short' }).format(0));
+          const sample = convertDigitsToAscii(new Intl.DateTimeFormat(localeExt,
                             { year: 'numeric', era: 'short' }).format(0)).replace(era, 'xxx');
 
           es = (/\d([\Dx]+)xxx/.exec(sample) ?? ['', NO_BREAK_SPACE])[1].replace(/\s+/g, NO_BREAK_SPACE);
@@ -666,8 +669,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     }
 
     if (hasIntl && hasTime && hasDate && opts.dateTimeSeparator == null) {
-      const sample = convertDigitsToAscii(new Intl.DateTimeFormat(opts.locale,
-                        { day: 'numeric', hour: 'numeric' }).format(0));
+      const sample = convertDigitsToAscii(
+        new Intl.DateTimeFormat(localeExt, { day: 'numeric', hour: 'numeric' }).format(0));
 
       dts = (/\d(\D+)\d/.exec(sample) ?? ['', NO_BREAK_SPACE])[1];
 
@@ -711,6 +714,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         case 'month': this.monthIndex = i; addDigits(2); break;
         case 'day': this.dayIndex = i; addDigits(2); break;
         case 'dts': this.items.push({ value: dts, static: true,
+          opacity: dts === ISO_T ? 0.15 : 1,
           width: dts === NO_BREAK_SPACE ?  '0.6em' : undefined }); break;
         case 'hour': this.hourIndex = i; addDigits(2); break;
         case 'amPm':
@@ -807,13 +811,17 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     // Bad timezone?
     if ((this.timezone as Timezone).error &&
         ((this.offsetIndex >= 0 && item.index === this.offsetIndex) ||
-         (this.dstIndex >= 0 && item.index === this.dstIndex)))
+         (this.dstIndex >= 0 && item.index === this.dstIndex))) {
       qlass += ' bad-value';
+      this.outOfRange = true;
+    }
     // Year out of displayable range?
     else if (this.yearIndex >= 0 && this.signIndex < 0 && this.eraIndex < 0 &&
              this.yearIndex <= item.index && item.index < this.yearIndex + 4 &&
-             (y < 1 || (this._options.twoDigitYear && (y < base || y > base + 99))))
+             (y < 1 || (this._options.twoDigitYear && (y < base || y > base + 99)))) {
       qlass += ' bad-value';
+      this.outOfRange = true;
+    }
 
     return qlass?.trim();
   }
@@ -1115,7 +1123,15 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     else if (this.yearIndex >= 0 && this.yearIndex <= sel && sel < this.yearIndex + 4) {
       field = DateTimeField.YEAR;
       change = 10 ** (3 + this.yearIndex - sel);
+
+      if (this._options.twoDigitYear) {
+        let newYear = mod(wallTime.y + change, 100);
+        newYear = newYear - this.centuryBase % 100 + this.centuryBase + (newYear < this.centuryBase % 100 ? 100 : 0);
+        change = (newYear - wallTime.y) * sign;
+      }
     }
+
+    this.outOfRange = false;
 
     if (change === 0)
       return;
@@ -1201,8 +1217,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       return;
     }
 
-    if (newValue !== origValue) {
+    if (newValue !== origValue || this.outOfRange) {
       i[sel].value = newValue;
+      this.outOfRange = false;
 
       const wallTime = this.getWallTimeFromDigits();
       let extraSec = 0;

@@ -20,6 +20,7 @@ export interface SequenceItemInfo {
   indicator?: boolean;
   monospaced?: boolean;
   name?: string;
+  opacity?: number | string;
   selected?: boolean;
   sign?: boolean;
   sizer?: string;

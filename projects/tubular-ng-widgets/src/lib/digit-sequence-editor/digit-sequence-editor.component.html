@@ -23,6 +23,7 @@
       [style.background-color]="getBackgroundColorForItem(item)"
       [style.color]="getColorForItem(item)"
       [style.cursor]="item.editable && !disabled && !viewOnly ? 'pointer' : 'default'"
+      [style.opacity]="item.opacity?.toString() ?? '1'"
       [ngStyle]="item.width ? { width: item.width, 'white-space': 'nowrap', overflow: 'visible' } : null"
       (mousedown)="onMouseDown(item.index, $event)"
       (mouseup)="onMouseUp($event)"
