@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, forwardRef, Input, OnInit } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DateAndTime, DateTime, DateTimeField, Timezone } from '@tubular/time';
-import { abs, div_tt0, floor, max, min } from '@tubular/math';
+import { abs, div_tt0, floor, max, min, mod } from '@tubular/math';
 import { clone, convertDigits, convertDigitsToAscii, getTextWidth, isAndroid, isArray, isChrome, isEqual, isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean } from '@tubular/util';
 import { timer } from 'rxjs';
 import { BACKGROUND_ANIMATIONS, DigitSequenceEditorComponent, FORWARD_TAB_DELAY, SequenceItemInfo } from '../digit-sequence-editor/digit-sequence-editor.component';
@@ -98,9 +98,11 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   private amPmKeys = ['a', 'p'];
   private amPmStrings = ['AM', 'PM'];
   private baseDigit = '0';
+  private centuryBase = DateTime.getDefaultCenturyBase();
   private dateTime = new DateTime();
   private eraKeys = ['b', 'a'];
   private eraStrings = ['BC', 'AD'];
+  private explicitMinYear = false;
   private firstTouch = true;
   private hasLocalTimeFocus = false;
   private _gregorianChangeDate = '1582-10-15';
@@ -179,6 +181,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     this.useAlternateTouchHandling = false;
     this.originalMinYear = this.minYear = -9999;
     this.maxYear = 9999;
+    this.explicitMinYear = false;
   }
 
   get value(): number { return this._tai ? this.dateTime.taiMillis : this.dateTime.utcMillis; }
@@ -357,6 +360,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   }
 
   private setValue(newValue: number, doCallback = false): void {
+    if (newValue == null)
+      return;
+
     let tai = this._tai;
 
     if (newValue as any instanceof DateTime) {
@@ -405,7 +411,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   get minYear(): number { return this._minYear; }
   @Input() set minYear(year: number) {
     if (this._minYear !== year) {
-      this._minYear = year;
+      this.explicitMinYear = true;
+      this._minYear = this.centuryBase = year;
       this.adjustLocalTimeMin();
     }
   }
@@ -733,6 +740,15 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       }
     }
 
+    if (opts.twoDigitYear && this.yearIndex >= 0) {
+      this.items[this.yearIndex].hidden = this.items[this.yearIndex + 1].hidden = true;
+
+      if (!this.explicitMinYear)
+        this.centuryBase = DateTime.getDefaultCenturyBase();
+      else
+        this.centuryBase = this.minYear;
+    }
+
     if (steps.includes('second'))
       this.selection = this.secondIndex + 1;
     else if (steps.includes('minute'))
@@ -785,6 +801,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     else
       qlass = super.getClassForItem(item);
 
+    const y = this.dateTime.wallTime.y;
+    const base = this.centuryBase;
+
     // Bad timezone?
     if ((this.timezone as Timezone).error &&
         ((this.offsetIndex >= 0 && item.index === this.offsetIndex) ||
@@ -792,7 +811,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       qlass += ' bad-value';
     // Year out of displayable range?
     else if (this.yearIndex >= 0 && this.signIndex < 0 && this.eraIndex < 0 &&
-             this.yearIndex <= item.index && item.index < this.yearIndex + 4 && this.dateTime.wallTime.y < 1)
+             this.yearIndex <= item.index && item.index < this.yearIndex + 4 &&
+             (y < 1 || (this._options.twoDigitYear && (y < base || y > base + 99))))
       qlass += ' bad-value';
 
     return qlass?.trim();
@@ -966,6 +986,11 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const si = this.secondIndex;
     const msi = this.millisIndex;
     let year = i[yi].value * 1000 + i[yi + 1].value * 100 + i[yi + 2].value * 10 + i[yi + 3].value;
+
+    if (this._options.twoDigitYear) {
+      year = mod(year, 100);
+      year = year - this.centuryBase % 100 + this.centuryBase + (year < this.centuryBase % 100 ? 100 : 0);
+    }
 
     if (this.eraIndex >= 0 && is[this.eraIndex].value === this.eraStrings[0])
       year = 1 - year;

@@ -15,6 +15,7 @@ export interface SequenceItemInfo {
   digit?: true;
   divider?: boolean;
   editable?: boolean;
+  hidden?: boolean;
   index?: number;
   indicator?: boolean;
   monospaced?: boolean;
@@ -231,7 +232,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     this.items.forEach((item, i) => item.index = i);
 
     if (!this.rtl) {
-      this.displayItems = this.items;
+      this.displayItems = this.items.filter(i => !i.hidden);
       return;
     }
 
@@ -240,7 +241,9 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
 
     this.displayItems = [];
     this.items.forEach(item => {
-      if (item.digit || item.sign || (ltr && item.bidi)) {
+      if (item.hidden)
+        return;
+      else if (item.digit || item.sign || (ltr && item.bidi)) {
         ltr = true;
         deferred.push(item);
       }
@@ -727,52 +730,60 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
       this.decrement();
   }
 
-  protected cursorLeft(): void {
-    this.rtl ? this.cursorBackward() : this.cursorForward();
+  protected cursorLeft(checkRtl = true): void {
+    if (checkRtl && this.rtl) {
+      this.cursorRight(false);
+      return;
+    }
+
+    this.cursorBackward(this.displayItems);
   }
 
-  protected cursorRight(): void {
-    this.rtl ? this.cursorForward() : this.cursorBackward();
+  protected cursorRight(checkRtl = true): void {
+    if (checkRtl && this.rtl) {
+      this.cursorLeft(false);
+      return;
+    }
+
+    this.cursorForward(this.displayItems);
   }
 
-  protected cursorForward(): void {
-    let nextSelection = NO_SELECTION;
-    const selection = this.displayItems.findIndex(item => item.index === this.selection);
-    const start = (selection >= 0 ? selection : this.displayItems.length);
+  protected cursorBackward(items = this.items): void {
+    let newSelection = NO_SELECTION;
+    const selection = items.findIndex(i => i.index === this.selection);
+    const start = (selection >= 0 ? selection : items.length);
 
     for (let i = start - 1; i >= 0; --i) {
-      if (this.displayItems[i].editable) {
-        nextSelection = this.displayItems[i].index;
+      if (items[i].editable && !items[i].hidden) {
+        newSelection = items[i].index;
         break;
       }
     }
 
-    if (nextSelection !== NO_SELECTION) {
-      if (this.selection >= 0)
-        this.items[this.selection].selected = false;
-
-      this.selection = nextSelection;
-      this.items[this.selection].selected = true;
-    }
+    this.setSelection(newSelection);
   }
 
-  protected cursorBackward(): void {
-    let nextSelection = -1;
-    const selection = this.displayItems.findIndex(item => item.index === this.selection);
+  protected cursorForward(items = this.items): void {
+    let newSelection = -1;
+    const selection = items.findIndex(i => i.index === this.selection);
     const start = (selection >= 0 ? selection : -1);
 
-    for (let i = start + 1; i < this.items.length; ++i) {
-      if (this.displayItems[i].editable) {
-        nextSelection = this.displayItems[i].index;
+    for (let i = start + 1; i < items.length; ++i) {
+      if (items[i].editable && !items[i].hidden) {
+        newSelection = items[i].index;
         break;
       }
     }
 
-    if (nextSelection >= 0) {
+    this.setSelection(newSelection);
+  }
+
+  protected setSelection(newSelection: number): void {
+    if (newSelection >= 0) {
       if (this.selection >= 0)
         this.items[this.selection].selected = false;
 
-      this.selection = nextSelection;
+      this.selection = newSelection;
       this.items[this.selection].selected = true;
     }
   }

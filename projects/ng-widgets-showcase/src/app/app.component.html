@@ -1,5 +1,6 @@
 <tz-time-editor tai style="font-size: 1.5em"
     [options]="{ showOccurrence: true, showSeconds: true }"
+    timezone="America/New_York"
     [(ngModel)]="time"
     [nativeDateTime]="native"></tz-time-editor>
   &nbsp;<button (click)="setCurrentTime()">Now</button>
@@ -8,7 +9,14 @@
 <!--  &nbsp;<label for="native">Native date/time</label>-->
 <!--   <input id="native" type="checkbox" (change)="native = $any($event.target).checked"/><br> --><br>
 <tz-time-editor tai style="font-size: 1.5em"
+    [options]="['iso', { showDstSymbol: true, showOccurrence: true, showUtcOffset: true }]"
+    timezone="America/New_York"
+    [(ngModel)]="time"></tz-time-editor><br><br>
+<tz-time-editor tai style="font-size: 1.5em"
     [options]="{ yearStyle: 1 }"
+    [(ngModel)]="time"></tz-time-editor><br><br>
+<tz-time-editor tai style="font-size: 1.5em"
+    [options]="{ twoDigitYear: true }"
     [(ngModel)]="time"></tz-time-editor><br><br>
 <tz-time-editor tai style="font-size: 1.5em"
     [options]="['iso', { millisDigits: 3, showDstSymbol: true, showOccurrence: true, showUtcOffset: true }]"
