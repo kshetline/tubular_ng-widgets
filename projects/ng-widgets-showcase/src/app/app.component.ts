@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { DateTime } from '@tubular/time';
-import { isString } from '@tubular/util';
+import { isAndroid, isIOS, isString } from '@tubular/util';
 
 @Component({
   selector: 'app-root',
@@ -8,6 +8,7 @@ import { isString } from '@tubular/util';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  mobile = isAndroid() || isIOS();
   native = false;
   time = new DateTime().taiMillis;
   title = 'tz-explorer';
@@ -26,6 +27,11 @@ export class AppComponent {
     if (zone)
       fmt.timeZone = zone;
 
-    return new Intl.DateTimeFormat(locale, fmt).format(dt.utcMillis);
+    let result = new Intl.DateTimeFormat(locale, fmt).format(dt.utcMillis);
+
+    if (locale === 'ar' && fmt.era)
+      result = result.replace(/(\d\d) (\d\d) (\d\d\d\d)/, '$3/$2/$1');
+
+    return result;
   }
 }

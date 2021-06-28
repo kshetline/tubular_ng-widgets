@@ -1,41 +1,83 @@
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="{ showOccurrence: true, showSeconds: true }"
-    timezone="America/New_York"
-    [(ngModel)]="time"
-    [nativeDateTime]="native"></tz-time-editor>
-  &nbsp;<button (click)="setCurrentTime()">Now</button>
-  &nbsp;<button (click)="time = 1636264837000">Sample time</button>
-  &nbsp;<button (click)="time = 1483228836000">Sample leap</button><br>
-<!--  &nbsp;<label for="native">Native date/time</label>-->
-<!--   <input id="native" type="checkbox" (change)="native = $any($event.target).checked"/><br> --><br>
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="['iso', { showDstSymbol: true, showOccurrence: true, showUtcOffset: true }]"
-    timezone="America/New_York"
-    [(ngModel)]="time"></tz-time-editor><br><br>
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="{ yearStyle: 1 }"
-    [(ngModel)]="time"></tz-time-editor><br><br>
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="{ twoDigitYear: true }"
-    [(ngModel)]="time"></tz-time-editor><br><br>
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="['iso', { millisDigits: 3, showDstSymbol: true, showOccurrence: true, showUtcOffset: true }]"
-    timezone="Europe/Dublin"
-    [(ngModel)]="time"></tz-time-editor><br><br>
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="{ hourStyle: 2, locale: 'ar', yearStyle: 1 }"
-    [(ngModel)]="time"></tz-time-editor><br>
-<span dir="rtl">{{ format(null, 'ar', { minute: '2-digit', hour: '2-digit', hourCycle: 'h12', year: 'numeric',
-  month: '2-digit', day: '2-digit', era: 'short' })}}</span><br><br>
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="{ hourStyle: 2, locale: 'ar-EG' }"
-    [(ngModel)]="time"></tz-time-editor><br>
-<span dir="rtl">{{ format(null, 'ar-EG', 'ISS')}}</span><br><br>
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="{ hourStyle: 2, locale: 'he' }"
-    [(ngModel)]="time"></tz-time-editor><br>
-<span dir="rtl">{{ format(null, 'he', { dateStyle: 'short', timeStyle: 'short', hourCycle: 'h12'})}}</span><br><br>
-<tz-time-editor tai style="font-size: 1.5em"
-    [options]="{ locale: 'bn' }"
-    [(ngModel)]="time"></tz-time-editor><br>
-<span dir="rtl">{{ format(null, 'bn', 'ISS')}}</span><br><br>
+<div class="top-grid">
+  <tz-time-editor tai
+      [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true }"
+      [(ngModel)]="time"
+      [nativeDateTime]="native"></tz-time-editor>
+  <span>Locale time, with UTC offset and DST symbol</span>
+  <div>
+      <button (click)="setCurrentTime()">Set now</button>
+      <button (click)="time = 1636264837000">Sample time</button>
+      <button (click)="time = 1483228836000">Sample leap second</button>
+      <label *ngIf="mobile" for="native">Mobile native date/time</label>
+      <input *ngIf="mobile" id="native" type="checkbox" (change)="native = $any($event.target).checked"/><br>
+  </div>
+  <span>&nbsp;</span>
+
+  <tz-time-editor tai
+      [options]="['iso', { showSeconds: true }]"
+      timezone="UTC"
+      [(ngModel)]="time"></tz-time-editor>
+  <span>UTC</span>
+
+  <tz-time-editor tai
+      [options]="{ yearStyle: 1 }"
+      [(ngModel)]="time"></tz-time-editor>
+  <span>Local with AD/BC</span>
+
+  <tz-time-editor tai
+      [options]="{ twoDigitYear: true }"
+      [(ngModel)]="time"></tz-time-editor>
+  <span>Local with two-digit year</span>
+
+  <tz-time-editor tai
+      [options]="['iso', { dateTimeStyle: 2, millisDigits: 3 }]"
+      timezone="UTC"
+      [(ngModel)]="time"></tz-time-editor>
+  <span>UTC time only, with milliseconds</span>
+</div><br>
+
+<div class="bottom-grid">
+  <span>Arabic, general, AD/BC</span>
+  <span>Arabic, Egypt</span>
+  <span>Hebrew, forced AM/PM form</span>
+
+  <tz-time-editor tai
+      [options]="{ hourStyle: 2, locale: 'ar', yearStyle: 1 }"
+      timezone="Africa/Cairo"
+      [(ngModel)]="time"></tz-time-editor>
+  <tz-time-editor tai
+      [options]="{ hourStyle: 2, locale: 'ar-EG' }"
+      timezone="Africa/Cairo"
+      [(ngModel)]="time"></tz-time-editor>
+  <tz-time-editor tai
+      [options]="{ hourStyle: 2, locale: 'he' }"
+      timezone="Asia/Jerusalem"
+      [(ngModel)]="time"></tz-time-editor>
+
+  <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar', { minute: '2-digit', hour: '2-digit',
+    year: 'numeric', month: '2-digit', day: '2-digit', era: 'short', timeZone: 'Africa/Cairo' })}}</span>
+  <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar-EG', 'ISS')}}</span>
+  <span class="text-time" dir="rtl">{{ format('Asia/Jerusalem', 'he', { dateStyle: 'short', timeStyle: 'short',
+    hourCycle: 'h12', timeZone: 'Asia/Jerusalem' })}}</span>
+
+  <span>Bengali</span>
+  <span>German</span>
+  <span>Chinese</span>
+
+  <tz-time-editor tai
+      [options]="{ locale: 'bn' }"
+      timezone="Asia/Dhaka"
+      [(ngModel)]="time"></tz-time-editor>
+  <tz-time-editor tai
+      [options]="{ locale: 'de' }"
+      timezone="Europe/Berlin"
+      [(ngModel)]="time"></tz-time-editor>
+  <tz-time-editor tai
+      [options]="{ locale: 'zh' }"
+      timezone="Asia/Shanghai"
+      [(ngModel)]="time"></tz-time-editor>
+
+  <span class="text-time">{{ format('Asia/Dhaka', 'bn', 'ISS')}}</span>
+  <span class="text-time">{{ format('Europe/Berlin', 'de', 'ISS')}}</span>
+  <span class="text-time">{{ format('Asia/Shanghai', 'zh', 'ISS')}}</span>
+</div>
