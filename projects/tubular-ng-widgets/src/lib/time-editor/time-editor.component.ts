@@ -9,6 +9,7 @@ import { BACKGROUND_ANIMATIONS, DigitSequenceEditorComponent, FORWARD_TAB_DELAY,
 export enum DateFieldOrder { PER_LOCALE, YMD, DMY, MDY }
 export enum DateTimeStyle { DATE_AND_TIME, DATE_ONLY, TIME_ONLY }
 export enum HourStyle { PER_LOCALE, HOURS_24, AM_PM }
+export enum MeridiemStyle { PER_LOCALE, TRAILING, LEADING }
 export enum YearStyle { POSITIVE_ONLY, AD_BC, SIGNED }
 
 export interface TimeEditorOptions {
@@ -20,6 +21,7 @@ export interface TimeEditorOptions {
   eraSeparator?: string;
   hourStyle?: HourStyle | string[];
   locale?: string | string[];
+  meridiemStyle?: MeridiemStyle;
   millisDigits?: number;
   showDstSymbol?: boolean;
   showOccurrence?: boolean;
@@ -536,6 +538,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     let ds = opts.dateFieldSeparator ?? '/';
     let ts = opts.timeFieldSeparator ?? ':';
     let dts = opts.dateTimeSeparator ?? NO_BREAK_SPACE;
+    let leadingMeridian = opts.meridiemStyle === MeridiemStyle.LEADING;
     const baseDigit: string[] = [];
 
     this.rtl = RTL_CHECK.test(new Date().toLocaleString(locale, { month: 'long'}));
@@ -627,6 +630,16 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
           amPm = true;
           this.amPmStrings = [am, new DateTime('1970-01-01T13:00', 'UTC', locale).format('A')];
         }
+
+        if (opts.meridiemStyle == null || opts.meridiemStyle === MeridiemStyle.PER_LOCALE) {
+          const sample = new DateTime(0, 'UTC', locale).format('IxS');
+          const $ = /\d/.exec(sample);
+          const digitIndex = $?.index ?? -1;
+          const amIndex = sample.indexOf(this.amPmStrings[0]);
+
+          if (amIndex >= 0 && amIndex < digitIndex)
+            leadingMeridian = true;
+        }
       }
       else if (isArray(opts.hourStyle)) {
         amPm = true;
@@ -634,7 +647,11 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       }
 
       if (amPm) {
-        timeSteps.push('amPm');
+        if (leadingMeridian)
+          timeSteps.splice(0, 0, 'amPm');
+        else
+          timeSteps.push('aps', 'amPm');
+
         this.amPmKeys = [];
         const aps = this.amPmStrings;
 
@@ -717,9 +734,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
           opacity: dts === ISO_T ? 0.15 : 1,
           width: dts === NO_BREAK_SPACE ?  '0.6em' : undefined }); break;
         case 'hour': this.hourIndex = i; addDigits(2); break;
+        case 'aps': this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' }); break;
         case 'amPm':
-          this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' });
-          this.amPmIndex = i + 1;
+          this.amPmIndex = i;
           this.items.push({ value: this.amPmStrings[0], editable: true, sizer: this.amPmStrings.join('\n') });
           break;
         case 'ts': this.items.push({ value: ts, bidi: true, static: true }); break;
@@ -894,7 +911,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       [i[j][value], i[j + 1][value]] = [d2, d1];
     }
 
-    if (this.hourIndex > 0) {
+    if (this.hourIndex >= 0) {
       let h = wallTime.hrs;
 
       if (this.amPmIndex >= 0) {
@@ -984,6 +1001,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   }
 
   private getWallTimeFromDigits(): DateAndTime {
+    const wt = this.dateTime.wallTime;
     const i = this.items as any as { value: number }[];
     const is = this.items as any as { value: string }[];
     const yi = this.yearIndex;
@@ -993,29 +1011,29 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const mi = this.minuteIndex;
     const si = this.secondIndex;
     const msi = this.millisIndex;
-    let year = i[yi].value * 1000 + i[yi + 1].value * 100 + i[yi + 2].value * 10 + i[yi + 3].value;
+
+    let year = yi >= 0 ?  i[yi].value * 1000 + i[yi + 1].value * 100 + i[yi + 2].value * 10 + i[yi + 3].value : wt.y;
 
     if (this._options.twoDigitYear) {
       year = mod(year, 100);
       year = year - this.centuryBase % 100 + this.centuryBase + (year < this.centuryBase % 100 ? 100 : 0);
     }
 
-    if (this.eraIndex >= 0 && is[this.eraIndex].value === this.eraStrings[0])
+    if (yi >= 0 && this.eraIndex >= 0 && is[this.eraIndex].value === this.eraStrings[0])
       year = 1 - year;
-    else if (this.signIndex >= 0 && is[this.signIndex].value === '-')
+    else if (yi >= 0 && this.signIndex >= 0 && is[this.signIndex].value === '-')
       year *= -1;
 
-    const month  = i[Mi].value * 10 + i[Mi + 1].value;
-    const date   = i[di].value * 10 + i[di + 1].value;
-    let   hour   = i[hi].value * 10 + i[hi + 1].value;
-    const minute = i[mi].value * 10 + i[mi + 1].value;
-    let   second = 0;
-    let   millis = 0;
-
-    if (si >= 0)
-      second = i[si].value * 10 + i[si + 1].value;
+    const month  = Mi >= 0 ? i[Mi].value * 10 + i[Mi + 1].value : wt.m;
+    const date   = di >= 0 ? i[di].value * 10 + i[di + 1].value : wt.d;
+    let   hour   = hi >= 0 ? i[hi].value * 10 + i[hi + 1].value : wt.hrs;
+    const minute = mi >= 0 ? i[mi].value * 10 + i[mi + 1].value : wt.min;
+    let   second = si >= 0 ? i[si].value * 10 + i[si + 1].value : wt.sec;
+    let   millis = wt.millis;
 
     if (msi >= 0) {
+      millis = 0;
+
       for (let j = msi; j < msi + this._options.millisDigits; ++j) {
         millis *= 10;
         millis += i[j].value;
@@ -1024,7 +1042,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       millis *= 10 ** (3 - this._options.millisDigits);
     }
 
-    if (this.amPmIndex >= 0) {
+    if (hi >= 0 && this.amPmIndex >= 0) {
       if (is[this.amPmIndex].value === this.amPmStrings[0])
         hour = (hour === 12 ? 0 : min(hour, 12));
       else if (hour !== 12)
