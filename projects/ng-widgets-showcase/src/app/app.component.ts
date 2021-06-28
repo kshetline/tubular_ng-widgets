@@ -33,7 +33,7 @@ export class AppComponent {
       result = new Intl.DateTimeFormat(locale, fmt).format(dt.utcMillis);
 
       if (locale === 'ar' && fmt.era)
-        result = result.replace(/(\d\d) (\d\d) (\d\d\d\d)/, '$3/$2/$1');
+        result = result.replace(/(\d\d) (\d\d) (\d\d\d\d)/, '$3/$2/$1').replace(',', '');
     }
 
     result = convertDigitsToAscii(result, base);

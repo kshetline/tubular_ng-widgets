@@ -129,7 +129,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   protected selectionHidden = false;
   protected showFocus = false;
   protected swipeIndex = -1;
-  protected _tabindex = '1';
+  protected _tabindex = '0';
   protected wrapper: HTMLElement;
 
   protected static addFocusOutline = isEdge() || isIOS();

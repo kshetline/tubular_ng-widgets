@@ -687,7 +687,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
 
     if (hasIntl && hasTime && hasDate && opts.dateTimeSeparator == null) {
       const sample = convertDigitsToAscii(
-        new Intl.DateTimeFormat(localeExt, { day: 'numeric', hour: 'numeric' }).format(0));
+        new Intl.DateTimeFormat(localeExt, { day: 'numeric', hour: 'numeric', hour12: false }).format(0));
 
       dts = (/\d(\D+)\d/.exec(sample) ?? ['', NO_BREAK_SPACE])[1];
 
