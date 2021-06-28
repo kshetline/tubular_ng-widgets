@@ -19,7 +19,7 @@
     "@angular/platform-browser-dynamic": "~12.1.0",
     "@angular/router": "~12.1.0",
     "@tubular/math": "^3.0.1",
-    "@tubular/time": "^3.0.3",
+    "@tubular/time": "^3.0.5",
     "@tubular/util": "^4.0.2",
     "rxjs": "~6.6.0",
     "tslib": "^2.1.0",

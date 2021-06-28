@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, forwardRef, Input, OnInit } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { DateAndTime, DateTime, DateTimeField, Timezone } from '@tubular/time';
+import { DateAndTime, DateTime, DateTimeField, newDateTimeFormat, Timezone } from '@tubular/time';
 import { abs, div_tt0, floor, max, min, mod } from '@tubular/math';
 import { clone, convertDigits, convertDigitsToAscii, getTextWidth, isAndroid, isArray, isChrome, isEqual, isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean } from '@tubular/util';
 import { timer } from 'rxjs';
@@ -575,8 +575,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         dateSteps.push('era');
 
         if (hasIntl && opts.eraSeparator == null) {
-          const era = convertDigitsToAscii(new Intl.DateTimeFormat(localeExt, { era: 'short' }).format(0));
-          const sample = convertDigitsToAscii(new Intl.DateTimeFormat(localeExt,
+          const era = convertDigitsToAscii(newDateTimeFormat(localeExt, { era: 'short' }).format(0));
+          const sample = convertDigitsToAscii(newDateTimeFormat(localeExt,
                             { year: 'numeric', era: 'short' }).format(0)).replace(era, 'xxx');
 
           es = (/\d([\Dx]+)xxx/.exec(sample) ?? ['', NO_BREAK_SPACE])[1].replace(/\s+/g, NO_BREAK_SPACE);
@@ -687,7 +687,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
 
     if (hasIntl && hasTime && hasDate && opts.dateTimeSeparator == null) {
       const sample = convertDigitsToAscii(
-        new Intl.DateTimeFormat(localeExt, { day: 'numeric', hour: 'numeric', hour12: false }).format(0));
+        newDateTimeFormat(localeExt,
+          { day: 'numeric', hour: 'numeric', hour12: false, hourCycle: 'h23' } as any).format(0));
 
       dts = (/\d(\D+)\d/.exec(sample) ?? ['', NO_BREAK_SPACE])[1];
 

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { DateTime } from '@tubular/time';
+import { DateTime, newDateTimeFormat } from '@tubular/time';
 import { convertDigits, convertDigitsToAscii, isAndroid, isIOS, isString } from '@tubular/util';
 
 @Component({
@@ -30,10 +30,10 @@ export class AppComponent {
       if (zone)
         fmt.timeZone = zone;
 
-      result = new Intl.DateTimeFormat(locale, fmt).format(dt.utcMillis);
+      result = newDateTimeFormat(locale, fmt).format(dt.utcMillis);
 
       if (locale === 'ar' && fmt.era)
-        result = result.replace(/(\d\d) (\d\d) (\d\d\d\d)/, '$3/$2/$1').replace(',', '');
+        result = result.replace(/([\d\u0660-\u0669]{2}) ([\d\u0660-\u0669]{2}) ([\d\u0660-\u0669]{4})/, '$3/$2/$1').replace(',', '');
     }
 
     result = convertDigitsToAscii(result, base);
