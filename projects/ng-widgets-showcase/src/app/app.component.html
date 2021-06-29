@@ -3,7 +3,7 @@
       [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true }"
       [(ngModel)]="time"
       [nativeDateTime]="native"></tz-time-editor>
-  <span>Locale time, with UTC offset and DST symbol</span>
+  <span>Locale time, with occurrence, UTC offset and DST symbol</span>
   <div>
       <button (click)="setCurrentTime()">Set now</button>
       <button (click)="time = 1636264837000">Sample time</button>
@@ -17,7 +17,7 @@
       [options]="['iso', { showSeconds: true }]"
       timezone="UTC"
       [(ngModel)]="time"></tz-time-editor>
-  <span>UTC</span>
+  <span>UTC, in ISO-8601 date/time format</span>
 
   <tz-time-editor tai
       [options]="{ yearStyle: 1 }"
@@ -51,14 +51,14 @@
       [(ngModel)]="time"></tz-time-editor>
   <tz-time-editor tai
       [options]="{ hourStyle: 2, locale: 'he' }"
-      timezone="Asia/Jerusalem"
+      timezone="America/New_York"
       [(ngModel)]="time"></tz-time-editor>
 
   <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar', { minute: '2-digit', hour: 'numeric',
-    year: 'numeric', month: '2-digit', day: '2-digit', era: 'short', timeZone: 'Africa/Cairo' })}}</span>
+    year: 'numeric', month: '2-digit', day: '2-digit', era: 'short' })}}</span>
   <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar-EG', 'ISS')}}</span>
-  <span class="text-time" dir="rtl">{{ format('Asia/Jerusalem', 'he', { dateStyle: 'short', timeStyle: 'short',
-    hourCycle: 'h12', year: 'numeric', timeZone: 'Asia/Jerusalem' })}}</span>
+  <span class="text-time" dir="ltr">{{ format('America/New_York', 'mr-u-nu-latn', { dateStyle: 'short', timeStyle: 'short',
+    hourCycle: 'h12', year: 'numeric' })}}</span><!-- 'Asia/Jerusalem' -->
 
   <span>Bengali</span>
   <span>German</span>
