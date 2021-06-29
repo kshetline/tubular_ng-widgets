@@ -23,6 +23,7 @@ export interface TimeEditorOptions {
   locale?: string | string[];
   meridiemStyle?: MeridiemStyle;
   millisDigits?: number;
+  numbering?: number;
   showDstSymbol?: boolean;
   showOccurrence?: boolean;
   showSeconds?: boolean;
@@ -531,7 +532,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const hasDate = (opts.dateTimeStyle !== DateTimeStyle.TIME_ONLY);
     const hasTime = (opts.dateTimeStyle !== DateTimeStyle.DATE_ONLY);
     const locale = opts.locale;
-    const localeExt = isArray(locale) ? locale.map(l => l + '-u-ca-gregory') : (locale && locale + '-u-ca-gregory');
+    const extendLocale = l => l + '-u-ca-gregory' + (opts.numbering ? '-nu-' + opts.numbering : '');
+    const localeExt = isArray(locale) ? locale.map(l => extendLocale(l)) : (locale && extendLocale(locale));
     const decimal = opts.decimal ||
       (hasIntl && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
     let es = opts.eraSeparator ?? NO_BREAK_SPACE;

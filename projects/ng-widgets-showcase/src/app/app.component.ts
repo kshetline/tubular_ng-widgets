@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { DateTime, newDateTimeFormat } from '@tubular/time';
-import { convertDigits, convertDigitsToAscii, isAndroid, isIOS, isString } from '@tubular/util';
+import { isAndroid, isIOS, isString } from '@tubular/util';
 
 @Component({
   selector: 'app-root',
@@ -8,21 +8,34 @@ import { convertDigits, convertDigitsToAscii, isAndroid, isIOS, isString } from 
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  private _customLocale = 'en-GB';
+
   mobile = isAndroid() || isIOS();
   native = false;
   time = new DateTime().taiMillis;
   title = 'tz-explorer';
+
+  get customLocale(): string { return this._customLocale; }
+  set customLocale(newValue: string) {
+    if (this._customLocale !== newValue) {
+      try {
+        new Intl.DateTimeFormat(newValue);
+      }
+      catch {
+        return;
+      }
+
+      this._customLocale = newValue;
+    }
+  }
 
   setCurrentTime(): void {
     this.time = new DateTime().taiMillis;
   }
 
   format(zone: string = null, locale: string = null, fmt: string | Intl.DateTimeFormatOptions): string {
-    const dt = new DateTime(null, zone, locale);
+    const dt = new DateTime({ tai: this.time }, zone, locale);
     let result: string;
-    const base: string[] = [];
-
-    dt.taiMillis = this.time;
 
     if (isString(fmt))
       result = dt.format(fmt);
@@ -31,14 +44,7 @@ export class AppComponent {
         fmt.timeZone = zone;
 
       result = newDateTimeFormat(locale, fmt).format(dt.utcMillis);
-
-      if (locale === 'ar' && fmt.era)
-        result = result.replace(/([\d\u0660-\u0669]{2}) ([\d\u0660-\u0669]{2}) ([\d\u0660-\u0669]{4})/, '$3/$2/$1').replace(',', '');
     }
-
-    result = convertDigitsToAscii(result, base);
-    result = result.replace(/\b(\d)\b/g, '0$1');
-    result = convertDigits(result, base[0]);
 
     return result;
   }

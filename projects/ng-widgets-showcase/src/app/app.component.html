@@ -42,7 +42,7 @@
   <span>Hebrew, forced AM/PM form</span>
 
   <tz-time-editor tai
-      [options]="{ locale: 'ar', yearStyle: 1 }"
+      [options]="$any({ locale: 'ar', yearStyle: 1, numbering: 'latn' })"
       timezone="Africa/Cairo"
       [(ngModel)]="time"></tz-time-editor>
   <tz-time-editor tai
@@ -51,14 +51,12 @@
       [(ngModel)]="time"></tz-time-editor>
   <tz-time-editor tai
       [options]="{ hourStyle: 2, locale: 'he' }"
-      timezone="America/New_York"
+      timezone="Asia/Jerusalem"
       [(ngModel)]="time"></tz-time-editor>
 
-  <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar', { minute: '2-digit', hour: 'numeric',
-    year: 'numeric', month: '2-digit', day: '2-digit', era: 'short' })}}</span>
+  <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar', 'Y/MM/DD N hh:mm A')}}</span>
   <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar-EG', 'ISS')}}</span>
-  <span class="text-time" dir="ltr">{{ format('America/New_York', 'mr-u-nu-latn', { dateStyle: 'short', timeStyle: 'short',
-    hourCycle: 'h12', year: 'numeric' })}}</span><!-- 'Asia/Jerusalem' -->
+  <span class="text-time" dir="rtl">{{ format('Asia/Jerusalem', 'he', 'DD.MM.Y, hh:mm A')}}</span>
 
   <span>Bengali</span>
   <span>German</span>
@@ -77,8 +75,16 @@
       timezone="Asia/Shanghai"
       [(ngModel)]="time"></tz-time-editor>
 
-  <span class="text-time">{{ format('Asia/Dhaka', 'bn', 'ISS')}}</span>
-  <span class="text-time">{{ format('Europe/Berlin', 'de', { minute: '2-digit', hour: 'numeric',
-    year: 'numeric', month: '2-digit', day: '2-digit' })}}</span>
-  <span class="text-time">{{ format('Asia/Shanghai', 'zh', 'ISS')}}</span>
-</div>
+  <span class="text-time">{{format('Asia/Dhaka', 'bn', 'DD/MM/Y hh:mm A')}}</span>
+  <span class="text-time">{{format('Europe/Berlin', 'de', 'DD.MM.Y, HH:mm')}}</span>
+  <span class="text-time">{{format('Asia/Shanghai', 'zh', 'ISS')}}</span>
+</div><br>
+
+<input type="text" width="6" [(ngModel)]="customLocale"><br>
+
+<tz-time-editor tai
+    [options]="{ hourStyle: 2, locale: customLocale }"
+    timezone="America/New_York"
+    [(ngModel)]="time"></tz-time-editor><br>
+
+<span class="text-time">{{ format('America/New_York', customLocale, 'ISS')}}</span>
