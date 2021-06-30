@@ -89,3 +89,5 @@
     [(ngModel)]="time"></tz-time-editor><br>
 
 <span class="text-time" dir="auto">{{ format(customTimezone, customLocale, 'ISS{hour:2-digit,day:2-digit,month:2-digit,year:numeric,hourCycle:h12}')}}</span>
+&bull; <span class="text-time" dir="auto">{{ format(customTimezone, customLocale, 'a')}}</span>
+&bull; <span class="text-time" dir="auto">{{ format(customTimezone, customLocale, 'A')}}</span>
