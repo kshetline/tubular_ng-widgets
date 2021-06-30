@@ -80,11 +80,12 @@
   <span class="text-time">{{format('Asia/Shanghai', 'zh', 'ISS')}}</span>
 </div><br>
 
-<input type="text" width="6" [(ngModel)]="customLocale"><br>
+<input type="text" width="15" [(ngModel)]="customLocale" [style.background-color]="localeGood ? 'inherit' : '#FBC'"><br>
+<input type="text" width="15" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"><br>
 
 <tz-time-editor tai
     [options]="{ hourStyle: 2, locale: customLocale }"
-    timezone="America/New_York"
+    [timezone]="customTimezone"
     [(ngModel)]="time"></tz-time-editor><br>
 
-<span class="text-time">{{ format('America/New_York', customLocale, 'ISS')}}</span>
+<span class="text-time" dir="auto">{{ format(customTimezone, customLocale, 'ISS{hour:2-digit,day:2-digit,month:2-digit,year:numeric,hourCycle:h12}')}}</span>

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { DateTime, newDateTimeFormat } from '@tubular/time';
+import { DateTime, newDateTimeFormat, Timezone } from '@tubular/time';
 import { isAndroid, isIOS, isString } from '@tubular/util';
 
 @Component({
@@ -8,24 +8,40 @@ import { isAndroid, isIOS, isString } from '@tubular/util';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  private _customLocale = 'en-GB';
+  private _customLocale = 'en-US';
+  private _customTimezone = 'America/New_York';
 
+  localeGood = true;
   mobile = isAndroid() || isIOS();
   native = false;
   time = new DateTime().taiMillis;
-  title = 'tz-explorer';
+  timezoneGood = true;
 
   get customLocale(): string { return this._customLocale; }
   set customLocale(newValue: string) {
-    if (this._customLocale !== newValue) {
+    if (this._customLocale !== newValue || !this.localeGood) {
       try {
         new Intl.DateTimeFormat(newValue);
       }
       catch {
+        this.localeGood = false;
         return;
       }
 
+      this.localeGood = true;
       this._customLocale = newValue;
+    }
+  }
+
+  get customTimezone(): string { return this._customTimezone; }
+  set customTimezone(newValue: string) {
+    if (this._customTimezone !== newValue || !this.timezoneGood) {
+      if (Timezone.has(newValue) && new DateTime(null, newValue).valid) {
+        this._customTimezone = newValue;
+        this.timezoneGood = true;
+      }
+      else
+        this.timezoneGood = false;
     }
   }
 
