@@ -38,7 +38,7 @@ const OCC2 = '\u200A\u2082\u200A';
 const ISO_T = '\u200AT\u200A';
 const NO_BREAK_SPACE = '\u00A0';
 const platformNativeDateTime = (isIOS() || (isAndroid() && isChrome()));
-const RTL_CHECK = /[\u0590-\u07BF\u0860-\u08FF\u200F\u2067\u202B\u202E\uFB1D-\uFDCF\uFDF0-\uFDFF\uFE70-\uFEFF]/
+const RTL_CHECK = /[\u0590-\u07BF\u0860-\u08FF\u200F\u2067\u202B\u202E\uFB1D-\uFDCF\uFDF0-\uFDFF\uFE70-\uFEFF]/;
 
 export const OPTIONS_DATE_ONLY: TimeEditorOptions = {
   dateTimeStyle: DateTimeStyle.DATE_ONLY,
@@ -532,7 +532,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const hasDate = (opts.dateTimeStyle !== DateTimeStyle.TIME_ONLY);
     const hasTime = (opts.dateTimeStyle !== DateTimeStyle.DATE_ONLY);
     const locale = opts.locale;
-    const extendLocale = l => l + '-u-ca-gregory' + (opts.numbering ? '-nu-' + opts.numbering : '');
+    const extendLocale = (l: string): string => l + '-u-ca-gregory' + (opts.numbering ? '-nu-' + opts.numbering : '');
     const localeExt = isArray(locale) ? locale.map(l => extendLocale(l)) : (locale && extendLocale(locale));
     const decimal = opts.decimal ||
       (hasIntl && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
@@ -695,7 +695,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       dts = (/\d(\D+)\d/.exec(sample) ?? ['', NO_BREAK_SPACE])[1];
 
       if (!new DateTime(0, 'UTC', locale).format('ISS').includes(dts))
-        dts = NO_BREAK_SPACE
+        dts = NO_BREAK_SPACE;
       else
         dts = dts.replace(/\s+/g, NO_BREAK_SPACE);
     }
@@ -734,8 +734,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         case 'month': this.monthIndex = i; addDigits(2); break;
         case 'day': this.dayIndex = i; addDigits(2); break;
         case 'dts': this.items.push({ value: dts, static: true,
-          opacity: dts === ISO_T ? 0.15 : 1,
-          width: dts === NO_BREAK_SPACE ?  '0.6em' : undefined }); break;
+                                      opacity: dts === ISO_T ? 0.15 : 1,
+                                      width: dts === NO_BREAK_SPACE ?  '0.6em' : undefined }); break;
         case 'hour': this.hourIndex = i; addDigits(2); break;
         case 'aps': this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' }); break;
         case 'amPm':
@@ -1031,7 +1031,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const date   = di >= 0 ? i[di].value * 10 + i[di + 1].value : wt.d;
     let   hour   = hi >= 0 ? i[hi].value * 10 + i[hi + 1].value : wt.hrs;
     const minute = mi >= 0 ? i[mi].value * 10 + i[mi + 1].value : wt.min;
-    let   second = si >= 0 ? i[si].value * 10 + i[si + 1].value : wt.sec;
+    const second = si >= 0 ? i[si].value * 10 + i[si + 1].value : wt.sec;
     let   millis = wt.millis;
 
     if (msi >= 0) {

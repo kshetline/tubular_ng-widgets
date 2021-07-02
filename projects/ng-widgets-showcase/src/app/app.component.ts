@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import { DateTime, newDateTimeFormat, Timezone } from '@tubular/time';
-import { isAndroid, isIOS, isString } from '@tubular/util';
+import { isAndroid, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
+import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
+
+const DisplayNames = (Intl as any).DisplayNames;
 
 @Component({
   selector: 'app-root',
@@ -11,11 +14,16 @@ export class AppComponent {
   private _customLocale = 'en-US';
   private _customTimezone = 'America/New_York';
 
+  customCycle = '0';
+  customStyle = '0';
+  customYear = '';
   localeGood = true;
   mobile = isAndroid() || isIOS();
   native = false;
+  showSeconds = false;
   time = new DateTime().taiMillis;
   timezoneGood = true;
+  yearStyle = '0';
 
   get customLocale(): string { return this._customLocale; }
   set customLocale(newValue: string) {
@@ -60,6 +68,53 @@ export class AppComponent {
         fmt.timeZone = zone;
 
       result = newDateTimeFormat(locale, fmt).format(dt.utcMillis);
+    }
+
+    return result;
+  }
+
+  getOptions(): TimeEditorOptions {
+    return {
+      dateTimeStyle: toNumber(this.customStyle),
+      hourStyle: toNumber(this.customCycle),
+      locale: this.customLocale,
+      showSeconds: this.showSeconds,
+      twoDigitYear: toBoolean(this.customYear, undefined),
+      yearStyle: toNumber(this.yearStyle)
+    };
+  }
+
+  getFormat(): string {
+    const styleNum = toNumber(this.customStyle);
+    const style = styleNum ? (styleNum === DateTimeStyle.DATE_ONLY ? 'S' : 'xS') : 'SS';
+    const era = toNumber(this.yearStyle) === YearStyle.AD_BC ? ',era:short' : '';
+    const year = this.customYear && styleNum !== DateTimeStyle.TIME_ONLY ?
+      ',year:' + (toBoolean(this.customYear) ? '2-digit' : 'numeric') : '';
+    const monthDay = styleNum !== DateTimeStyle.TIME_ONLY ? ',month:2-digit,day:2-digit' : '';
+    const cycle = toNumber(this.customCycle);
+    const hour =  styleNum !== DateTimeStyle.DATE_ONLY ? ',hour:2-digit' : '';
+    const hourCycle = cycle && styleNum !== DateTimeStyle.DATE_ONLY ?
+      ',hourCycle:' + (cycle === HourStyle.HOURS_24 ? 'h23' : 'h12') : '';
+    const seconds = this.showSeconds && styleNum !== DateTimeStyle.DATE_ONLY ? ',second:2-digit' : '';
+
+    return `I${style}{${era}${year}${monthDay}${hour}${hourCycle}${seconds}}`.replace('{,' , '{');
+  }
+
+  getCustomCaption(lang?: string): string {
+    lang = lang || this.customLocale.toLowerCase().substr(0, 2);
+
+    let result = '?';
+
+    try {
+      result = DisplayNames && new (DisplayNames)(lang, { type: 'language' }).of(this.customLocale);
+    }
+    catch {}
+
+    if (lang !== 'en') {
+      const enCaption = this.getCustomCaption('en');
+
+      if (enCaption !== result)
+        result = enCaption + ' • ' + result;
     }
 
     return result;

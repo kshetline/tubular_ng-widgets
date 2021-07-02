@@ -80,14 +80,40 @@
   <span class="text-time">{{format('Asia/Shanghai', 'zh', 'ISS')}}</span>
 </div><br>
 
-<input type="text" width="15" [(ngModel)]="customLocale" [style.background-color]="localeGood ? 'inherit' : '#FBC'"><br>
-<input type="text" width="15" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"><br>
+<div class='custom-config'>
+  <label>Locale: <input type="text" width="15" [(ngModel)]="customLocale" [style.background-color]="localeGood ? 'inherit' : '#FBC'"></label>
+  <label>IANA timezone: <input type="text" width="15" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"></label>
+  <div style="flex-basis: 100%; height: 0.5em">&nbsp;</div>
+  <select style="margin-left: 0" [(ngModel)]="customStyle">
+    <option value="0">Date and time</option>
+    <option value="1">Date only</option>
+    <option value="2">Time only</option>
+  </select>
+  <select *ngIf="customStyle !== '2'" [(ngModel)]="yearStyle">
+    <option value="0">Positive-only years</option>
+    <option value="1">AD/BC years</option>
+    <option value="2">Signed years</option>
+  </select>
+  <select *ngIf="customStyle !== '2'" [(ngModel)]="customYear">
+    <option value="">Year length per locale</option>
+    <option value="false">4/variable-digit year</option>
+    <option value="true">2-digit year</option>
+  </select>
+  <select *ngIf="customStyle !== '1'" [(ngModel)]="customCycle">
+    <option value="0">12/24 hours, per locale</option>
+    <option value="1">24-hour time</option>
+    <option value="2">AM/PM time</option>
+  </select>
+  <label *ngIf="customStyle !== '1'"><input type="checkbox" [(ngModel)]="showSeconds">Show seconds</label>
+</div>
 
-<tz-time-editor tai
-    [options]="{ hourStyle: 2, locale: customLocale }"
-    [timezone]="customTimezone"
-    [(ngModel)]="time"></tz-time-editor><br>
+<div class='custom-time'>
+  &nbsp;<span>{{getCustomCaption()}}</span><br>
 
-<span class="text-time" dir="auto">{{ format(customTimezone, customLocale, 'ISS{hour:2-digit,day:2-digit,month:2-digit,year:numeric,hourCycle:h12}')}}</span>
-&bull; <span class="text-time" dir="auto">{{ format(customTimezone, customLocale, 'a')}}</span>
-&bull; <span class="text-time" dir="auto">{{ format(customTimezone, customLocale, 'A')}}</span>
+  <tz-time-editor tai
+      [options]="getOptions()"
+      [timezone]="customTimezone"
+      [(ngModel)]="time"></tz-time-editor><br>
+
+  &nbsp;<span class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</span>
+</div>

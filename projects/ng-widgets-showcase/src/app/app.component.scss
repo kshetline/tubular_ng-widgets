@@ -58,3 +58,20 @@
     font-size: 20px;
   }
 }
+
+.custom-config {
+  border-top: 1px solid #CCC;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 1em 0;
+
+  *:not(:first-child) {
+    margin-left: 1em;
+  }
+}
+
+.custom-time {
+  tz-time-editor {
+    font-size: 20px;
+  }
+}
