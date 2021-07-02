@@ -23,7 +23,7 @@ export interface TimeEditorOptions {
   locale?: string | string[];
   meridiemStyle?: MeridiemStyle;
   millisDigits?: number;
-  numbering?: number;
+  numbering?: string;
   showDstSymbol?: boolean;
   showOccurrence?: boolean;
   showSeconds?: boolean;
@@ -120,8 +120,10 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   private outOfRange = false;
   private _options: TimeEditorOptions = {};
   private readonly originalMinYear: number;
+  private rtlMark = false;
   private sizerDigit = '0';
   private _tai = false;
+  private twoDigitYear = false;
 
   private eraIndex = -1;
   private signIndex = -1;
@@ -524,6 +526,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     this.occIndex = -1;
     this.offsetIndex = -1;
     this.dstIndex = -1;
+    this.rtlMark = false;
 
     const steps: string[] = [];
     const dateSteps: string[] = [];
@@ -552,7 +555,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       let sampleDate = new DateTime('3333-11-22Z', 'UTC', locale).format('IS');
       let dfo = opts.dateFieldOrder ?? DateFieldOrder.PER_LOCALE;
 
+      this.twoDigitYear = opts.twoDigitYear ?? !sampleDate.includes('3333');
       this.rtl = this.rtl || RTL_CHECK.test(sampleDate);
+      this.rtlMark = this.rtl && sampleDate.includes('\u200F');
       ds = opts.dateFieldSeparator ||
         convertDigitsToAscii(sampleDate, baseDigit).replace(/(^\D+)|[\d\s\u2000-\u200F]/g, '').charAt(0) || '/';
 
@@ -675,7 +680,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         timeSteps.push('dst');
     }
 
-    if (this.rtl && dateRtl) {
+    if (this.rtlMark) {
       const hasEra = dateSteps.includes('era');
 
       if (hasEra)
@@ -764,7 +769,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       }
     }
 
-    if (opts.twoDigitYear && this.yearIndex >= 0) {
+    if (this.twoDigitYear && this.yearIndex >= 0) {
       this.items[this.yearIndex].hidden = this.items[this.yearIndex + 1].hidden = true;
 
       if (!this.explicitMinYear)
@@ -838,7 +843,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     // Year out of displayable range?
     else if (this.yearIndex >= 0 && this.signIndex < 0 && this.eraIndex < 0 &&
              this.yearIndex <= item.index && item.index < this.yearIndex + 4 &&
-             (y < 1 || (this._options.twoDigitYear && (y < base || y > base + 99)))) {
+             (y < 1 || (this.twoDigitYear && (y < base || y > base + 99)))) {
       qlass += ' bad-value';
       this.outOfRange = true;
     }
@@ -1017,7 +1022,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
 
     let year = yi >= 0 ?  i[yi].value * 1000 + i[yi + 1].value * 100 + i[yi + 2].value * 10 + i[yi + 3].value : wt.y;
 
-    if (this._options.twoDigitYear) {
+    if (this.twoDigitYear) {
       year = mod(year, 100);
       year = year - this.centuryBase % 100 + this.centuryBase + (year < this.centuryBase % 100 ? 100 : 0);
     }
@@ -1145,7 +1150,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       field = DateTimeField.YEAR;
       change = 10 ** (3 + this.yearIndex - sel);
 
-      if (this._options.twoDigitYear) {
+      if (this.twoDigitYear) {
         let newYear = mod(wallTime.y + change, 100);
         newYear = newYear - this.centuryBase % 100 + this.centuryBase + (newYear < this.centuryBase % 100 ? 100 : 0);
         change = (newYear - wallTime.y) * sign;

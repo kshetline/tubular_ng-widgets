@@ -13,6 +13,7 @@ const DisplayNames = (Intl as any).DisplayNames;
 export class AppComponent {
   private _customLocale = 'en-US';
   private _customTimezone = 'America/New_York';
+  private _numSystem = '';
 
   customCycle = '0';
   customStyle = '0';
@@ -20,6 +21,7 @@ export class AppComponent {
   localeGood = true;
   mobile = isAndroid() || isIOS();
   native = false;
+  numSystemGood = true;
   showSeconds = false;
   time = new DateTime().taiMillis;
   timezoneGood = true;
@@ -53,6 +55,23 @@ export class AppComponent {
     }
   }
 
+  get numSystem(): string { return this._numSystem; }
+  set numSystem(newValue: string) {
+    if (this._numSystem !== newValue || !this.numSystemGood) {
+      try {
+        if (!newValue || new Intl.NumberFormat('en-u-nu-' + newValue).resolvedOptions().numberingSystem === newValue) {
+          this.numSystemGood = true;
+          this._numSystem = newValue;
+          return;
+        }
+      }
+      catch {}
+
+      this.numSystemGood = false;
+      return;
+    }
+  }
+
   setCurrentTime(): void {
     this.time = new DateTime().taiMillis;
   }
@@ -78,8 +97,9 @@ export class AppComponent {
       dateTimeStyle: toNumber(this.customStyle),
       hourStyle: toNumber(this.customCycle),
       locale: this.customLocale,
+      numbering: this.numSystem || undefined,
       showSeconds: this.showSeconds,
-      twoDigitYear: toBoolean(this.customYear, undefined),
+      twoDigitYear: this.customYear ? toBoolean(this.customYear) : undefined,
       yearStyle: toNumber(this.yearStyle)
     };
   }
@@ -96,8 +116,10 @@ export class AppComponent {
     const hourCycle = cycle && styleNum !== DateTimeStyle.DATE_ONLY ?
       ',hourCycle:' + (cycle === HourStyle.HOURS_24 ? 'h23' : 'h12') : '';
     const seconds = this.showSeconds && styleNum !== DateTimeStyle.DATE_ONLY ? ',second:2-digit' : '';
+    const numbering = this.numSystem && ',numberingSystem:' + this.numSystem;
 
-    return `I${style}{${era}${year}${monthDay}${hour}${hourCycle}${seconds}}`.replace('{,' , '{');
+    return `I${style}{${era}${year}${monthDay}${hour}${hourCycle}${seconds}${numbering}}`
+      .replace('{,' , '{').replace('{},' , '');
   }
 
   getCustomCaption(lang?: string): string {
