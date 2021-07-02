@@ -787,7 +787,12 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
 
     this.items.push({ divider: true });
     this.items.push({ spinner: true });
+
+    if (opts.numbering)
+      convertDigitsToAscii(new Intl.NumberFormat(locale + '-u-nu-' + opts.numbering).format(0), baseDigit);
+
     this.baseDigit = baseDigit[0] ?? '0';
+
     this.findSizerDigit();
 
     this.updateDigits();
