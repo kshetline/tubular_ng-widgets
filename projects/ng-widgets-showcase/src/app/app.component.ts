@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { DateTime, newDateTimeFormat, Timezone } from '@tubular/time';
 import { isAndroid, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
-import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
+import { DateTimeStyle, HourStyle, TimeEditorLimit, TimeEditorOptions, YearStyle } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
 
 const DisplayNames = (Intl as any).DisplayNames;
 
@@ -19,12 +19,16 @@ export class AppComponent {
 
   private _customLocale = navigator.language;
   private _customTimezone = 'America/New_York';
+  private _max = '';
+  private _min = '';
   private _numSystem = '';
 
   customCycle = '0';
   customStyle = '0';
   customYear = '';
   localeGood = true;
+  maxGood = true;
+  minGood = true;
   mobile = isAndroid() || isIOS();
   native = false;
   numSystemGood = true;
@@ -37,6 +41,7 @@ export class AppComponent {
   set customLocale(newValue: string) {
     if (this._customLocale !== newValue || !this.localeGood) {
       try {
+        // eslint-disable-next-line chai-friendly/no-unused-expressions
         newValue && new Intl.DateTimeFormat(newValue);
       }
       catch {
@@ -58,6 +63,38 @@ export class AppComponent {
       }
       else
         this.timezoneGood = false;
+    }
+  }
+
+  get max(): string { return this._max; }
+  set max(newValue: string) {
+    if (this._max !== newValue || !this.maxGood) {
+      try {
+        new TimeEditorLimit(newValue);
+      }
+      catch {
+        this.maxGood = false;
+        return;
+      }
+
+      this._max = newValue;
+      this.maxGood = true;
+    }
+  }
+
+  get min(): string { return this._min; }
+  set min(newValue: string) {
+    if (this._min !== newValue || !this.minGood) {
+      try {
+        new TimeEditorLimit(newValue);
+      }
+      catch {
+        this.minGood = false;
+        return;
+      }
+
+      this._min = newValue;
+      this.minGood = true;
     }
   }
 

@@ -1,8 +1,11 @@
 import { ChangeDetectorRef, Component, forwardRef, Input, OnInit } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { DateAndTime, DateTime, DateTimeField, newDateTimeFormat, Timezone } from '@tubular/time';
-import { abs, ceil, div_tt0, floor, max, min, mod } from '@tubular/math';
-import { clone, convertDigits, convertDigitsToAscii, getFontMetrics, getTextWidth, isAndroid, isArray, isChrome, isEqual, isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean } from '@tubular/util';
+import { DateAndTime, DateTime, DateTimeField, getISOFormatDate, isDate, newDateTimeFormat, Timezone } from '@tubular/time';
+import { abs, ceil, div_tt0, floor, max, min, mod, sign } from '@tubular/math';
+import {
+  clone, convertDigits, convertDigitsToAscii, getFontMetrics, getTextWidth, isAndroid, isArray, isChrome, isEqual,
+  isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean, toNumber
+} from '@tubular/util';
 import { timer } from 'rxjs';
 import { BACKGROUND_ANIMATIONS, DigitSequenceEditorComponent, FORWARD_TAB_DELAY, SequenceItemInfo } from '../digit-sequence-editor/digit-sequence-editor.component';
 
@@ -51,6 +54,7 @@ export const OPTIONS_ISO: TimeEditorOptions = {
   dateTimeSeparator: ISO_T,
   dateTimeStyle: DateTimeStyle.DATE_AND_TIME,
   decimal: '.',
+  numbering: 'latn',
   showSeconds: true,
   timeFieldSeparator: ':',
   twoDigitYear: false
@@ -60,6 +64,8 @@ export const OPTIONS_ISO_DATE: TimeEditorOptions = {
   dateFieldOrder: DateFieldOrder.YMD,
   dateFieldSeparator: '-',
   dateTimeStyle: DateTimeStyle.DATE_ONLY,
+  numbering: 'latn',
+  twoDigitYear: false
 };
 
 const namedOptions: Record<string, TimeEditorOptions> = {
@@ -75,6 +81,96 @@ const TIME_EDITOR_VALUE_ACCESSOR: any = {
 };
 
 type TimeFormat = 'date' | 'time' | 'datetime-local';
+
+export class TimeEditorLimit {
+  tai?: number;
+  utc?: number;
+  wallTime?: DateAndTime;
+  year?: number;
+
+  constructor(limit: Date | number | string, asLow = false, asTai = false) {
+    if (limit == null || limit === '')
+      limit = asLow ? '-9999' : '9999';
+    else if (isNumber(limit) && abs(limit) < 10000)
+      limit = limit.toString();
+    else if (isDate(limit)) {
+      asTai = false;
+      limit = limit.getTime();
+    }
+    else if (isString(limit) && /^[-+]?\d{5,}$/.test(limit.trim()))
+      limit = toNumber(limit);
+
+    if (isNumber(limit)) {
+      if (asTai) {
+        this.tai = limit;
+        this.utc = new DateTime({ tai: limit }).utcMillis;
+      }
+      else {
+        this.tai = new DateTime(limit).taiMillis;
+        this.utc = limit;
+      }
+
+      this.year = new Date(this.utc).getFullYear() + (asLow ? -1 : 1);
+    }
+    else {
+      limit = limit.trim();
+      const dateTime = new DateTime(limit);
+
+      if (!dateTime.valid)
+        throw new Error(`Time limit "${limit}" not valid`);
+
+      if (/\w$/.test(limit)) {
+        this.tai = dateTime.taiMillis;
+        this.utc = dateTime.utcMillis;
+        this.year = dateTime.wallTime.y + (asLow ? -1 : 1);
+      }
+      else if (/^\d$/.test(limit)) {
+        this.year = dateTime.wallTime.y;
+      }
+      else {
+        this.wallTime = dateTime.wallTime;
+
+        if (!limit.includes(':')) {
+          if (!/-[^-]+-/.test(limit))
+            this.wallTime.d = undefined;
+          else
+            this.wallTime.hrs = undefined;
+        }
+        else if (!limit.includes('.'))
+          this.wallTime.millis = undefined;
+        else if (!/:[^:]+:/.test(limit))
+          this.wallTime.sec = undefined;
+
+        this.year = this.wallTime.y + (asLow ? -1 : 1);
+      }
+    }
+  }
+
+  compare(dateTime: DateTime): number {
+    if (this.tai !== null)
+      return sign(this.tai - dateTime.taiMillis);
+
+    const wt = dateTime.wallTime;
+    const diffs = [
+      this.wallTime.y - wt.y,
+      this.wallTime.m - wt.m,
+      this.wallTime.d - wt.d,
+      this.wallTime.hrs - wt.hrs,
+      this.wallTime.min - wt.min,
+      this.wallTime.sec - wt.sec,
+      this.wallTime.millis - wt.millis,
+    ];
+
+    for (const diff of diffs) {
+      if (isNaN(diff))
+        return 0;
+      else if (diff !== 0)
+        return sign(diff);
+    }
+
+    return 0;
+  }
+}
 
 let hasIntl = false;
 let defaultLocale = 'en';
@@ -99,7 +195,7 @@ try {
     defaultLocale = navigator.language;
 }
 catch (e) {
-  defaultLocale = 'en'
+  defaultLocale = 'en';
 }
 
 @Component({
@@ -125,8 +221,10 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   private _gregorianChangeDate = '1582-10-15';
   private localTime: HTMLInputElement;
   private localTimeValue: string;
-  private _maxYear: number;
-  private _minYear: number;
+  private _max: Date | number | string;
+  private maxLimit = new TimeEditorLimit('9999');
+  private _min: Date | number | string;
+  private minLimit = new TimeEditorLimit('-9999');
   private _nativeDateTime = false;
   private onChangeCallback: (_: any) => void = noop;
   private onTouchedCallback: () => void = noop;
@@ -199,8 +297,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   constructor(private cd: ChangeDetectorRef) {
     super();
     this.useAlternateTouchHandling = false;
-    this.originalMinYear = this.minYear = -9999;
-    this.maxYear = 9999;
+    this.originalMinYear = this.minLimit.year;
     this.explicitMinYear = false;
   }
 
@@ -428,37 +525,56 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'viewOnly' : 'normal'));
   }
 
-  get minYear(): number { return this._minYear; }
-  @Input() set minYear(year: number) {
-    if (this._minYear !== year) {
-      this.explicitMinYear = true;
-      this._minYear = this.centuryBase = year;
+  get wallTime(): DateAndTime { return this.dateTime.wallTime; }
+
+  get min(): Date | number | string { return this._min; }
+  @Input() set min(value: Date | number | string) {
+    if (this._min !== value) {
+      this._min = value;
+      this.minLimit = new TimeEditorLimit(value, true, this.tai as boolean);
+
+      if (this.minLimit.wallTime == null && value != null && value !== '') {
+        this.explicitMinYear = true;
+        this.centuryBase = this.minLimit.year;
+      }
+      else
+        this.explicitMinYear = false;
+
       this.adjustLocalTimeMin();
     }
   }
 
-  private adjustLocalTimeMin(): void {
-    if (this.localTimeFormat === 'time')
-      this.localTimeMin = null;
-    else
-      this.localTimeMin = padLeft(max(this._minYear, 1), 4, '0') + '-01-01' + (this.localTimeFormat === 'date' ? '' : 'T00:00');
-
-    this.localTime?.setAttribute('min', this.localTimeMin);
-  }
-
-  get maxYear(): number { return this._maxYear; }
-  @Input() set maxYear(year: number) {
-    if (this._maxYear !== year) {
-      this._maxYear = year;
+  get max(): Date | number | string { return this._max; }
+  @Input() set max(value: Date | number | string) {
+    if (this._max !== value) {
+      this._max = value;
+      this.maxLimit = new TimeEditorLimit(value, false, this.tai as boolean);
       this.adjustLocalTimeMax();
     }
+  }
+
+  private adjustLocalTimeMin(): void {
+    if (this.localTimeFormat === 'time' || (this.minLimit.year == null && this.minLimit.wallTime == null))
+      this.localTimeMin = null;
+    else if (this.minLimit.year != null)
+      this.localTimeMin = padLeft(max(this.minLimit.year, 1), 4, '0') + '-01-01' + (this.localTimeFormat === 'date' ? '' : 'T00:00');
+    else if (this.minLimit.year >= 1)
+      this.localTimeMin = getISOFormatDate(this.minLimit.year, this.minLimit.wallTime.m, this.minLimit.wallTime.d);
+    else
+      this.localTimeMin = '0000-01-01';
+
+    this.localTime?.setAttribute('min', this.localTimeMin);
   }
 
   private adjustLocalTimeMax(): void {
     if (this.localTimeFormat === 'time')
       this.localTimeMax = null;
+    else if (this.maxLimit.year != null)
+      this.localTimeMax = padLeft(this.maxLimit.year, 4, '0') + '-12-31' + (this.localTimeFormat === 'date' ? '' : 'T23:59');
+    else if (this.maxLimit.year >= 1)
+      this.localTimeMax = getISOFormatDate(this.maxLimit.year, this.maxLimit.wallTime.m, this.maxLimit.wallTime.d);
     else
-      this.localTimeMax = padLeft(this._maxYear, 4, '0') + '-12-31' + (this.localTimeFormat === 'date' ? '' : 'T23:59');
+      this.localTimeMax = '0000-01-01';
 
     this.localTime?.setAttribute('max', this.localTimeMax);
   }
@@ -497,17 +613,17 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       if (newValue) {
         let wallTime = this.dateTime.wallTime;
 
-        this.minYear = max(this.originalMinYear, 1);
+        this.min = max(this.originalMinYear, 1).toString();
 
-        if (wallTime.y < this.minYear) {
-          wallTime = { y: this.minYear, m: 1, d: 1, hrs: 0, min: 0, sec: 0 };
+        if (wallTime.y < this.minLimit.year) {
+          wallTime = { y: this.minLimit.year, m: 1, d: 1, hrs: 0, min: 0, sec: 0 };
           this.dateTime.wallTime = wallTime;
           this.doChangeCallback();
           this.updateDigits();
         }
       }
       else
-        this.minYear = this.originalMinYear;
+        this.min = this.originalMinYear.toString();
 
       this.cd.detectChanges();
     }
@@ -788,7 +904,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       if (!this.explicitMinYear)
         this.centuryBase = DateTime.getDefaultCenturyBase();
       else
-        this.centuryBase = this.minYear;
+        this.centuryBase = this.minLimit.year;
     }
 
     if (steps.includes('second'))
@@ -917,12 +1033,12 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     let wallTime = dateTime.wallTime;
     let reUpdate = false;
 
-    if (wallTime.y < this.minYear) {
-      wallTime = { y: this.minYear, m: 1, d: 1, hrs: 0, min: 0, sec: 0 };
+    if (wallTime.y < this.minLimit.year) {
+      wallTime = { y: this.minLimit.year, m: 1, d: 1, hrs: 0, min: 0, sec: 0 };
       reUpdate = true;
     }
-    else if (wallTime.y > this.maxYear) {
-      wallTime = { y: this.maxYear, m: 12, d: 31, hrs: 23, min: 59, sec: 0 };
+    else if (wallTime.y > this.maxLimit.year) {
+      wallTime = { y: this.maxLimit.year, m: 12, d: 31, hrs: 23, min: 59, sec: 0 };
       reUpdate = true;
     }
 
@@ -933,6 +1049,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         this.doChangeCallback();
         this.updateDigits();
       });
+
       return;
     }
 
@@ -1146,14 +1263,14 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const tai = this._tai;
     let change = 0;
     let field = DateTimeField.YEAR;
-    let wallTime = this.dateTime.wallTime;
+    const wallTime = this.dateTime.wallTime;
     const wasNegative = (this.items[this.signIndex]?.value === '-');
     const mDigits = this._options.millisDigits;
 
     if (this.eraIndex >= 0 && sel === this.eraIndex) {
       const newYear = 1 - wallTime.y;
 
-      if (newYear < this.minYear || newYear > this.maxYear) {
+      if (newYear < this.minLimit.year || newYear > this.maxLimit.year) {
         if (updateTime)
           this.errorFlash();
 
@@ -1163,7 +1280,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       change = sign * (newYear - wallTime.y);
     }
     else if (this.signIndex >= 0 && sel === this.signIndex) { // Sign of year
-      if (-wallTime.y < this.minYear || -wallTime.y > this.maxYear) {
+      if (-wallTime.y < this.minLimit.year || -wallTime.y > this.maxLimit.year) {
         if (updateTime)
           this.errorFlash();
 
@@ -1217,9 +1334,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       return;
 
     dateTime.add(field, change * sign);
-    wallTime = dateTime.wallTime;
 
-    if (wallTime.y < this.minYear || wallTime.y > this.maxYear) {
+    if (this.minLimit.compare(dateTime) > 0 || this.maxLimit.compare(dateTime) < 0) {
       if (updateTime)
         this.errorFlash();
 
@@ -1312,7 +1428,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
           extraSec = 10;
       }
 
-      if (wallTime.y < this.minYear || wallTime.y > this.maxYear ||
+      if ((this.minLimit.year != null && wallTime.y < this.minLimit.year) ||
+          (this.maxLimit.year != null && wallTime.y > this.maxLimit.year) ||
           wallTime.m > 19 || wallTime.d > 39 ||
           wallTime.hrs > 29 || wallTime.min > 59 || wallTime.sec > 59 + extraSec || wallTime.millis > 999) {
         i[sel].value = origValue;

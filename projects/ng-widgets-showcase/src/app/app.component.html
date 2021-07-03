@@ -85,6 +85,7 @@
   <label>IANA timezone: <input type="text" autocorrect="off" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"></label>
   <label>Numbering: <input type="text" autocorrect="off" [(ngModel)]="numSystem" [style.background-color]="numSystemGood ? 'inherit' : '#FBC'"></label>
   <div class="wrap">&nbsp;</div>
+
   <select class="line-start" [(ngModel)]="customStyle">
     <option value="0">Date and time</option>
     <option value="1">Date only</option>
@@ -106,12 +107,18 @@
     <option value="2">AM/PM time</option>
   </select>
   <label *ngIf="customStyle !== '1'"><input type="checkbox" [(ngModel)]="showSeconds">Show seconds</label>
+  <div class="wrap">&nbsp;</div>
+
+  <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="minGood ? 'inherit' : '#FBC'"></label>
+  <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="maxGood ? 'inherit' : '#FBC'"></label>
 </div>
 
 <div class='custom-time'>
   &nbsp;<span>{{getCustomCaption()}}</span><br>
 
   <tz-time-editor tai
+      [max]="max"
+      [min]="min"
       [options]="getOptions()"
       [timezone]="customTimezone"
       [(ngModel)]="time"></tz-time-editor><br>
