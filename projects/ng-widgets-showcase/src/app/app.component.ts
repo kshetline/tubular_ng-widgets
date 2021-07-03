@@ -11,6 +11,11 @@ const DisplayNames = (Intl as any).DisplayNames;
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  AD_BC = YearStyle.AD_BC;
+  AM_PM = HourStyle.AM_PM;
+  POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
+  TIME_ONLY = DateTimeStyle.TIME_ONLY;
+
   private _customLocale = 'en-US';
   private _customTimezone = 'America/New_York';
   private _numSystem = '';

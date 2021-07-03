@@ -14,13 +14,13 @@
   <span>&nbsp;</span>
 
   <tz-time-editor tai
-      [options]="['iso', { showSeconds: true }]"
+      [options]="['iso', { showSeconds: true, yearStyle: POSITIVE_ONLY }]"
       timezone="UTC"
       [(ngModel)]="time"></tz-time-editor>
   <span>UTC, in ISO-8601 date/time format</span>
 
   <tz-time-editor tai
-      [options]="{ twoDigitYear: false, yearStyle: 1 }"
+      [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
       [(ngModel)]="time"></tz-time-editor>
   <span>Local with AD/BC</span>
 
@@ -30,7 +30,7 @@
   <span>Local with two-digit year</span>
 
   <tz-time-editor tai
-      [options]="['iso', { dateTimeStyle: 2, millisDigits: 3 }]"
+      [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
       timezone="UTC"
       [(ngModel)]="time"></tz-time-editor>
   <span>UTC time only, with milliseconds</span>
@@ -42,7 +42,7 @@
   <span>Hebrew, forced AM/PM form</span>
 
   <tz-time-editor tai
-      [options]="$any({ locale: 'ar', yearStyle: 1, numbering: 'latn' })"
+      [options]="$any({ locale: 'ar', yearStyle: AD_BC, numbering: 'latn' })"
       timezone="Africa/Cairo"
       [(ngModel)]="time"></tz-time-editor>
   <tz-time-editor tai
@@ -50,7 +50,7 @@
       timezone="Africa/Cairo"
       [(ngModel)]="time"></tz-time-editor>
   <tz-time-editor tai
-      [options]="{ hourStyle: 2, locale: 'he' }"
+      [options]="{ hourStyle: AM_PM, locale: 'he' }"
       timezone="Asia/Jerusalem"
       [(ngModel)]="time"></tz-time-editor>
 
@@ -81,9 +81,9 @@
 </div><br>
 
 <div class='custom-config'>
-  <label>Locale: <input type="text" width="15" [(ngModel)]="customLocale" [style.background-color]="localeGood ? 'inherit' : '#FBC'"></label>
-  <label>IANA timezone: <input type="text" width="15" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"></label>
-  <label>Numbering: <input type="text" width="15" [(ngModel)]="numSystem" [style.background-color]="numSystemGood ? 'inherit' : '#FBC'"></label>
+  <label>Locale: <input type="text" autocorrect="off" [(ngModel)]="customLocale" [style.background-color]="localeGood ? 'inherit' : '#FBC'"></label>
+  <label>IANA timezone: <input type="text" autocorrect="off" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"></label>
+  <label>Numbering: <input type="text" autocorrect="off" [(ngModel)]="numSystem" [style.background-color]="numSystemGood ? 'inherit' : '#FBC'"></label>
   <div class="wrap">&nbsp;</div>
   <select class="line-start" [(ngModel)]="customStyle">
     <option value="0">Date and time</option>

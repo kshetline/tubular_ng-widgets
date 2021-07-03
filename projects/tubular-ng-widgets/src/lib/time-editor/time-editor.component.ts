@@ -49,6 +49,7 @@ export const OPTIONS_ISO: TimeEditorOptions = {
   dateFieldOrder: DateFieldOrder.YMD,
   dateFieldSeparator: '-',
   dateTimeSeparator: ISO_T,
+  dateTimeStyle: DateTimeStyle.DATE_AND_TIME,
   decimal: '.',
   showSeconds: true,
   timeFieldSeparator: ':',
@@ -841,7 +842,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       else
         baselineShift = descent - extraDescent;
 
-      this.baselineShift = (baselineShift / em) + 'em';
+      this.baselineShift = (baselineShift / em / 2) + 'em';
     }
   }
 
