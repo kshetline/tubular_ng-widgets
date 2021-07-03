@@ -16,7 +16,7 @@ export class AppComponent {
   POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;
 
-  private _customLocale = 'en-US';
+  private _customLocale = navigator.language;
   private _customTimezone = 'America/New_York';
   private _numSystem = '';
 
@@ -36,7 +36,7 @@ export class AppComponent {
   set customLocale(newValue: string) {
     if (this._customLocale !== newValue || !this.localeGood) {
       try {
-        new Intl.DateTimeFormat(newValue);
+        newValue && new Intl.DateTimeFormat(newValue);
       }
       catch {
         this.localeGood = false;
@@ -128,12 +128,12 @@ export class AppComponent {
   }
 
   getCustomCaption(lang?: string): string {
-    lang = lang || this.customLocale.toLowerCase().substr(0, 2);
+    lang = lang || this.customLocale.toLowerCase().substr(0, 2) || navigator.language;
 
     let result = '?';
 
     try {
-      result = DisplayNames && new (DisplayNames)(lang, { type: 'language' }).of(this.customLocale);
+      result = DisplayNames && new (DisplayNames)(lang, { type: 'language' }).of(this.customLocale || navigator.language);
     }
     catch {}
 

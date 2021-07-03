@@ -77,6 +77,7 @@ const TIME_EDITOR_VALUE_ACCESSOR: any = {
 type TimeFormat = 'date' | 'time' | 'datetime-local';
 
 let hasIntl = false;
+let defaultLocale = 'en';
 
 try {
   hasIntl = typeof Intl !== 'undefined' && !!Intl?.DateTimeFormat;
@@ -89,6 +90,16 @@ try {
 catch (e) {
   hasIntl = false;
   console.warn('Intl.DateTimeFormat not available: %s', e.message || e.toString());
+}
+
+try {
+  if (typeof process === 'object' && process.env?.LANG)
+    defaultLocale = process.env.LANG.replace(/\..*$/, '').replace(/_/g, '-');
+  if (typeof navigator === 'object' && navigator.language)
+    defaultLocale = navigator.language;
+}
+catch (e) {
+  defaultLocale = 'en'
 }
 
 @Component({
@@ -536,7 +547,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const opts = this._options;
     const hasDate = (opts.dateTimeStyle !== DateTimeStyle.TIME_ONLY);
     const hasTime = (opts.dateTimeStyle !== DateTimeStyle.DATE_ONLY);
-    const locale = opts.locale;
+    const locale = opts.locale || defaultLocale;
     const extendLocale = (l: string): string => l + '-u-ca-gregory' + (opts.numbering ? '-nu-' + opts.numbering : '');
     const localeExt = isArray(locale) ? locale.map(l => extendLocale(l)) : (locale && extendLocale(locale));
     const decimal = opts.decimal ||
@@ -794,13 +805,11 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       convertDigitsToAscii(new Intl.NumberFormat(locale + '-u-nu-' + opts.numbering).format(0), baseDigit);
 
     this.baseDigit = baseDigit[0] ?? '0';
-
-    this.findSizerDigit();
-
+    this.findSizerDigitAndHeight(this.items[this.amPmIndex]?.sizer, this.items[this.eraIndex]?.sizer);
     this.updateDigits();
   }
 
-  private findSizerDigit(): void {
+  private findSizerDigitAndHeight(...textItems: string[]): void {
     this.baselineShift = '0';
     this.lineHeight = undefined;
     this.sizerDigit = this.baseDigit;
@@ -822,6 +831,15 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         maxWidth = width;
         this.sizerDigit = digit;
       }
+
+      extraAscent = max(metrics.extraAscent, extraAscent);
+      extraDescent = max(metrics.extraDescent, extraDescent);
+    }
+
+    const textChars = (textItems ?? []).join('').replace(/\s/g, '').split('');
+
+    for (const ch of textChars) {
+      const metrics = getFontMetrics(this.wrapper, ch);
 
       extraAscent = max(metrics.extraAscent, extraAscent);
       extraDescent = max(metrics.extraDescent, extraDescent);

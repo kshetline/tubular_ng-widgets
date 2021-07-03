@@ -15,6 +15,7 @@
     "importHelpers": true,
     "target": "es2018",
     "module": "es2020",
+    "types": ["jasmine", "node"],
     "lib": [
       "es2020",
       "dom"
