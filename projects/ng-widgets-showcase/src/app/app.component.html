@@ -1,6 +1,6 @@
 <div class="top-grid">
   <tz-time-editor tai
-      [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true }"
+      [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
       [(ngModel)]="time"
       [nativeDateTime]="native"></tz-time-editor>
   <span>Locale time, with occurrence, UTC offset and DST symbol</span>
@@ -20,7 +20,7 @@
   <span>UTC, in ISO-8601 date/time format</span>
 
   <tz-time-editor tai
-      [options]="{ yearStyle: 1 }"
+      [options]="{ twoDigitYear: false, yearStyle: 1 }"
       [(ngModel)]="time"></tz-time-editor>
   <span>Local with AD/BC</span>
 

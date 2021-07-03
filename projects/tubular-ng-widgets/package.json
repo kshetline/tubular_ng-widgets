@@ -8,7 +8,7 @@
   "dependencies": {
     "@tubular/math": "^3.0.2",
     "@tubular/time": "^3.1.0",
-    "@tubular/util": "^4.0.3",
+    "@tubular/util": "^4.2.0",
     "tslib": "^2.1.0"
   }
 }

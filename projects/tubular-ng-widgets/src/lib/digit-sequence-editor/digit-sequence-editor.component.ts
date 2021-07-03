@@ -122,6 +122,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   private _viewOnly = false;
   private warningTimer: Subscription;
 
+  protected emSizer: HTMLElement;
   protected hiddenInput: HTMLInputElement;
   protected lastTabTime = 0;
   protected letterDecrement = 'z';
@@ -134,17 +135,20 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
 
   protected static addFocusOutline = isEdge() || isIOS();
 
+  baselineShift = '0';
   digitHeight = 17;
   displayItems: SequenceItemInfo[] = [];
   displayState = 'normal';
   hasFocus = false;
   items: SequenceItemInfo[] = [];
+  lineHeight: string;
   rtl = false;
   selection = 0;
   smoothedDeltaY = 0;
   useAlternateTouchHandling = false;
 
   @ViewChild('wrapper', { static: true }) private wrapperRef: ElementRef;
+  @ViewChild('emSizer', { static: true }) private emSizerRef: ElementRef;
 
   get viewOnly(): boolean { return this._viewOnly; }
   @Input() set viewOnly(value: boolean) {
@@ -208,6 +212,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.wrapper = this.wrapperRef.nativeElement;
+    this.emSizer = this.emSizerRef.nativeElement;
     this.createDigits();
     this.createDisplayOrder();
     this.createHiddenInput();

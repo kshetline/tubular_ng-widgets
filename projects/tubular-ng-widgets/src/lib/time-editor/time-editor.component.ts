@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, forwardRef, Input, OnInit } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DateAndTime, DateTime, DateTimeField, newDateTimeFormat, Timezone } from '@tubular/time';
-import { abs, div_tt0, floor, max, min, mod } from '@tubular/math';
-import { clone, convertDigits, convertDigitsToAscii, getTextWidth, isAndroid, isArray, isChrome, isEqual, isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean } from '@tubular/util';
+import { abs, ceil, div_tt0, floor, max, min, mod } from '@tubular/math';
+import { clone, convertDigits, convertDigitsToAscii, getFontMetrics, getTextWidth, isAndroid, isArray, isChrome, isEqual, isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean } from '@tubular/util';
 import { timer } from 'rxjs';
 import { BACKGROUND_ANIMATIONS, DigitSequenceEditorComponent, FORWARD_TAB_DELAY, SequenceItemInfo } from '../digit-sequence-editor/digit-sequence-editor.component';
 
@@ -52,6 +52,7 @@ export const OPTIONS_ISO: TimeEditorOptions = {
   decimal: '.',
   showSeconds: true,
   timeFieldSeparator: ':',
+  twoDigitYear: false
 };
 
 export const OPTIONS_ISO_DATE: TimeEditorOptions = {
@@ -799,19 +800,48 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   }
 
   private findSizerDigit(): void {
+    this.baselineShift = '0';
+    this.lineHeight = undefined;
     this.sizerDigit = this.baseDigit;
+
+    if (!this.wrapper || !this.emSizer)
+      return;
 
     const baseCode = this.baseDigit.charCodeAt(0);
     let maxWidth = getTextWidth(this.sizerDigit, this.wrapper);
+    // eslint-disable-next-line prefer-const
+    let { lineHeight, fullAscent, descent, extraAscent, extraDescent } = getFontMetrics(this.wrapper, this.baseDigit);
 
     for (let i = 1; i <= 9; ++i) {
       const digit = String.fromCodePoint(baseCode + i);
       const width = getTextWidth(digit, this.wrapper);
+      const metrics = getFontMetrics(this.wrapper, digit);
 
       if (maxWidth < width) {
         maxWidth = width;
         this.sizerDigit = digit;
       }
+
+      extraAscent = max(metrics.extraAscent, extraAscent);
+      extraDescent = max(metrics.extraDescent, extraDescent);
+    }
+
+    const extraLineHeight = lineHeight + (extraAscent - fullAscent) + (extraDescent - descent);
+
+    if (extraLineHeight > lineHeight) {
+      this.lineHeight = ceil(extraLineHeight / lineHeight * 122) + '%';
+
+      const em = this.emSizer.getBoundingClientRect().width;
+      let baselineShift: number;
+
+      if (extraAscent > fullAscent && extraDescent > descent)
+        baselineShift = (extraAscent - fullAscent) - (extraDescent - descent);
+      else if (extraAscent > fullAscent)
+        baselineShift = extraAscent - fullAscent;
+      else
+        baselineShift = descent - extraDescent;
+
+      this.baselineShift = (baselineShift / em) + 'em';
     }
   }
 

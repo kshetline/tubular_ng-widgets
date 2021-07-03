@@ -18,12 +18,11 @@
 }
 
 .divider {
+  align-self: stretch;
   background-color: #A6A6A6;
-  height: 1.15em;
   margin: 0 max(1px, 0.0836em);
   overflow: hidden;
   position: relative;
-  top: 0.05em;
   white-space: nowrap;
   width: max(1px, 0.0836em);
 }
@@ -34,6 +33,7 @@
   flex-direction: column;
   font-family: Verdana, Arial, sans-serif;
   line-height: 122%;
+  position: relative;
   text-align: center;
   text-decoration: inherit;
   user-select: none;
@@ -62,6 +62,12 @@
   overflow: hidden;
   position: relative;
   white-space: pre;
+}
+
+.backgrounder {
+  height: 100%;
+  position: absolute;
+  width: 100%;
 }
 
 .sized {
@@ -112,4 +118,12 @@
     margin-left: -0.1em;
     margin-right: 0;
   }
+}
+
+.em-sizer {
+  background-color: transparent;
+  color: transparent;
+  height: 0.1px;
+  position: absolute;
+  width: 1em;
 }
