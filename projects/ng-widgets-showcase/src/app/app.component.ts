@@ -14,6 +14,7 @@ export class AppComponent {
   AD_BC = YearStyle.AD_BC;
   AM_PM = HourStyle.AM_PM;
   POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
+  SIGNED = YearStyle.SIGNED;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;
 
   private _customLocale = navigator.language;

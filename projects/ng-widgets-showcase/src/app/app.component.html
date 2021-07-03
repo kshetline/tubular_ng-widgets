@@ -14,10 +14,10 @@
   <span>&nbsp;</span>
 
   <tz-time-editor tai
-      [options]="['iso', { showSeconds: true, yearStyle: POSITIVE_ONLY }]"
+      [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
       timezone="UTC"
       [(ngModel)]="time"></tz-time-editor>
-  <span>UTC, in ISO-8601 date/time format</span>
+  <span>UTC, in signed ISO-8601 date/time format</span>
 
   <tz-time-editor tai
       [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
@@ -25,7 +25,7 @@
   <span>Local with AD/BC</span>
 
   <tz-time-editor tai
-      [options]="{ twoDigitYear: true }"
+      [options]="{ twoDigitYear: true, yearStyle: POSITIVE_ONLY }"
       [(ngModel)]="time"></tz-time-editor>
   <span>Local with two-digit year</span>
 

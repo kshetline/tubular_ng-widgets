@@ -562,13 +562,11 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     this.rtl = RTL_CHECK.test(new Date().toLocaleString(locale, { month: 'long'}));
 
     if (hasDate) {
-      if (opts.yearStyle === YearStyle.SIGNED)
-        dateSteps.push('sign');
-
       let sampleDate = new DateTime('3333-11-22Z', 'UTC', locale).format('IS');
       let dfo = opts.dateFieldOrder ?? DateFieldOrder.PER_LOCALE;
 
-      this.twoDigitYear = opts.twoDigitYear ?? !sampleDate.includes('3333');
+      this.twoDigitYear = opts.yearStyle !== YearStyle.AD_BC && opts.yearStyle !== YearStyle.SIGNED &&
+        (opts.twoDigitYear ?? !sampleDate.includes('3333'));
       this.rtl = this.rtl || RTL_CHECK.test(sampleDate);
       this.rtlMark = this.rtl && sampleDate.includes('\u200F');
       ds = opts.dateFieldSeparator ||
@@ -591,7 +589,9 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         default: dateSteps.push('month', 'ds', 'day', 'ds', 'year');
       }
 
-      if (opts.yearStyle === YearStyle.AD_BC || isArray(opts.yearStyle)) {
+      if (opts.yearStyle === YearStyle.SIGNED)
+        dateSteps.splice(dateSteps.indexOf('year'), 0, 'sign');
+      else if (opts.yearStyle === YearStyle.AD_BC || isArray(opts.yearStyle)) {
         dateSteps.push('era');
 
         if (hasIntl && opts.eraSeparator == null) {
@@ -836,7 +836,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       extraDescent = max(metrics.extraDescent, extraDescent);
     }
 
-    const textChars = (textItems ?? []).join('').replace(/\s/g, '').split('');
+    const textChars = (textItems ?? []).join('').replace(/[\s\xA0\u2000-\u200F]/g, '').split('');
 
     for (const ch of textChars) {
       const metrics = getFontMetrics(this.wrapper, ch);
@@ -941,7 +941,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     if (this.eraIndex >= 0)
       i[this.eraIndex][value] = this.eraStrings[wallTime.y < 1 ? 0 : 1];
     else if (this.signIndex >= 0)
-      i[this.signIndex][value] = (wallTime.y < 0 ? '-' : NO_BREAK_SPACE);
+      i[this.signIndex][value] = (wallTime.y < 0 ? '-' : this.signIndex > 0 ? '+' : NO_BREAK_SPACE);
 
     if (this.yearIndex >= 0) {
       if (this.signIndex < 0 && wallTime.y < 1)
@@ -1236,7 +1236,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       this.updateDigits();
 
       if (sel === this.signIndex && this.dateTime.wallTime.y === 0)
-        this.items[sel].value = (wasNegative ? NO_BREAK_SPACE : '-');
+        this.items[sel].value = (wasNegative ? (sel > 0 ? '+' : NO_BREAK_SPACE) : '-');
     }
     else
       this.updateDigits(dateTime, sign);
@@ -1276,8 +1276,8 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
         return;
       }
       else if (i[this.signIndex].value === '-' && (key === ' ' || key === '+' || key === '='))
-        newValue = NO_BREAK_SPACE;
-      else if (i[this.signIndex].value === NO_BREAK_SPACE && key === '-')
+        newValue = sel > 0 ? '+' : NO_BREAK_SPACE;
+      else if ((i[this.signIndex].value === NO_BREAK_SPACE || i[this.signIndex].value === '+') && key === '-')
         newValue = '-';
     }
     else if (sel === this.amPmIndex) {
