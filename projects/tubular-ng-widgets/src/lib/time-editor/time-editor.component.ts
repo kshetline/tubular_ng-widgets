@@ -137,8 +137,10 @@ export class TimeEditorLimit {
         if (!limit.includes(':')) {
           if (!/-[^-]+-/.test(limit))
             this.wallTime.d = undefined;
-          else
+          else if (!/[\sT]\d+$/i.test(limit))
             this.wallTime.hrs = undefined;
+          else
+            this.wallTime.min = undefined;
         }
         else if (!limit.includes('.'))
           this.wallTime.millis = undefined;
@@ -265,6 +267,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   private _options: TimeEditorOptions = {};
   private readonly originalMinYear: number;
   private rtlMark = false;
+  private settingOutOfRange: any;
   private sizerDigit = '0';
   private _tai = false;
   private twoDigitYear = false;
@@ -1048,15 +1051,15 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
              (y < 1 || (this.twoDigitYear && (y < base || y > base + 99))))) {
       qlass += ' bad-value';
 
-      if (!this.outOfRange)
-        setTimeout(() => this.outOfRange = true);
+      if (!this.outOfRange && !this.settingOutOfRange)
+        this.settingOutOfRange = setTimeout(() => { this.outOfRange = true; this.settingOutOfRange = undefined; });
     }
 
     return qlass?.trim() || null;
   }
 
   private updateDigits(dateTime?: DateTime, delta = 0, selection = -1): void {
-    const programmatic = dateTime === undefined;
+    const programmatic = (dateTime === undefined);
 
     dateTime = dateTime === undefined ? this.dateTime : dateTime;
 
@@ -1320,13 +1323,15 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
     const wallTime = this.dateTime.wallTime;
     const wasNegative = (this.items[this.signIndex]?.value === '-');
     const mDigits = this._options.millisDigits;
-    const maxYear = min(this.maxLimit.year, this.explicitMinYear ? this.centuryBase + 99 : Number.MAX_SAFE_INTEGER);
+    const yearStyle = isArray(this._options.yearStyle) ? YearStyle.AD_BC : this._options.yearStyle;
+    const minYear = max(this.minLimit.year, this.explicitMinYear ? this.centuryBase : [1, -9999, -9999][yearStyle]);
+    const maxYear = min(this.maxLimit.year, this.explicitMinYear ? this.centuryBase + 99 : 9999);
     const wasOutOfRange = this.outOfRange;
 
     if (this.eraIndex >= 0 && sel === this.eraIndex) {
       const newYear = 1 - wallTime.y;
 
-      if (newYear < this.minLimit.year || newYear > maxYear) {
+      if (newYear < minYear || newYear > maxYear) {
         if (updateTime)
           this.errorFlash();
 
@@ -1336,7 +1341,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
       change = sign * (newYear - wallTime.y);
     }
     else if (this.signIndex >= 0 && sel === this.signIndex) { // Sign of year
-      if (-wallTime.y < this.minLimit.year || -wallTime.y > maxYear) {
+      if (-wallTime.y < minYear || -wallTime.y > maxYear) {
         if (updateTime)
           this.errorFlash();
 
@@ -1386,13 +1391,14 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
 
     dateTime.add(field, change * sign);
 
-    if (this.minLimit.compare(dateTime) > 0 || this.maxLimit.compare(dateTime) < 0 || dateTime.wallTime.y > maxYear) {
+    if (this.minLimit.compare(dateTime) > 0 || this.maxLimit.compare(dateTime) < 0 ||
+        dateTime.wallTime.y < minYear || dateTime.wallTime.y > maxYear) {
       if (updateTime)
         this.errorFlash();
       else
         this.updateDigits(null, sign, sel);
 
-      if (!updateTime && !wasOutOfRange)
+      if (!updateTime || !wasOutOfRange)
         return;
     }
 
@@ -1539,19 +1545,23 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
 
       this.dateTime.wallTime = wallTime;
 
-      if (this.minLimit.compare(this.dateTime) > 0)
+      if (this.minLimit.compare(this.dateTime) > 0) {
         this.dateTime.wallTime = this.minLimit.getWallTime(this.dateTime);
+        this.warningFlash();
+      }
       else if (this.maxLimit.compare(this.dateTime) < 0) {
         const max = this.maxLimit.getWallTime(this.dateTime);
+        const md = this._options.millisDigits;
 
         if (!this._options.showSeconds) {
           max.sec = 0;
           max.millis = 0;
         }
-        else if (this._options.millisDigits == null || this._options.millisDigits < 3)
-          max.millis = 0;
+        else if (this._options.millisDigits == null || md < 3)
+          max.millis = floor(max.millis / 10 ** (3 - md)) * 10 ** (3 - md);
 
         this.dateTime.wallTime = max;
+        this.warningFlash();
       }
 
       this.outOfRange = false;

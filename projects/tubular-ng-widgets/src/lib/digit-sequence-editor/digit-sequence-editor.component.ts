@@ -37,7 +37,8 @@ export const FORWARD_TAB_DELAY = 250;
 const FALSE_REPEAT_THRESHOLD = 50;
 const KEY_REPEAT_DELAY = 500;
 const KEY_REPEAT_RATE  = 100;
-const WARNING_DURATION = 5000;
+const FLASH_DURATION = 250;
+const LONG_WARNING_DURATION = 2500;
 
 const DIGIT_SWIPE_THRESHOLD = 6;
 const MAX_DIGIT_SWIPE = 0.9;
@@ -49,7 +50,6 @@ const NO_SELECTION = -1;
 const SPIN_UP      = -2;
 const SPIN_DOWN    = -3;
 
-const FLASH_DURATION = 100;
 const NORMAL_BACKGROUND    = 'white';
 const DISABLED_BACKGROUND  = '#CCC';
 const ERROR_BACKGROUND     = '#F67';
@@ -108,6 +108,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   private _blank = false;
   private clickTimer: Subscription;
   private _disabled = false;
+  private errorTimer: Subscription;
   private firstTouchPoint: Point;
   private focusTimer: any;
   private getCharFromInputEvent = false;
@@ -177,36 +178,6 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     if (this._tabindex !== newValue) {
       this._tabindex = newValue;
       this.adjustState();
-    }
-  }
-
-  protected checkForWarning(): void {
-    if (this.shouldWarn())
-      this.startWarning(); // Start or extend time in warning mode.
-    else
-      this.endWarning();
-  }
-
-  protected shouldWarn(): boolean {
-    return false;
-  }
-
-  protected startWarning(): void {
-    if (this.warningTimer)
-      this.warningTimer.unsubscribe();
-
-    this.displayState = 'warning';
-    this.warningTimer = timer(WARNING_DURATION).subscribe(() => {
-      this.endWarning();
-    });
-  }
-
-  protected endWarning(): void {
-    this.displayState = 'normal';
-
-    if (this.warningTimer) {
-      this.warningTimer.unsubscribe();
-      this.warningTimer = undefined;
     }
   }
 
@@ -373,9 +344,28 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     return false;
   }
 
+  protected warningFlash(longer = false): void {
+    if (this.warningTimer)
+      return;
+
+    if (!this.errorTimer)
+      this.displayState = 'warning';
+
+    this.warningTimer = timer(longer ? LONG_WARNING_DURATION : FLASH_DURATION).subscribe(() => {
+      this.warningTimer = undefined;
+      this.displayState = (this.errorTimer ? 'error' : 'normal');
+    });
+  }
+
   protected errorFlash(): void {
+    if (this.errorTimer)
+      return;
+
     this.displayState = 'error';
-    timer(FLASH_DURATION).subscribe(() => { this.displayState = (this.warningTimer ? 'warning' : 'normal'); });
+    this.errorTimer = timer(FLASH_DURATION).subscribe(() => {
+      this.errorTimer = undefined;
+      this.displayState = (this.warningTimer ? 'warning' : 'normal');
+    });
   }
 
   protected stopKeyTimer(): void {
