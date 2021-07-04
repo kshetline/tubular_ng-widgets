@@ -25,7 +25,7 @@ export class AppComponent {
 
   customCycle = '0';
   customStyle = '0';
-  customYear = '';
+  customYear = 'false';
   localeGood = true;
   maxGood = true;
   minGood = true;
@@ -129,7 +129,7 @@ export class AppComponent {
       if (zone)
         fmt.timeZone = zone;
 
-      result = newDateTimeFormat(locale, fmt).format(dt.utcMillis);
+      result = newDateTimeFormat(locale, fmt).format(dt.epochMillis);
     }
 
     return result;
