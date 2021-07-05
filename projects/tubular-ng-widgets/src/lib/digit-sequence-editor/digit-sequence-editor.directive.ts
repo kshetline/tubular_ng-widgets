@@ -1,5 +1,5 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { abs, max, min, mod, Point, round, sign } from '@tubular/math';
 import {
   eventToKey, getCssValue, isAndroid, isEdge, isIOS, isString, processMillis, toBoolean, toNumber
@@ -86,13 +86,8 @@ const touchListener = (): void => {
 
 document.addEventListener('touchstart', touchListener);
 
-@Component({
-  selector: 'tz-digit-sequence-editor',
-  animations: [BACKGROUND_ANIMATIONS],
-  templateUrl: './digit-sequence-editor.directive.html',
-  styleUrls: ['./digit-sequence-editor.directive.scss']
-})
-export class DigitSequenceEditorDirective implements OnInit, OnDestroy {
+@Directive()
+export abstract class DigitSequenceEditorDirective<T> implements OnInit, OnDestroy {
   addFocusOutline = addFocusOutline;
   disableContentEditable = disableContentEditable;
   SPIN_DOWN = SPIN_DOWN;
@@ -104,6 +99,14 @@ export class DigitSequenceEditorDirective implements OnInit, OnDestroy {
   private static checkForRepeatedKeyTimestamps = isIOS();
 
   static touchHasOccurred = false;
+
+  // Placeholders for the callbacks which are later provided by the Control Value Accessor.
+  private changed = new Array<(value: T) => void>();
+  private touched = new Array<() => void>();
+
+  // Emits the value of the component when the value changes (any time it changes, not just on blur).
+  // eslint-disable-next-line @angular-eslint/no-output-native
+  @Output() private change = new EventEmitter<T>();
 
   private activeSpinner = NO_SELECTION;
   private _blank = false;
@@ -133,6 +136,7 @@ export class DigitSequenceEditorDirective implements OnInit, OnDestroy {
   protected showFocus = false;
   protected swipeIndex = -1;
   protected _tabindex = '0';
+  protected _value: T = null;
   protected wrapper: HTMLElement;
 
   protected static addFocusOutline = isEdge() || isIOS();
@@ -786,11 +790,11 @@ export class DigitSequenceEditorDirective implements OnInit, OnDestroy {
   }
 
   protected increment(): void {
-    this.items[this.selection].value = (<number> this.items[this.selection].value + 1) % 10;
+    this.items[this.selection].value = ((this.items[this.selection].value as number) + 1) % 10;
   }
 
   protected decrement(): void {
-    this.items[this.selection].value = (<number> this.items[this.selection].value + 9) % 10;
+    this.items[this.selection].value = ((this.items[this.selection].value as number) + 9) % 10;
   }
 
   protected digitTyped(charCode: number, _key: string): void {

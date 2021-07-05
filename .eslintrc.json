@@ -124,6 +124,116 @@
       "rules": {
         "@typescript-eslint/explicit-function-return-type": "off"
       }
+    },
+    {
+      "files": [
+        "*.ts"
+      ],
+      "parserOptions": {
+        "project": [
+          "tsconfig.json"
+        ],
+        "createDefaultProgram": true
+      },
+      "extends": [
+        "plugin:@angular-eslint/ng-cli-compat",
+        "plugin:@angular-eslint/ng-cli-compat--formatting-add-on",
+        "plugin:@angular-eslint/template/process-inline-templates"
+      ],
+      "rules": {
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "type": "element",
+            "prefix": [
+              "app",
+              "tz"
+            ],
+            "style": "kebab-case"
+          }
+        ],
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "type": "attribute",
+            "prefix": "app",
+            "style": "camelCase"
+          }
+        ],
+        "arrow-parens": [
+          "off",
+          "always"
+        ],
+        "brace-style": [
+          "error",
+          "stroustrup",
+          {
+            "allowSingleLine": true
+          }
+        ],
+        "curly": "off",
+        "@typescript-eslint/member-ordering": "off",
+        "@typescript-eslint/naming-convention": [
+          "error",
+          {
+            "selector": "default",
+            "format": [
+              "camelCase",
+              "PascalCase",
+              "snake_case",
+              "UPPER_CASE"
+            ],
+            "filter": {
+              "regex": "^alt_.+",
+              "match": false
+            },
+            "leadingUnderscore": "allow"
+          },
+          {
+            "selector": "enumMember",
+            "format": [
+              "camelCase",
+              "PascalCase",
+              "UPPER_CASE"
+            ]
+          },
+          {
+            "selector": "typeLike",
+            "format": [
+              "PascalCase"
+            ]
+          },
+          {
+            "selector": "variable",
+            "format": [
+              "camelCase",
+              "snake_case",
+              "UPPER_CASE"
+            ],
+            "filter": {
+              "regex": "^(Mi)$",
+              "match": false
+            }
+          }
+        ],
+        "@typescript-eslint/no-shadow": [
+          "error",
+          {
+            "allow": ["max", "min", "sign"]
+          }
+        ],
+        "no-underscore-dangle": "off",
+        "prefer-arrow/prefer-arrow-functions": "off"
+      }
+    },
+    {
+      "files": [
+        "*.html"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended"
+      ],
+      "rules": {}
     }
   ]
 }

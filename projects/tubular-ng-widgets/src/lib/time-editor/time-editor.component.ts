@@ -1,10 +1,17 @@
 import { ChangeDetectorRef, Component, forwardRef, Input, OnInit } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { DateAndTime, DateTime, DateTimeField, getISOFormatDate, isDate, newDateTimeFormat, Timezone } from '@tubular/time';
+import {
+  DateAndTime, DateTime, DateTimeField, getISOFormatDate, isDate, newDateTimeFormat, Timezone
+} from '@tubular/time';
 import { abs, ceil, div_tt0, floor, max, min, mod, sign } from '@tubular/math';
-import { clone, convertDigits, convertDigitsToAscii, getFontMetrics, getTextWidth, isAndroid, isArray, isChrome, isEqual, isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean, toNumber } from '@tubular/util';
+import {
+  clone, convertDigits, convertDigitsToAscii, getFontMetrics, getTextWidth, isAndroid, isArray, isChrome, isEqual,
+  isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean, toNumber
+} from '@tubular/util';
 import { timer } from 'rxjs';
-import { BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, SequenceItemInfo } from '../digit-sequence-editor/digit-sequence-editor.directive';
+import {
+  BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, SequenceItemInfo
+} from '../digit-sequence-editor/digit-sequence-editor.directive';
 
 export enum DateFieldOrder { PER_LOCALE, YMD, DMY, MDY }
 export enum DateTimeStyle { DATE_AND_TIME, DATE_ONLY, TIME_ONLY }
@@ -240,7 +247,7 @@ catch (e) {
   styleUrls: ['../digit-sequence-editor/digit-sequence-editor.directive.scss', './time-editor.component.scss'],
   providers: [TIME_EDITOR_VALUE_ACCESSOR]
 })
-export class TimeEditorComponent extends DigitSequenceEditorDirective implements ControlValueAccessor, OnInit {
+export class TimeEditorComponent extends DigitSequenceEditorDirective<number> implements ControlValueAccessor, OnInit {
   static get supportsNativeDateTime(): boolean { return platformNativeDateTime; }
 
   private amPmKeys = ['a', 'p'];
@@ -361,12 +368,14 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective implements
             d[4] = w.min;
           }
 
-          newTime = new DateTime({ y: d[0], m: d[1], d: d[2], hrs: d[3], min: d[4], sec: 0 }, this.timezone, this._gregorianChangeDate).utcMillis;
+          newTime = new DateTime({ y: d[0], m: d[1], d: d[2], hrs: d[3], min: d[4], sec: 0 },
+            this.timezone, this._gregorianChangeDate).utcMillis;
         }
         else if (($ = /(\d\d):(\d\d)/.exec(newValue))) {
           const t = $.slice(1).map(n => Number(n));
 
-          newTime = new DateTime({ y: w.y, m: w.m, d: w.d, hrs: t[0], min: t[1], sec: 0 }, this.timezone, this._gregorianChangeDate).utcMillis;
+          newTime = new DateTime({ y: w.y, m: w.m, d: w.d, hrs: t[0], min: t[1], sec: 0 },
+            this.timezone, this._gregorianChangeDate).utcMillis;
         }
       }
       else
@@ -527,7 +536,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective implements
     }
     else if (isString(newValue)) {
       tai = true;
-      newValue = new DateTime(newValue as any as string, this.dateTime.timezone, this.dateTime.locale, this.dateTime.getGregorianChange()).taiMillis;
+      newValue = new DateTime(newValue as any as string, this.dateTime.timezone, this.dateTime.locale,
+        this.dateTime.getGregorianChange()).taiMillis;
     }
 
     if ((tai && this.dateTime.taiMillis !== newValue) || (!tai && this.dateTime.utcMillis !== newValue)) {
@@ -1429,7 +1439,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective implements
 
   protected digitTyped(charCode: number, key: string): void {
     const i = this.items;
-    const origDate = this.dayIndex >= 0 ? <number> i[this.dayIndex].value * 10 + <number> i[this.dayIndex + 1].value : 0;
+    const origDate = this.dayIndex >= 0 ?
+      (i[this.dayIndex].value as number) * 10 + (i[this.dayIndex + 1].value as number) : 0;
     const sel = this.selection;
     const origValue = i[sel].value;
     let newValue: number | string = origValue;
