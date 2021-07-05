@@ -1,17 +1,18 @@
-import { ChangeDetectorRef, Component, forwardRef, Input, OnInit } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ChangeDetectorRef, Component, forwardRef, Injector, Input, OnInit } from '@angular/core';
+import { AbstractControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import {
-  DateAndTime, DateTime, DateTimeField, getISOFormatDate, isDate, newDateTimeFormat, Timezone
+  DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, Timezone
 } from '@tubular/time';
-import { abs, ceil, div_tt0, floor, max, min, mod, sign } from '@tubular/math';
+import { abs, ceil, div_tt0, floor, max, min, mod } from '@tubular/math';
 import {
   clone, convertDigits, convertDigitsToAscii, getFontMetrics, getTextWidth, isAndroid, isArray, isChrome, isEqual,
-  isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean, toNumber
+  isIOS, isNumber, isString, padLeft, repeat, toBoolean
 } from '@tubular/util';
 import { timer } from 'rxjs';
 import {
   BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
+import { sparse, TimeEditorLimit } from './time-editor-limit';
 
 export enum DateFieldOrder { PER_LOCALE, YMD, DMY, MDY }
 export enum DateTimeStyle { DATE_AND_TIME, DATE_ONLY, TIME_ONLY }
@@ -86,134 +87,6 @@ const TIME_EDITOR_VALUE_ACCESSOR: any = {
 
 type TimeFormat = 'date' | 'time' | 'datetime-local';
 
-function sparse(dt: DateAndTime): DateAndTime {
-  const { y, m, d, hrs, min, sec, millis } = dt;
-
-  return { y, m, d, hrs, min, sec, millis };
-}
-
-export class TimeEditorLimit {
-  tai?: number;
-  utc?: number;
-  wallTime?: DateAndTime;
-  year?: number;
-
-  constructor(limit: Date | number | string, private asLow = false, asTai = false) {
-    if (limit == null || limit === '')
-      limit = asLow ? '-9999' : '9999';
-    else if (isNumber(limit) && abs(limit) < 10000)
-      limit = limit.toString();
-    else if (isDate(limit)) {
-      asTai = false;
-      limit = limit.getTime();
-    }
-    else if (isString(limit) && /^[-+]?\d{5,}$/.test(limit.trim()))
-      limit = toNumber(limit);
-
-    if (isNumber(limit)) {
-      if (asTai) {
-        this.tai = limit;
-        this.utc = new DateTime({ tai: limit }).utcMillis;
-      }
-      else {
-        this.tai = new DateTime(limit).taiMillis;
-        this.utc = limit;
-      }
-
-      this.year = new Date(this.utc).getFullYear();
-    }
-    else {
-      limit = limit.trim();
-      const dateTime = new DateTime(limit);
-
-      if (!dateTime.valid)
-        throw new Error(`Time limit "${limit}" not valid`);
-
-      if (/[_a-z]$/i.test(limit)) {
-        this.tai = dateTime.taiMillis;
-        this.utc = dateTime.utcMillis;
-        this.year = dateTime.wallTime.y;
-      }
-      else if (/^[\d]+$/.test(limit)) {
-        this.year = dateTime.wallTime.y;
-        this.wallTime = { y : this.year };
-      }
-      else {
-        this.wallTime = sparse(dateTime.wallTime);
-
-        if (!limit.includes(':')) {
-          if (!/-[^-]+-/.test(limit))
-            this.wallTime.d = undefined;
-          else if (!/[\sT]\d+$/i.test(limit))
-            this.wallTime.hrs = undefined;
-          else
-            this.wallTime.min = undefined;
-        }
-        else if (!limit.includes('.'))
-          this.wallTime.millis = undefined;
-        else if (!/:[^:]+:/.test(limit))
-          this.wallTime.sec = undefined;
-
-        this.year = this.wallTime.y;
-      }
-
-      if (!this.wallTime)
-        this.wallTime = { y: this.year };
-    }
-  }
-
-  compare(dateTime: DateTime): number {
-    if (this.wallTime == null)
-      return sign(this.tai - dateTime.taiMillis);
-
-    const wt = dateTime.wallTime;
-    const diffs = [
-      this.wallTime.y - wt.y,
-      this.wallTime.m - wt.m,
-      this.wallTime.d - wt.d,
-      this.wallTime.hrs - wt.hrs,
-      this.wallTime.min - wt.min,
-      this.wallTime.sec - wt.sec,
-      this.wallTime.millis - wt.millis,
-    ];
-
-    for (const diff of diffs) {
-      if (isNaN(diff))
-        return 0;
-      else if (diff !== 0)
-        return sign(diff);
-    }
-
-    return 0;
-  }
-
-  getWallTime(dateTime: DateTime): DateAndTime {
-    if (this.wallTime == null)
-      return sparse(dateTime.isTai() ?
-        new DateTime({ tai: this.tai }).wallTime :
-        dateTime.clone().setUtcMillis(this.utc).wallTime);
-
-    dateTime = new DateTime(this.wallTime, Timezone.ZONELESS);
-
-    if (!this.asLow) {
-      if (this.wallTime.m == null)
-        dateTime = dateTime.endOf(DateTimeField.YEAR);
-      else if (this.wallTime.d == null)
-        dateTime = dateTime.endOf(DateTimeField.MONTH);
-      else if (this.wallTime.hrs == null)
-        dateTime = dateTime.endOf(DateTimeField.DAY);
-      else if (this.wallTime.min == null)
-        dateTime = dateTime.endOf(DateTimeField.HOUR);
-      else if (this.wallTime.sec == null)
-        dateTime = dateTime.endOf(DateTimeField.MINUTE);
-      else if (this.wallTime.millis == null)
-        dateTime = dateTime.endOf(DateTimeField.SECOND);
-    }
-
-    return sparse(dateTime.wallTimeShort);
-  }
-}
-
 let hasIntl = false;
 let defaultLocale = 'en';
 
@@ -247,7 +120,7 @@ catch (e) {
   styleUrls: ['../digit-sequence-editor/digit-sequence-editor.directive.scss', './time-editor.component.scss'],
   providers: [TIME_EDITOR_VALUE_ACCESSOR]
 })
-export class TimeEditorComponent extends DigitSequenceEditorDirective<number> implements ControlValueAccessor, OnInit {
+export class TimeEditorComponent extends DigitSequenceEditorDirective<number> implements OnInit {
   static get supportsNativeDateTime(): boolean { return platformNativeDateTime; }
 
   private amPmKeys = ['a', 'p'];
@@ -268,8 +141,6 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   private _min: Date | number | string;
   private minLimit = new TimeEditorLimit('-9999');
   private _nativeDateTime = false;
-  private onChangeCallback: (_: any) => void = noop;
-  private onTouchedCallback: () => void = noop;
   private outOfRange = false;
   private _options: TimeEditorOptions = {};
   private readonly originalMinYear: number;
@@ -295,6 +166,25 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   localTimeFormat: TimeFormat = 'datetime-local';
   localTimeMin: string;
   localTimeMax: string;
+
+  constructor(injector: Injector, private cd: ChangeDetectorRef) {
+    super(injector);
+    this.useAlternateTouchHandling = false;
+    this.originalMinYear = this.minLimit.year;
+    this.explicitMinYear = false;
+  }
+
+  get value(): number { return this._tai ? this.dateTime.taiMillis : this.dateTime.utcMillis; }
+  set value(newValue: number) {
+    this.setValue(newValue, true);
+  }
+
+  protected validateImpl(_value: number, _control?: AbstractControl): { [key: string]: any } {
+    if (this.outOfRange)
+      return { invalid: true }; // TODO: Make more specific with min/max response
+
+    return null;
+  }
 
   get options(): string | TimeEditorOptions | (string | TimeEditorOptions)[] { return this._options; }
   @Input() set options(newValue: string | TimeEditorOptions | (string | TimeEditorOptions)[]) {
@@ -332,20 +222,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
     if (this._tai !== newValue) {
       this._tai = newValue;
-      this.doChangeCallback();
+      this.reportValueChange();
     }
-  }
-
-  constructor(private cd: ChangeDetectorRef) {
-    super();
-    this.useAlternateTouchHandling = false;
-    this.originalMinYear = this.minLimit.year;
-    this.explicitMinYear = false;
-  }
-
-  get value(): number { return this._tai ? this.dateTime.taiMillis : this.dateTime.utcMillis; }
-  set value(newValue: number) {
-    this.setValue(newValue, true);
   }
 
   onLocalTimeChange(): void {
@@ -453,7 +331,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   }
 
   protected lostFocus(): void {
-    this.onTouchedCallback();
+    this.touched();
   }
 
   protected adjustState(): void {
@@ -549,24 +427,12 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.updateDigits();
 
       if (doCallback)
-        this.doChangeCallback();
+        this.reportValueChange();
     }
   }
 
-  private doChangeCallback(): void {
-    this.onChangeCallback(this._tai ? this.dateTime.taiMillis : this.dateTime.utcMillis);
-  }
-
-  registerOnChange(fn: any): void {
-    this.onChangeCallback = fn;
-  }
-
-  registerOnTouched(fn: any): void {
-    this.onTouchedCallback = fn;
-  }
-
   setDisabledState?(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+    super.setDisabledState(isDisabled);
     this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'viewOnly' : 'normal'));
   }
 
@@ -666,7 +532,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         if (wallTime.y < this.minLimit.year) {
           wallTime = { y: this.minLimit.year, m: 1, d: 1, hrs: 0, min: 0, sec: 0 };
           this.dateTime.wallTime = wallTime;
-          this.doChangeCallback();
+          this.reportValueChange();
           this.updateDigits();
         }
       }
@@ -1109,7 +975,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       timer().subscribe(() => {
         this.errorFlash();
         dateTime.wallTime = wallTime;
-        this.doChangeCallback();
+        this.reportValueChange();
         this.updateDigits();
       });
 
@@ -1414,7 +1280,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       else
         this.dateTime.utcMillis = dateTime.utcMillis;
 
-      this.doChangeCallback();
+      this.reportValueChange();
       this.updateDigits(this.dateTime);
 
       if (sel === this.signIndex && this.dateTime.wallTime.y === 0)
@@ -1572,7 +1438,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       }
 
       this.outOfRange = false;
-      this.doChangeCallback();
+      this.reportValueChange();
       this.updateDigits();
 
       if (this.outOfRange)

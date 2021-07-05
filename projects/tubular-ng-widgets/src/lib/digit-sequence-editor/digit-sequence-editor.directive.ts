@@ -1,11 +1,14 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import {
+  AfterViewInit, Directive, ElementRef, EventEmitter, Injector, Input, OnDestroy, OnInit, Output, ViewChild
+} from '@angular/core';
 import { abs, max, min, mod, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isString, processMillis, toBoolean, toNumber
+  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isString, noop, processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
+import { AbstractControl, ControlValueAccessor, Validator } from '@angular/forms';
 
 export interface SequenceItemInfo {
   alt_swipeAbove?: string;
@@ -86,12 +89,35 @@ const touchListener = (): void => {
 
 document.addEventListener('touchstart', touchListener);
 
+export function isNilOrBlank(v: any): boolean {
+  return v == null || v === '';
+}
+
 @Directive()
-export abstract class DigitSequenceEditorDirective<T> implements OnInit, OnDestroy {
+export abstract class DigitSequenceEditorDirective<T> implements
+    AfterViewInit, ControlValueAccessor, OnInit, OnDestroy, Validator {
+  // Template accessibility
+
   addFocusOutline = addFocusOutline;
   disableContentEditable = disableContentEditable;
   SPIN_DOWN = SPIN_DOWN;
   SPIN_UP = SPIN_UP;
+
+  // ControlValueAccessor/Validator-related fields
+
+  private afterViewInit = false;
+  private _disabled = false;
+  private pendingValueChange = false;
+
+  protected changed = noop;
+  protected lastValue: T = null;
+  protected touched = noop;
+  protected valid = true;
+  protected _value: T = null;
+
+  @Output() private valueChange = new EventEmitter<T>();
+
+  // DigitSequenceEditorDirective specifics
 
   private static lastKeyTimestamp = 0;
   private static lastKeyKey = '';
@@ -100,18 +126,8 @@ export abstract class DigitSequenceEditorDirective<T> implements OnInit, OnDestr
 
   static touchHasOccurred = false;
 
-  // Placeholders for the callbacks which are later provided by the Control Value Accessor.
-  private changed = new Array<(value: T) => void>();
-  private touched = new Array<() => void>();
-
-  // Emits the value of the component when the value changes (any time it changes, not just on blur).
-  // eslint-disable-next-line @angular-eslint/no-output-native
-  @Output() private change = new EventEmitter<T>();
-
   private activeSpinner = NO_SELECTION;
-  private _blank = false;
   private clickTimer: Subscription;
-  private _disabled = false;
   private errorTimer: Subscription;
   private firstTouchPoint: Point;
   private focusTimer: any;
@@ -136,7 +152,6 @@ export abstract class DigitSequenceEditorDirective<T> implements OnInit, OnDestr
   protected showFocus = false;
   protected swipeIndex = -1;
   protected _tabindex = '0';
-  protected _value: T = null;
   protected wrapper: HTMLElement;
 
   protected static addFocusOutline = isEdge() || isIOS();
@@ -153,21 +168,56 @@ export abstract class DigitSequenceEditorDirective<T> implements OnInit, OnDestr
   smoothedDeltaY = 0;
   useAlternateTouchHandling = false;
 
-  @ViewChild('wrapper', { static: true }) private wrapperRef: ElementRef;
   @ViewChild('emSizer', { static: true }) private emSizerRef: ElementRef;
+  @ViewChild('wrapper', { static: true }) private wrapperRef: ElementRef;
 
-  get viewOnly(): boolean { return this._viewOnly; }
-  @Input() set viewOnly(value: boolean) {
-    this._viewOnly = value;
-    this.adjustState();
+  protected constructor(protected injector: Injector) {}
+
+  // Angular lifecycle
+
+  ngOnInit(): void {
+    this.wrapper = this.wrapperRef.nativeElement;
+    this.emSizer = this.emSizerRef.nativeElement;
+    this.createDigits();
+    this.createDisplayOrder();
+    this.createHiddenInput();
   }
 
-  get blank(): boolean { return this._blank; }
-  @Input() set blank(value: boolean) {
-    if (this._blank !== value) {
-      this._blank = value;
-    }
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.afterViewInit = true;
+
+      if (this.pendingValueChange) {
+        this.pendingValueChange = false;
+        this.valueHasChanged(true);
+      }
+    });
   }
+
+  ngOnDestroy(): void {
+    this.stopKeyTimer();
+    this.stopClickTimer();
+  }
+
+  // ControlValueAccessor interface
+
+  writeValue(obj: any): void {
+    this.value = obj;
+  }
+
+  registerOnChange(fn: any): void {
+    this.changed = fn;
+  }
+
+  registerOnTouched(fn: any): void {
+    this.touched = fn;
+  }
+
+  setDisabledState?(isDisabled: boolean): void {
+    this.disabled = isDisabled;
+  }
+
+  // ControlValueAccessor support
 
   get disabled(): boolean | string { return this._disabled; }
   @Input() set disabled(value: boolean | string) {
@@ -178,6 +228,64 @@ export abstract class DigitSequenceEditorDirective<T> implements OnInit, OnDestr
     this.adjustState();
   }
 
+  onBlur(): void {
+    this.touched();
+  }
+
+  get value(): T {
+    return this._value;
+  }
+
+  set value(value: T) {
+    if (isNilOrBlank(value) && isNilOrBlank(this._value))
+      return;
+
+    let forceChange = false;
+
+    if (value === undefined) {
+      value = null;
+      forceChange = true;
+    }
+
+    if (this._value !== value) {
+      this._value = value;
+      this.valueHasChanged();
+    }
+    else if (forceChange)
+      this.valueHasChanged(true);
+  }
+
+  protected valueHasChanged(forceChange = false): void {
+    if (forceChange || this.lastValue !== this.value) {
+      this.lastValue = this.value;
+
+      if (this.afterViewInit) {
+        this.reportValueChange();
+        this.valueChange.emit(this.value);
+      }
+      else
+        this.pendingValueChange = true;
+    }
+  }
+
+  protected reportValueChange(): void {
+    this.changed(this.value);
+  }
+
+  // Validator interface
+
+  validate(control?: AbstractControl): { [key: string]: any } {
+    const validation = this.validateImpl(this._value, control);
+    this.valid = !validation;
+    return validation;
+  }
+
+  protected validateImpl(_value: T, _control?: AbstractControl): { [key: string]: any } {
+    return null;
+  }
+
+  // DigitSequenceEditorDirective specifics
+
   get tabindex(): string { return this._tabindex; }
   @Input() set tabindex(newValue: string) {
     if (this._tabindex !== newValue) {
@@ -186,17 +294,10 @@ export abstract class DigitSequenceEditorDirective<T> implements OnInit, OnDestr
     }
   }
 
-  ngOnInit(): void {
-    this.wrapper = this.wrapperRef.nativeElement;
-    this.emSizer = this.emSizerRef.nativeElement;
-    this.createDigits();
-    this.createDisplayOrder();
-    this.createHiddenInput();
-  }
-
-  ngOnDestroy(): void {
-    this.stopKeyTimer();
-    this.stopClickTimer();
+  get viewOnly(): boolean { return this._viewOnly; }
+  @Input() set viewOnly(value: boolean) {
+    this._viewOnly = value;
+    this.adjustState();
   }
 
   protected createDigits(): void {

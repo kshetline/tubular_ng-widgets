@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { DateTime, newDateTimeFormat, Timezone } from '@tubular/time';
 import { isAndroid, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
-import { DateTimeStyle, HourStyle, TimeEditorLimit, TimeEditorOptions, YearStyle }
+import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle }
   from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
+import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const DisplayNames = (Intl as any).DisplayNames;
