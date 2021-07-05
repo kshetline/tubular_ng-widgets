@@ -2,12 +2,6 @@ import { DateAndTime, DateTime, DateTimeField, isDate, Timezone } from '@tubular
 import { isNumber, isString, toNumber } from '@tubular/util';
 import { abs, sign } from '@tubular/math';
 
-export function sparse(dt: DateAndTime): DateAndTime {
-  const { y, m, d, hrs, min, sec, millis } = dt;
-
-  return { y, m, d, hrs, min, sec, millis };
-}
-
 export class TimeEditorLimit {
   tai?: number;
   utc?: number;
@@ -55,7 +49,7 @@ export class TimeEditorLimit {
         this.wallTime = { y : this.year };
       }
       else {
-        this.wallTime = sparse(dateTime.wallTime);
+        this.wallTime = dateTime.wallTimeSparse;
 
         if (!limit.includes(':')) {
           if (!/-[^-]+-/.test(limit))
@@ -105,9 +99,8 @@ export class TimeEditorLimit {
 
   getWallTime(dateTime: DateTime): DateAndTime {
     if (this.wallTime == null)
-      return sparse(dateTime.isTai() ?
-        new DateTime({ tai: this.tai }).wallTime :
-        dateTime.clone().setUtcMillis(this.utc).wallTime);
+      return dateTime.isTai() ? new DateTime({ tai: this.tai }).wallTimeSparse :
+        dateTime.clone().setUtcMillis(this.utc).wallTimeSparse;
 
     dateTime = new DateTime(this.wallTime, Timezone.ZONELESS);
 
@@ -126,6 +119,6 @@ export class TimeEditorLimit {
         dateTime = dateTime.endOf(DateTimeField.SECOND);
     }
 
-    return sparse(dateTime.wallTimeShort);
+    return dateTime.wallTimeSparse;
   }
 }

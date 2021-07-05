@@ -184,7 +184,7 @@
               "UPPER_CASE"
             ],
             "filter": {
-              "regex": "^alt_.+",
+              "regex": "^(alt|intl)_.+",
               "match": false
             },
             "leadingUnderscore": "allow"
@@ -211,7 +211,7 @@
               "UPPER_CASE"
             ],
             "filter": {
-              "regex": "^(Mi)$",
+              "regex": "^((^(alt|intl)_.+)|Mi)$",
               "match": false
             }
           }

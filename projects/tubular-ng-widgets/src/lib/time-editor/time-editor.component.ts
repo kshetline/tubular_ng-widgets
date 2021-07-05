@@ -12,7 +12,7 @@ import { timer } from 'rxjs';
 import {
   BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
-import { sparse, TimeEditorLimit } from './time-editor-limit';
+import { TimeEditorLimit } from './time-editor-limit';
 
 export enum DateFieldOrder { PER_LOCALE, YMD, DMY, MDY }
 export enum DateTimeStyle { DATE_AND_TIME, DATE_ONLY, TIME_ONLY }
@@ -79,12 +79,6 @@ const namedOptions: Record<string, TimeEditorOptions> = {
   iso_date: OPTIONS_ISO_DATE
 };
 
-const TIME_EDITOR_VALUE_ACCESSOR: any = {
-  provide: NG_VALUE_ACCESSOR,
-  useExisting: forwardRef(() => TimeEditorComponent),
-  multi: true
-};
-
 type TimeFormat = 'date' | 'time' | 'datetime-local';
 
 let hasIntl = false;
@@ -106,7 +100,7 @@ catch (e) {
 try {
   if (typeof process === 'object' && process.env?.LANG)
     defaultLocale = process.env.LANG.replace(/\..*$/, '').replace(/_/g, '-');
-  if (typeof navigator === 'object' && navigator.language)
+  else if (typeof navigator === 'object' && navigator.language)
     defaultLocale = navigator.language;
 }
 catch (e) {
@@ -118,7 +112,7 @@ catch (e) {
   animations: [BACKGROUND_ANIMATIONS],
   templateUrl: '../digit-sequence-editor/digit-sequence-editor.directive.html',
   styleUrls: ['../digit-sequence-editor/digit-sequence-editor.directive.scss', './time-editor.component.scss'],
-  providers: [TIME_EDITOR_VALUE_ACCESSOR]
+  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TimeEditorComponent), multi: true }]
 })
 export class TimeEditorComponent extends DigitSequenceEditorDirective<number> implements OnInit {
   static get supportsNativeDateTime(): boolean { return platformNativeDateTime; }
@@ -947,7 +941,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       return;
     }
 
-    let wallTime = sparse(dateTime.wallTime);
+    let wallTime = dateTime.wallTimeSparse;
     let reUpdate = false;
     let outOfRange = false;
 

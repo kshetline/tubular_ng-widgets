@@ -5,8 +5,7 @@ import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle }
   from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
 import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const DisplayNames = (Intl as any).DisplayNames;
+const intl_DisplayNames = (Intl as any).DisplayNames;
 
 @Component({
   selector: 'app-root',
@@ -173,7 +172,8 @@ export class AppComponent {
     let result = '?';
 
     try {
-      result = DisplayNames && new (DisplayNames)(lang, { type: 'language' }).of(this.customLocale || navigator.language);
+      result = intl_DisplayNames &&
+        new (intl_DisplayNames)(lang, { type: 'language' }).of(this.customLocale || navigator.language);
     }
     catch {}
 
