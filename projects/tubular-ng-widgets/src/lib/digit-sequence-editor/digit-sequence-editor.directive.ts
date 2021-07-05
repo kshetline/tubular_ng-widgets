@@ -68,7 +68,8 @@ export const BACKGROUND_ANIMATIONS = trigger('displayState', [
   transition('normal => error',  animate(FLASH_DURATION)),
   transition('error => normal',  animate(FLASH_DURATION)),
   transition('warning => error', animate(FLASH_DURATION)),
-  transition('error => warning', animate(FLASH_DURATION))]);
+  transition('error => warning', animate(FLASH_DURATION))
+]);
 
 const NORMAL_TEXT          = 'black';
 const DISABLED_ARROW_COLOR = '#060';
@@ -79,7 +80,7 @@ const SPINNER_FILL         = '#EEE';
 const VIEW_ONLY_TEXT       = '#0F0';
 
 const touchListener = (): void => {
-  DigitSequenceEditorComponent.touchHasOccurred = true;
+  DigitSequenceEditorDirective.touchHasOccurred = true;
   document.removeEventListener('touchstart', touchListener);
 };
 
@@ -88,10 +89,10 @@ document.addEventListener('touchstart', touchListener);
 @Component({
   selector: 'tz-digit-sequence-editor',
   animations: [BACKGROUND_ANIMATIONS],
-  templateUrl: './digit-sequence-editor.component.html',
-  styleUrls: ['./digit-sequence-editor.component.scss']
+  templateUrl: './digit-sequence-editor.directive.html',
+  styleUrls: ['./digit-sequence-editor.directive.scss']
 })
-export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
+export class DigitSequenceEditorDirective implements OnInit, OnDestroy {
   addFocusOutline = addFocusOutline;
   disableContentEditable = disableContentEditable;
   SPIN_DOWN = SPIN_DOWN;
@@ -236,7 +237,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
   }
 
   protected createHiddenInput(): void {
-    if (!DigitSequenceEditorComponent.useHiddenInput)
+    if (!DigitSequenceEditorDirective.useHiddenInput)
       return;
 
     this.hiddenInput = document.createElement('input');
@@ -588,7 +589,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
 
     if (this.hiddenInput && !this.disabled)
       this.wrapper.style.outline = getCssValue(this.hiddenInput, 'outline');
-    else if (DigitSequenceEditorComponent.addFocusOutline)
+    else if (DigitSequenceEditorDirective.addFocusOutline)
       this.wrapper.style.outline = (newFocus && !this.disabled ? 'rgb(59, 153, 252) solid 1px' : 'black none 0px');
   }
 
@@ -606,9 +607,9 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     // On the other hand, one Android external keyboard I've tested with sends the same timestamp multiple times
     // for legitimately separate keystrokes, so repeated timestamps have to be expected and allowed there.
     //
-    if (DigitSequenceEditorComponent.checkForRepeatedKeyTimestamps &&
-        (abs(evt.timeStamp - DigitSequenceEditorComponent.lastKeyTimestamp) <= FALSE_REPEAT_THRESHOLD &&
-         key === DigitSequenceEditorComponent.lastKeyKey)) {
+    if (DigitSequenceEditorDirective.checkForRepeatedKeyTimestamps &&
+        (abs(evt.timeStamp - DigitSequenceEditorDirective.lastKeyTimestamp) <= FALSE_REPEAT_THRESHOLD &&
+         key === DigitSequenceEditorDirective.lastKeyKey)) {
       evt.preventDefault();
 
       return false;
@@ -620,7 +621,7 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     // noinspection JSDeprecatedSymbols (for `keyCode`)
     if (this.hiddenInput && key === 'Unidentified' && evt.keyCode === 229) {
       this.getCharFromInputEvent = true;
-      DigitSequenceEditorComponent.lastKeyTimestamp = evt.timeStamp;
+      DigitSequenceEditorDirective.lastKeyTimestamp = evt.timeStamp;
 
       return true;
     }
@@ -638,8 +639,8 @@ export class DigitSequenceEditorComponent implements OnInit, OnDestroy {
     }
 
     evt.preventDefault();
-    DigitSequenceEditorComponent.lastKeyTimestamp = evt.timeStamp;
-    DigitSequenceEditorComponent.lastKeyKey = key;
+    DigitSequenceEditorDirective.lastKeyTimestamp = evt.timeStamp;
+    DigitSequenceEditorDirective.lastKeyKey = key;
 
     return false;
   }

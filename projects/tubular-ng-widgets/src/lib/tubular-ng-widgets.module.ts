@@ -3,12 +3,12 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CommonModule } from '@angular/common';
 
-import { DigitSequenceEditorComponent } from './digit-sequence-editor/digit-sequence-editor.component';
+import { DigitSequenceEditorDirective } from './digit-sequence-editor/digit-sequence-editor.directive';
 import { TimeEditorComponent } from './time-editor/time-editor.component';
 
 @NgModule({
   declarations: [
-    DigitSequenceEditorComponent,
+    DigitSequenceEditorDirective,
     TimeEditorComponent
   ],
   imports: [
@@ -17,7 +17,7 @@ import { TimeEditorComponent } from './time-editor/time-editor.component';
     CommonModule
   ],
   exports: [
-    DigitSequenceEditorComponent,
+    DigitSequenceEditorDirective,
     TimeEditorComponent
   ]
 })

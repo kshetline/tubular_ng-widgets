@@ -4,7 +4,7 @@ import { DateAndTime, DateTime, DateTimeField, getISOFormatDate, isDate, newDate
 import { abs, ceil, div_tt0, floor, max, min, mod, sign } from '@tubular/math';
 import { clone, convertDigits, convertDigitsToAscii, getFontMetrics, getTextWidth, isAndroid, isArray, isChrome, isEqual, isIOS, isNumber, isString, noop, padLeft, repeat, toBoolean, toNumber } from '@tubular/util';
 import { timer } from 'rxjs';
-import { BACKGROUND_ANIMATIONS, DigitSequenceEditorComponent, FORWARD_TAB_DELAY, SequenceItemInfo } from '../digit-sequence-editor/digit-sequence-editor.component';
+import { BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, SequenceItemInfo } from '../digit-sequence-editor/digit-sequence-editor.directive';
 
 export enum DateFieldOrder { PER_LOCALE, YMD, DMY, MDY }
 export enum DateTimeStyle { DATE_AND_TIME, DATE_ONLY, TIME_ONLY }
@@ -236,11 +236,11 @@ catch (e) {
 @Component({
   selector: 'tz-time-editor',
   animations: [BACKGROUND_ANIMATIONS],
-  templateUrl: '../digit-sequence-editor/digit-sequence-editor.component.html',
-  styleUrls: ['../digit-sequence-editor/digit-sequence-editor.component.scss', './time-editor.component.scss'],
+  templateUrl: '../digit-sequence-editor/digit-sequence-editor.directive.html',
+  styleUrls: ['../digit-sequence-editor/digit-sequence-editor.directive.scss', './time-editor.component.scss'],
   providers: [TIME_EDITOR_VALUE_ACCESSOR]
 })
-export class TimeEditorComponent extends DigitSequenceEditorComponent implements ControlValueAccessor, OnInit {
+export class TimeEditorComponent extends DigitSequenceEditorDirective implements ControlValueAccessor, OnInit {
   static get supportsNativeDateTime(): boolean { return platformNativeDateTime; }
 
   private amPmKeys = ['a', 'p'];
@@ -267,7 +267,6 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   private _options: TimeEditorOptions = {};
   private readonly originalMinYear: number;
   private rtlMark = false;
-  private settingOutOfRange: any;
   private sizerDigit = '0';
   private _tai = false;
   private twoDigitYear = false;
@@ -669,7 +668,7 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
   }
 
   isNativeDateTimeActive(): boolean {
-    return DigitSequenceEditorComponent.touchHasOccurred && this.nativeDateTime && TimeEditorComponent.supportsNativeDateTime;
+    return DigitSequenceEditorDirective.touchHasOccurred && this.nativeDateTime && TimeEditorComponent.supportsNativeDateTime;
   }
 
   protected createHiddenInput(): void {
@@ -1050,9 +1049,6 @@ export class TimeEditorComponent extends DigitSequenceEditorComponent implements
              this.yearIndex <= item.index && item.index < this.yearIndex + 4 &&
              (y < 1 || (this.twoDigitYear && (y < base || y > base + 99))))) {
       qlass += ' bad-value';
-
-      if (!this.outOfRange && !this.settingOutOfRange)
-        this.settingOutOfRange = setTimeout(() => { this.outOfRange = true; this.settingOutOfRange = undefined; });
     }
 
     return qlass?.trim() || null;
