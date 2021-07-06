@@ -178,6 +178,21 @@ export abstract class DigitSequenceEditorDirective<T> implements
   ngOnInit(): void {
     this.wrapper = this.wrapperRef.nativeElement;
     this.emSizer = this.emSizerRef.nativeElement;
+
+    this.wrapper.addEventListener('copy', evt => {
+      evt.preventDefault();
+
+      const text = this.getClipboardText();
+
+      if (text)
+        evt.clipboardData.setData('text/plain', text);
+    });
+
+    this.wrapper.addEventListener('paste', evt => {
+      evt.preventDefault();
+      this.doPaste(evt.clipboardData.getData('text/plain'));
+    });
+
     this.createDigits();
     this.createDisplayOrder();
     this.createHiddenInput();
@@ -731,9 +746,21 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return true;
     }
 
+    if (/![xcv]/i.test(key) && (evt.ctrlKey || evt.metaKey) && !evt.altKey) {
+      evt.preventDefault();
+
+      if (key.toLowerCase() === 'v')
+        this.doPaste();
+      else
+        this.doCopy();
+
+      return false;
+    }
+
     if (key === 'Tab')
       this.lastTabTime = performance.now();
 
+    // After this point, most modifiers don't make sense, and no function keys are used.
     if (key === 'Tab' || evt.altKey || evt.ctrlKey || evt.metaKey || /^F\d+$/.test(key))
       return true;
 
@@ -748,6 +775,29 @@ export abstract class DigitSequenceEditorDirective<T> implements
     DigitSequenceEditorDirective.lastKeyKey = key;
 
     return false;
+  }
+
+  private doPaste(text?: string): void {
+    if (text)
+      this.applyPastedText(text);
+    else
+      navigator.clipboard.readText().then(txt => this.applyPastedText(txt));
+  }
+
+  protected applyPastedText(_text: string): void {
+    // Default implementation does nothing.
+  }
+
+  private doCopy(): void {
+    const text = this.getClipboardText();
+
+    if (text)
+      navigator.clipboard.writeText(text);
+  }
+
+  protected getClipboardText(): string {
+    // Default implementation does nothing.
+    return null;
   }
 
   onKeyUp(): boolean {
@@ -812,7 +862,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
         break;
 
       case ' ':
-      case 'Enter':
         this.cursorForward();
         break;
 

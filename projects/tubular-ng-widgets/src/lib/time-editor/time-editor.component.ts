@@ -180,6 +180,69 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return null;
   }
 
+  protected applyPastedText(_text: string): void {
+    // Default implementation does nothing.
+  }
+
+  protected getClipboardText(): string {
+    const opts = this._options;
+    const style = opts.dateTimeStyle;
+    const hasDate = style !== DateTimeStyle.TIME_ONLY;
+    const hasTime = style !== DateTimeStyle.DATE_ONLY;
+
+    if (this.outOfRange || !this.dateTime.valid)
+      return 'Invalid ' + (hasDate && hasTime ? 'date/time' : hasDate ? 'date' : 'time');
+
+    let format: string;
+
+    // Copy some styles using ISO format instead of localized format
+    if (opts.dateFieldOrder === DateFieldOrder.YMD || opts.millisDigits > 0) {
+      if (hasDate)
+        format = 'Y-MM-DD';
+
+      if (hasTime) {
+        format += (hasDate ? 'T' : '') + 'HH:mm';
+
+        if (opts.showSeconds || opts.millisDigits > 0)
+          format += ':ss';
+
+        if (opts.millisDigits > 0)
+          format += '.' + 'S'.repeat(opts.millisDigits);
+
+        return this.dateTime.format(format);
+      }
+    }
+
+    format = 'I' + (hasDate && hasTime ? 'SS' : hasDate ? 'S' : 'xS') + '{';
+
+    if (hasDate) {
+      format += ',month:2-digit,day:2-digit';
+
+      if (opts.twoDigitYear !== null)
+        format += ',year:' + (opts.twoDigitYear ? '2-digit' : 'numeric');
+
+      if (opts.yearStyle === YearStyle.AD_BC)
+        format += ',era:short';
+    }
+
+    if (hasTime) {
+      format += ',hour:2-digit,minute:2-digit';
+
+      if (opts.showSeconds)
+        format += ',second:2-digit';
+
+      if (isArray(opts.hourStyle) || opts.hourStyle === HourStyle.AM_PM)
+        format += ',hourCycle:h12';
+      else if (opts.hourStyle === HourStyle.HOURS_24)
+        format += ',hourCycle:h23';
+    }
+
+    format = format.replace('{,', '{') + '}';
+    console.log(format);
+
+    return this.dateTime.format(format);
+  }
+
   get options(): string | TimeEditorOptions | (string | TimeEditorOptions)[] { return this._options; }
   @Input() set options(newValue: string | TimeEditorOptions | (string | TimeEditorOptions)[]) {
     if (isArray(newValue)) {
