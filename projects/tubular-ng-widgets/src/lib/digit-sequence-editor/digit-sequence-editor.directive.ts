@@ -18,6 +18,7 @@ export interface SequenceItemInfo {
   digit?: true;
   divider?: boolean;
   editable?: boolean;
+  format?: string;
   hidden?: boolean;
   index?: number;
   indicator?: boolean;

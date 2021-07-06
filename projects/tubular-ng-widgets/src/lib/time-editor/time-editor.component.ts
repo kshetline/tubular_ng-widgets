@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, forwardRef, Injector, Input, OnInit } from '@angular/core';
 import { AbstractControl, NG_VALUE_ACCESSOR } from '@angular/forms';
-import {
-  DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, Timezone
+import ttime, {
+  DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone
 } from '@tubular/time';
 import { abs, ceil, div_tt0, floor, max, min, mod } from '@tubular/math';
 import {
@@ -13,6 +13,7 @@ import {
   BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
 import { TimeEditorLimit } from './time-editor-limit';
+import parse = ttime.parse;
 
 export enum DateFieldOrder { PER_LOCALE, YMD, DMY, MDY }
 export enum DateTimeStyle { DATE_AND_TIME, DATE_ONLY, TIME_ONLY }
@@ -180,67 +181,30 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return null;
   }
 
-  protected applyPastedText(_text: string): void {
-    // Default implementation does nothing.
+  protected applyPastedText(text: string): void {
+    const parsed = this.parseText(text);
+
+    if (parsed == null)
+      this.errorFlash();
+    else if (isNumber(parsed)) {
+      // const modDate = this.dateTime.clone();
+
+      // modDate.epochMillis = parsed;
+      this.dateTime.epochMillis = parsed;
+      this.outOfRange = false;
+      this.reportValueChange();
+      this.updateDigits();
+    }
+    else {
+      this.dateTime.wallTime = parsed;
+      this.outOfRange = false;
+      this.reportValueChange();
+      this.updateDigits();
+    }
   }
 
   protected getClipboardText(): string {
-    const opts = this._options;
-    const style = opts.dateTimeStyle;
-    const hasDate = style !== DateTimeStyle.TIME_ONLY;
-    const hasTime = style !== DateTimeStyle.DATE_ONLY;
-
-    if (this.outOfRange || !this.dateTime.valid)
-      return 'Invalid ' + (hasDate && hasTime ? 'date/time' : hasDate ? 'date' : 'time');
-
-    let format: string;
-
-    // Copy some styles using ISO format instead of localized format
-    if (opts.dateFieldOrder === DateFieldOrder.YMD || opts.millisDigits > 0) {
-      if (hasDate)
-        format = 'Y-MM-DD';
-
-      if (hasTime) {
-        format += (hasDate ? 'T' : '') + 'HH:mm';
-
-        if (opts.showSeconds || opts.millisDigits > 0)
-          format += ':ss';
-
-        if (opts.millisDigits > 0)
-          format += '.' + 'S'.repeat(opts.millisDigits);
-
-        return this.dateTime.format(format);
-      }
-    }
-
-    format = 'I' + (hasDate && hasTime ? 'SS' : hasDate ? 'S' : 'xS') + '{';
-
-    if (hasDate) {
-      format += ',month:2-digit,day:2-digit';
-
-      if (opts.twoDigitYear !== null)
-        format += ',year:' + (opts.twoDigitYear ? '2-digit' : 'numeric');
-
-      if (opts.yearStyle === YearStyle.AD_BC)
-        format += ',era:short';
-    }
-
-    if (hasTime) {
-      format += ',hour:2-digit,minute:2-digit';
-
-      if (opts.showSeconds)
-        format += ',second:2-digit';
-
-      if (isArray(opts.hourStyle) || opts.hourStyle === HourStyle.AM_PM)
-        format += ',hourCycle:h12';
-      else if (opts.hourStyle === HourStyle.HOURS_24)
-        format += ',hourCycle:h23';
-    }
-
-    format = format.replace('{,', '{') + '}';
-    console.log(format);
-
-    return this.dateTime.format(format);
+    return this.getValueAsText();
   }
 
   get options(): string | TimeEditorOptions | (string | TimeEditorOptions)[] { return this._options; }
@@ -429,7 +393,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     let format: TimeFormat = 'datetime-local';
 
     if (isIOS())
-      format = (this.hourIndex < 0 && index < this.hourIndex ? 'date' : 'time'); // TODO: Handle time first
+      format = (this.hourIndex < 0 && index < this.hourIndex ? 'date' : 'time'); // TODO: Handle time-first formats
 
     if (this.localTimeFormat !== format) {
       // Changing the format of the input (using the "type" attribute) sets off a number of updates
@@ -819,7 +783,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       }
     }
 
-    const addDigits = (n: number): void => repeat(n, () => this.items.push({ value: 0, digit: true, editable: true }));
+    const addDigits = (n: number, format?: string): void =>
+      repeat(n, () => this.items.push({ value: 0, digit: true, editable: true, format }));
 
     for (const step of steps) {
       const i = this.items.length;
@@ -829,53 +794,60 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         case 'era':
           this.items.push({ value: es, static: true, width: '0.25em' });
           this.eraIndex = i + 1;
-          this.items.push({ value: this.eraStrings[1], editable: true, sizer: this.eraStrings.join('\n') });
+          this.items.push({ value: this.eraStrings[1], editable: true, format: 'N', sizer: this.eraStrings.join('\n') });
           break;
         case 'sign':
           this.signIndex = i;
           this.items.push({ value: NO_BREAK_SPACE, editable: true, monospaced: true, sign: true, sizer: '-' });
           break;
         case 'ds': this.items.push({ value: ds, bidi: true, static: true }); break;
-        case 'month': this.monthIndex = i; addDigits(2); break;
-        case 'day': this.dayIndex = i; addDigits(2); break;
+        case 'month': this.monthIndex = i; addDigits(2, 'M'); break;
+        case 'day': this.dayIndex = i; addDigits(2, 'D'); break;
         case 'dts': this.items.push({ value: dts, static: true,
                                       opacity: dts === ISO_T ? 0.15 : 1,
                                       width: dts === NO_BREAK_SPACE ?  '0.6em' : undefined }); break;
-        case 'hour': this.hourIndex = i; addDigits(2); break;
+        case 'hour': this.hourIndex = i; addDigits(2, steps.includes('amPm') ? 'h' : 'H'); break;
         case 'aps': this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' }); break;
         case 'amPm':
           this.amPmIndex = i;
-          this.items.push({ value: this.amPmStrings[0], editable: true, sizer: this.amPmStrings.join('\n') });
+          this.items.push({ value: this.amPmStrings[0], editable: true, format: 'A', sizer: this.amPmStrings.join('\n') });
           break;
         case 'ts': this.items.push({ value: ts, bidi: true, static: true }); break;
-        case 'minute': this.minuteIndex = i; addDigits(2); break;
-        case 'second': this.secondIndex = i; addDigits(2); break;
+        case 'minute': this.minuteIndex = i; addDigits(2, 'm'); break;
+        case 'second': this.secondIndex = i; addDigits(2, 's'); break;
         case 'millis':
           this.items.push({ value: decimal, static: true });
           this.millisIndex = i + 1;
-          addDigits(min(opts.millisDigits, 3)); break;
+          addDigits(min(opts.millisDigits, 3), 'S'); break;
         case 'occ':
           this.occIndex = i;
-          this.items.push({ value: NO_BREAK_SPACE, sizer: OCC2, name: '2occ' });
+          this.items.push({ value: NO_BREAK_SPACE, format: 'r', sizer: OCC2, name: '2occ' });
           break;
         case 'off':
           this.offsetIndex = i;
-          this.items.push({ value: '+00:00', indicator: true, monospaced: true });
+          this.items.push({ value: '+00:00', format: 'Z', indicator: true, monospaced: true });
           break;
         case 'dst':
           this.dstIndex = i;
-          this.items.push({ value: NO_BREAK_SPACE, indicator: true, sizer: '^\n§\n#\n~\n?\n\u2744' });
+          this.items.push({ value: NO_BREAK_SPACE, format: 'v', indicator: true, sizer: '^\n§\n#\n~\n?\n\u2744' });
           break;
       }
     }
 
-    if (this.twoDigitYear && this.yearIndex >= 0) {
-      this.items[this.yearIndex].hidden = this.items[this.yearIndex + 1].hidden = true;
+    if (this.yearIndex >= 0) {
+      if (this.twoDigitYear) {
+        this.items[this.yearIndex].hidden = this.items[this.yearIndex + 1].hidden = true;
+        this.items[this.yearIndex + 2].format = 'YY';
 
-      if (!this.explicitMinYear)
-        this.centuryBase = DateTime.getDefaultCenturyBase();
+        if (!this.explicitMinYear)
+          this.centuryBase = DateTime.getDefaultCenturyBase();
+        else
+          this.centuryBase = this.minLimit.year;
+      }
+      else if (this.eraIndex >= 0)
+        this.items[this.yearIndex].format = 'y';
       else
-        this.centuryBase = this.minLimit.year;
+        this.items[this.yearIndex].format = 'Y';
     }
 
     if (steps.includes('second'))
@@ -1506,5 +1478,62 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
 
     this.cursorForward();
+  }
+
+  getValueAsText(): string {
+    const opts = this._options;
+    const style = opts.dateTimeStyle;
+    const hasDate = style !== DateTimeStyle.TIME_ONLY;
+    const hasTime = style !== DateTimeStyle.DATE_ONLY;
+
+    if (this.outOfRange || !this.dateTime.valid)
+      return 'Invalid ' + (hasDate && hasTime ? 'date/time' : hasDate ? 'date' : 'time');
+
+    return convertDigits(this.dateTime.format(this.getFormat(), opts.locale as string), this.baseDigit);
+  }
+
+  private parseText(s: string): number | DateAndTime {
+    try {
+      return parseISODateTime(s);
+    }
+    catch {}
+
+    const opts = this._options;
+    const style = opts.dateTimeStyle;
+    const hasDate = style !== DateTimeStyle.TIME_ONLY;
+    const hasTime = style !== DateTimeStyle.DATE_ONLY;
+    const formats = [this.getFormat()];
+
+    if (hasDate && hasTime)
+      formats.push('IMM', 'IMS', 'ISM', 'ISS');
+    else if (hasDate)
+      formats.push('IM', 'IS');
+    else
+      formats.push('IxM', 'IxS');
+
+    for (const format of formats) {
+      try {
+        return parse(s, format, this.dateTime.timezone, opts.locale).epochMillis;
+      }
+      catch {}
+    }
+
+    return null;
+  }
+
+  private getFormat(): string {
+    let format = '';
+
+    for (const item of this.items) {
+      if (item.hidden)
+        continue;
+
+      if ((item.editable || item.indicator) && item.format)
+        format += item.format;
+      else if (item.static && item.value != null)
+        format += item.value.toString().replace(/\u200A/g, '').replace(/([a-z])/gi, '[$1]').replace(/\xA0/g, ' ');
+    }
+
+    return format;
   }
 }
