@@ -147,7 +147,7 @@
             "type": "element",
             "prefix": [
               "app",
-              "tz"
+              "tbw"
             ],
             "style": "kebab-case"
           }
@@ -211,7 +211,7 @@
               "UPPER_CASE"
             ],
             "filter": {
-              "regex": "^((^(alt|intl)_.+)|Mi)$",
+              "regex": "^((^(alt|intl)_.+)|Mi|This)$",
               "match": false
             }
           }
@@ -223,7 +223,13 @@
           }
         ],
         "no-underscore-dangle": "off",
-        "prefer-arrow/prefer-arrow-functions": "off"
+        "prefer-arrow/prefer-arrow-functions": "off",
+        "prefer-const": [
+          "error",
+          {
+            "ignoreReadBeforeAssign": true
+          }
+        ]
       }
     },
     {

@@ -1,8 +1,8 @@
 <div class="top-grid">
-  <tz-time-editor tai
+  <tbw-time-editor tai
       [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
       [(ngModel)]="time"
-      [nativeDateTime]="native"></tz-time-editor>
+      [nativeDateTime]="native"></tbw-time-editor>
   <span>Locale time, with occurrence, UTC offset and DST symbol</span>
   <div>
       <button (click)="setCurrentTime()">Set now</button>
@@ -13,26 +13,26 @@
   </div>
   <span>&nbsp;</span>
 
-  <tz-time-editor tai
+  <tbw-time-editor tai
       [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
       timezone="UTC"
-      [(ngModel)]="time"></tz-time-editor>
+      [(ngModel)]="time"></tbw-time-editor>
   <span>UTC, in signed ISO-8601 date/time format</span>
 
-  <tz-time-editor tai
+  <tbw-time-editor tai
       [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
-      [(ngModel)]="time"></tz-time-editor>
+      [(ngModel)]="time"></tbw-time-editor>
   <span>Local with AD/BC</span>
 
-  <tz-time-editor tai
+  <tbw-time-editor tai
       [options]="{ twoDigitYear: true, yearStyle: POSITIVE_ONLY }"
-      [(ngModel)]="time"></tz-time-editor>
+      [(ngModel)]="time"></tbw-time-editor>
   <span>Local with two-digit year</span>
 
-  <tz-time-editor tai
+  <tbw-time-editor tai
       [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
       timezone="UTC"
-      [(ngModel)]="time"></tz-time-editor>
+      [(ngModel)]="time"></tbw-time-editor>
   <span>UTC time only, with milliseconds</span>
 </div><br>
 
@@ -41,18 +41,18 @@
   <span>Arabic, Egypt</span>
   <span>Hebrew, forced AM/PM form</span>
 
-  <tz-time-editor tai
+  <tbw-time-editor tai
       [options]="$any({ locale: 'ar', yearStyle: AD_BC, numbering: 'latn' })"
       timezone="Africa/Cairo"
-      [(ngModel)]="time"></tz-time-editor>
-  <tz-time-editor tai
+      [(ngModel)]="time"></tbw-time-editor>
+  <tbw-time-editor tai
       [options]="{ locale: 'ar-EG' }"
       timezone="Africa/Cairo"
-      [(ngModel)]="time"></tz-time-editor>
-  <tz-time-editor tai
+      [(ngModel)]="time"></tbw-time-editor>
+  <tbw-time-editor tai
       [options]="{ hourStyle: AM_PM, locale: 'he' }"
       timezone="Asia/Jerusalem"
-      [(ngModel)]="time"></tz-time-editor>
+      [(ngModel)]="time"></tbw-time-editor>
 
   <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar', 'Y/MM/DD N hh:mm A')}}</span>
   <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar-EG', 'ISS')}}</span>
@@ -62,18 +62,18 @@
   <span>German</span>
   <span>Chinese</span>
 
-  <tz-time-editor tai
+  <tbw-time-editor tai
       [options]="{ locale: 'bn' }"
       timezone="Asia/Dhaka"
-      [(ngModel)]="time"></tz-time-editor>
-  <tz-time-editor tai
+      [(ngModel)]="time"></tbw-time-editor>
+  <tbw-time-editor tai
       [options]="{ locale: 'de' }"
       timezone="Europe/Berlin"
-      [(ngModel)]="time"></tz-time-editor>
-  <tz-time-editor tai
+      [(ngModel)]="time"></tbw-time-editor>
+  <tbw-time-editor tai
       [options]="{ locale: 'zh' }"
       timezone="Asia/Shanghai"
-      [(ngModel)]="time"></tz-time-editor>
+      [(ngModel)]="time"></tbw-time-editor>
 
   <span class="text-time">{{format('Asia/Dhaka', 'bn', 'DD/MM/Y hh:mm A')}}</span>
   <span class="text-time">{{format('Europe/Berlin', 'de', 'DD.MM.Y, HH:mm')}}</span>
@@ -113,15 +113,18 @@
   <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="maxGood ? 'inherit' : '#FBC'"></label>
 </div>
 
-<div class='custom-time'>
+<form #form="ngForm" class='custom-time'>
   &nbsp;<span>{{getCustomCaption()}}</span><br>
 
-  <tz-time-editor tai
+  <tbw-time-editor #sample [ngModelOptions]="{standalone: true}"
+      tai
       [max]="max"
       [min]="min"
       [options]="getOptions()"
       [timezone]="customTimezone"
-      [(ngModel)]="time"></tz-time-editor><br>
+      [(ngModel)]="time"></tbw-time-editor><br>
 
-  &nbsp;<span class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</span>
-</div>
+  &nbsp;<span class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</span><br>
+  &nbsp;<tbw-form-error-display [control]="sample.control"></tbw-form-error-display><br>
+  &nbsp;<span>{{JSON.stringify(sample?.validate())}}</span>
+</form>

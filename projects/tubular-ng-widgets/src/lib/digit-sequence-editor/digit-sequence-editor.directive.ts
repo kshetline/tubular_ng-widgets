@@ -8,7 +8,7 @@ import {
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
-import { AbstractControl, ControlValueAccessor, Validator } from '@angular/forms';
+import { AbstractControl, AbstractControlDirective, ControlValueAccessor, NgModel, Validator } from '@angular/forms';
 
 export interface SequenceItemInfo {
   alt_swipeAbove?: string;
@@ -145,6 +145,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private _viewOnly = false;
   private warningTimer: Subscription;
 
+  protected _control: AbstractControlDirective;
   protected emSizer: HTMLElement;
   protected hiddenInput: HTMLInputElement;
   protected lastTabTime = 0;
@@ -178,6 +179,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
   // Angular lifecycle
 
   ngOnInit(): void {
+    try {
+      this._control = this.injector.get<NgModel>(NgModel);
+    }
+    catch (err) { /* We'll end up here if [(ngModel)] isn't defined. */ }
+
     this.wrapper = this.wrapperRef.nativeElement;
     this.emSizer = this.emSizerRef.nativeElement;
 
@@ -235,6 +241,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   // ControlValueAccessor support
+
+  get control(): AbstractControlDirective { return this._control; };
 
   get disabled(): boolean | string { return this._disabled; }
   @Input() set disabled(value: boolean | string) {

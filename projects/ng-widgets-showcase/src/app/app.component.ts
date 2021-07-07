@@ -15,6 +15,7 @@ const intl_DisplayNames = (Intl as any).DisplayNames;
 export class AppComponent {
   AD_BC = YearStyle.AD_BC;
   AM_PM = HourStyle.AM_PM;
+  JSON = JSON;
   POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
   SIGNED = YearStyle.SIGNED;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;

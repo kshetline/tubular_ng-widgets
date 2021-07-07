@@ -1,0 +1,5 @@
+<ul class="error-list"
+  *ngIf="shouldShowErrors()">
+  <li class="camp-warn error"
+    *ngFor="let error of listOfErrors()">{{error}}</li>
+</ul>

@@ -109,7 +109,7 @@ catch (e) {
 }
 
 @Component({
-  selector: 'tz-time-editor',
+  selector: 'tbw-time-editor',
   animations: [BACKGROUND_ANIMATIONS],
   templateUrl: '../digit-sequence-editor/digit-sequence-editor.directive.html',
   styleUrls: ['../digit-sequence-editor/digit-sequence-editor.directive.scss', './time-editor.component.scss'],
@@ -138,7 +138,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   private _nativeDateTime = false;
   private outOfRange = false;
   private _options: TimeEditorOptions = {};
-  private readonly originalMinYear: number;
+  private readonly originalMinYear = this.minLimit.year;
   private rtlMark = false;
   private sizerDigit = '0';
   private _tai = false;
@@ -165,8 +165,6 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   constructor(injector: Injector, private cd: ChangeDetectorRef) {
     super(injector);
     this.useAlternateTouchHandling = false;
-    this.originalMinYear = this.minLimit.year;
-    this.explicitMinYear = false;
   }
 
   get value(): number { return this._tai ? this.dateTime.taiMillis : this.dateTime.utcMillis; }
@@ -175,8 +173,20 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   }
 
   protected validateImpl(_value: number, _control?: AbstractControl): { [key: string]: any } {
-    if (this.outOfRange)
+    if (this.outOfRange) {
+      const year = this.dateTime.wallTime.year;
+
+      if (year < this.minYear())
+        return { min: `Year must be at least ${this.minYear()}` };
+      else if (year > this.maxYear())
+        return { max: `Year must not be after ${this.maxYear()}` };
+      else if (this.minLimit.compare(this.dateTime) > 0)
+        return { min: `Date/time must be on or after ${this.minLimit.text}` };
+      else if (this.maxLimit.compare(this.dateTime) < 0)
+        return { max: `Date/time must be on or after ${this.maxLimit.text}` };
+
       return { invalid: true }; // TODO: Make more specific with min/max response
+    }
 
     return null;
   }
@@ -187,10 +197,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     if (parsed == null)
       this.errorFlash();
     else if (isNumber(parsed)) {
-      // const modDate = this.dateTime.clone();
-
-      // modDate.epochMillis = parsed;
-      this.dateTime.epochMillis = parsed;
+      this.dateTime.taiMillis = parsed;
       this.outOfRange = false;
       this.reportValueChange();
       this.updateDigits();
@@ -484,7 +491,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.maxLimit = new TimeEditorLimit(value, false, this.tai as boolean);
       this.outOfRange = false;
       this.adjustLocalTimeMax();
-      setTimeout(() => this.updateDigits());
+      setTimeout(() => { this.updateDigits(); this.valueHasChanged(true); });
     }
   }
 
@@ -944,19 +951,32 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       qlass = super.getClassForItem(item) ?? '';
 
     const y = this.dateTime.wallTime.y;
-    const base = this.centuryBase;
 
     if ((this.outOfRange && item.editable) ||
         ((this.timezone as Timezone).error &&
         ((this.offsetIndex >= 0 && item.index === this.offsetIndex) ||
          (this.dstIndex >= 0 && item.index === this.dstIndex))) ||
-        (this.yearIndex >= 0 && this.signIndex < 0 && this.eraIndex < 0 &&
-             this.yearIndex <= item.index && item.index < this.yearIndex + 4 &&
-             (y < 1 || (this.twoDigitYear && (y < base || y > base + 99))))) {
+        (this.yearIndex <= item.index && item.index < this.yearIndex + 4 && !this.yearInRange(y)))
       qlass += ' bad-value';
-    }
 
     return qlass?.trim() || null;
+  }
+
+  private maxYear(): number {
+    const twoDigitMax = this.twoDigitYear ? this.centuryBase + 99 : Number.MAX_SAFE_INTEGER;
+
+    return min(twoDigitMax, this.maxLimit.year);
+  }
+
+  private minYear(): number {
+    const eraMin = this.eraIndex < 0 ? (this.signIndex < 0 ? 1 : Number.MIN_SAFE_INTEGER) : Number.MIN_SAFE_INTEGER;
+    const twoDigitMin = this.twoDigitYear ? this.centuryBase : Number.MIN_SAFE_INTEGER;
+
+    return max(eraMin, twoDigitMin, this.minLimit.year);
+  }
+
+  private yearInRange(y = this.dateTime.wallTime.y): boolean {
+    return this.minYear() <= y && y <= this.maxYear();
   }
 
   private updateDigits(dateTime?: DateTime, delta = 0, selection = -1): void {
@@ -1224,9 +1244,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     const wallTime = this.dateTime.wallTime;
     const wasNegative = (this.items[this.signIndex]?.value === '-');
     const mDigits = this._options.millisDigits;
-    const yearStyle = isArray(this._options.yearStyle) ? YearStyle.AD_BC : this._options.yearStyle;
-    const minYear = max(this.minLimit.year, this.explicitMinYear ? this.centuryBase : [1, -9999, -9999][yearStyle]);
-    const maxYear = min(this.maxLimit.year, this.explicitMinYear ? this.centuryBase + 99 : 9999);
+    const minYear = this.minYear();
+    const maxYear = this.maxYear();
     const wasOutOfRange = this.outOfRange;
 
     if (this.eraIndex >= 0 && sel === this.eraIndex) {
@@ -1508,16 +1527,12 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
     try {
       if (!zone)
-        return parseISODateTime(s);
+        return parseISODateTime(s, true);
 
       const dt = new DateTime(s, zone);
 
-      if (dt.valid) {
-        if (this.dateTime.timezone.zoneName === 'TAI')
-          return dt.taiMillis;
-        else
-          return dt.utcMillis;
-      }
+      if (dt.valid)
+        return dt.taiMillis;
     }
     catch {}
 
@@ -1527,7 +1542,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     const style = opts.dateTimeStyle;
     const hasDate = style !== DateTimeStyle.TIME_ONLY;
     const hasTime = style !== DateTimeStyle.DATE_ONLY;
-    const formats = [this.getFormat().replace(/\u200F/g, '')];
+    const formats = [this.getFormat().replace(/[rv\u200F]/gi, '')];
 
     // If parsing with a zone offset doesn't work, try without the offset.
     if (formats[0].includes('Z'))
@@ -1542,7 +1557,10 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
     for (const format of formats) {
       try {
-        return parse(s, format, zone, opts.locale).epochMillis;
+        const dt = parse(s, format, zone, opts.locale, true);
+
+        if (dt.valid)
+          return dt.taiMillis;
       }
       catch {}
     }

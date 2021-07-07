@@ -1,9 +1,10 @@
-import { DateAndTime, DateTime, DateTimeField, isDate, Timezone } from '@tubular/time';
+import ttime, { DateAndTime, DateTime, DateTimeField, isDate, Timezone } from '@tubular/time';
 import { isNumber, isString, toNumber } from '@tubular/util';
 import { abs, sign } from '@tubular/math';
 
 export class TimeEditorLimit {
   tai?: number;
+  text: string;
   utc?: number;
   wallTime?: DateAndTime;
   year?: number;
@@ -21,19 +22,23 @@ export class TimeEditorLimit {
       limit = toNumber(limit);
 
     if (isNumber(limit)) {
+      let dt: DateTime;
+
       if (asTai) {
         this.tai = limit;
-        this.utc = new DateTime({ tai: limit }).utcMillis;
+        this.utc = (dt = new DateTime({ tai: limit })).utcMillis;
       }
       else {
-        this.tai = new DateTime(limit).taiMillis;
+        this.tai = (dt = new DateTime(limit)).taiMillis;
         this.utc = limit;
       }
 
+      this.text = dt.format(limit % 1000 === 0 ? ttime.DATETIME_LOCAL_SECONDS : ttime.DATETIME_LOCAL_MS);
       this.year = new Date(this.utc).getFullYear();
     }
     else {
-      limit = limit.trim();
+      this.text = limit = limit.trim();
+
       const dateTime = new DateTime(limit);
 
       if (!dateTime.valid)
