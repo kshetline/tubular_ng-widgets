@@ -621,7 +621,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.rtl = this.rtl || RTL_CHECK.test(sampleDate);
       this.rtlMark = this.rtl && sampleDate.includes('\u200F');
       ds = opts.dateFieldSeparator ||
-        convertDigitsToAscii(sampleDate, baseDigit).replace(/(^\D+)|[\d\s\u2000-\u200F]/g, '').charAt(0) || '/';
+        (/\d(\u200F?\D)\d/.exec(convertDigitsToAscii(sampleDate, baseDigit)) ?? [])[1] || '/';
 
       sampleDate = convertDigitsToAscii(sampleDate);
 
@@ -821,7 +821,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
           addDigits(min(opts.millisDigits, 3), 'S'); break;
         case 'occ':
           this.occIndex = i;
-          this.items.push({ value: NO_BREAK_SPACE, format: 'r', sizer: OCC2, name: '2occ' });
+          this.items.push({ value: NO_BREAK_SPACE, format: 'r', indicator: true, sizer: OCC2, name: '2occ', deltaY: -0.2 });
           break;
         case 'off':
           this.offsetIndex = i;
@@ -1090,7 +1090,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
 
     if (this.occIndex >= 0)
-      i[this.occIndex][value] = (wallTime.occurrence === 2 ? OCC2 : NO_BREAK_SPACE);
+      i[this.occIndex][value] = (dateTime.wallTime.occurrence === 2 ? OCC2 : NO_BREAK_SPACE);
 
     if (this.offsetIndex >= 0)
       i[this.offsetIndex][value] = dateTime.timezone.getFormattedOffset(dateTime.utcMillis);
@@ -1098,10 +1098,10 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     if (this.dstIndex >= 0) {
       if ((this.timezone as Timezone).error)
         i[this.dstIndex][value] = '?';
-      else if (!wallTime.dstOffset)
+      else if (!dateTime.dstOffsetSeconds)
         i[this.dstIndex][value] = NO_BREAK_SPACE;
       else {
-        i[this.dstIndex][value] = Timezone.getDstSymbol(wallTime.dstOffset);
+        i[this.dstIndex][value] = Timezone.getDstSymbol(dateTime.dstOffsetSeconds);
       }
     }
 
@@ -1489,20 +1489,49 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     if (this.outOfRange || !this.dateTime.valid)
       return 'Invalid ' + (hasDate && hasTime ? 'date/time' : hasDate ? 'date' : 'time');
 
-    return convertDigits(this.dateTime.format(this.getFormat(), opts.locale as string), this.baseDigit);
+    return convertDigits(this.dateTime.format(this.getFormat(), opts.locale), this.baseDigit);
   }
 
   private parseText(s: string): number | DateAndTime {
+    s = s.replace(/[§#~?\u2744\u200F]/g, '').trim();
+
+    let zone: string | Timezone;
+    const $ = /(Z|\bTAI|\bUTC?|[+-]\d[0-9:]*)$/i.exec(s);
+
+    if ($) {
+      zone = $[1];
+      s = s.slice(0, -zone.length).trim();
+
+      if (zone === 'Z')
+        zone = 'UTC';
+    }
+
     try {
-      return parseISODateTime(s);
+      if (!zone)
+        return parseISODateTime(s);
+
+      const dt = new DateTime(s, zone);
+
+      if (dt.valid) {
+        if (this.dateTime.timezone.zoneName === 'TAI')
+          return dt.taiMillis;
+        else
+          return dt.utcMillis;
+      }
     }
     catch {}
+
+    zone = zone || this.dateTime.timezone;
 
     const opts = this._options;
     const style = opts.dateTimeStyle;
     const hasDate = style !== DateTimeStyle.TIME_ONLY;
     const hasTime = style !== DateTimeStyle.DATE_ONLY;
-    const formats = [this.getFormat()];
+    const formats = [this.getFormat().replace(/\u200F/g, '')];
+
+    // If parsing with a zone offset doesn't work, try without the offset.
+    if (formats[0].includes('Z'))
+      formats.push(formats[0].replace('Z', ''));
 
     if (hasDate && hasTime)
       formats.push('IMM', 'IMS', 'ISM', 'ISS');
@@ -1513,7 +1542,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
     for (const format of formats) {
       try {
-        return parse(s, format, this.dateTime.timezone, opts.locale).epochMillis;
+        return parse(s, format, zone, opts.locale).epochMillis;
       }
       catch {}
     }
@@ -1533,6 +1562,19 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       else if (item.static && item.value != null)
         format += item.value.toString().replace(/\u200A/g, '').replace(/([a-z])/gi, '[$1]').replace(/\xA0/g, ' ');
     }
+
+    // Restore year/month/day order which might have been previously flipped to deal with right-to-left (RTL) markers.
+    const origFormat = format;
+
+    format = format.replace(/([yY]+)(\u200F[^a-zA-Z]+)(M+)(\u200F[^a-zA-Z]+)(D+)/, '$5$4$3$2$1');
+
+    if (format === origFormat)
+      format = format.replace(/(D+)(\u200F[^a-zA-Z]+)(M+)(\u200F[^a-zA-Z]+)([yY]+)/, '$5$4$3$2$1');
+
+    if (format === origFormat)
+      format = format.replace(/(M+)(\u200F[^a-zA-Z]+)(D+)(\u200F[^a-zA-Z]+)([yY]+)/, '$5$4$3$2$1');
+
+    format = format.replace('rZ', 'RZ');
 
     return format;
   }

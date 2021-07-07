@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { abs, max, min, mod, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isString, noop, processMillis, toBoolean, toNumber
+  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isNumber, isString, noop, processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
@@ -15,6 +15,7 @@ export interface SequenceItemInfo {
   alt_swipeBelow?: string;
   alt_value?: string;
   bidi?: boolean;
+  deltaY?: number;
   digit?: true;
   divider?: boolean;
   editable?: boolean;
@@ -325,6 +326,13 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     this.items.push({ divider: true });
     this.items.push({ spinner: true });
+  }
+
+  filterDisplayChars(value: number | string): number | string {
+    if (isNumber(value))
+      return value;
+    else
+      return value.replace(/\u200F/g, '');
   }
 
   protected createDisplayOrder(): void {
@@ -793,7 +801,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     const text = this.getClipboardText();
 
     if (text)
-      navigator.clipboard.writeText(text);
+      navigator.clipboard.writeText(text).finally(noop);
   }
 
   protected getClipboardText(): string {

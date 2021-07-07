@@ -35,17 +35,17 @@
         [style.bottom]="item.spinner || item.divider ? '0' : baselineShift">&nbsp;</div>
     <span *ngIf="swipeable(item, 1)"
         class="draggable-extra"
-        [style.top]="(-digitHeight + smoothedDeltaY) + 'px'"
+        [style.top]="'calc(' + (-digitHeight + smoothedDeltaY) + 'px + ' + (item.deltaY || 0) + 'em)'"
     >{{item.alt_swipeAbove || item.swipeAbove}}</span>
     <span *ngIf="swipeable(item, -1)"
         class="draggable-extra"
-        [style.top]="(digitHeight + smoothedDeltaY) + 'px'"
+        [style.top]="'calc(' + (digitHeight + smoothedDeltaY) + 'px + ' + (item.deltaY || 0) + 'em)'"
     >{{item.alt_swipeBelow || item.swipeBelow}}</span>
     <span *ngIf="!item.spinner && !item.divider; else dividerOrSpinner"
         class="draggable dse-item-{{item.index}}"
         [class.sized]="!!item.sizer"
-        [style.top]="(swipeable(item, 0) ? smoothedDeltaY : 0) + 'px'"
-    >{{item.alt_value || item.value}}</span>
+        [style.top]="'calc(' + (swipeable(item, 0) ? smoothedDeltaY : 0) + 'px + ' + (item.deltaY || 0) + 'em)'"
+    >{{filterDisplayChars(item.alt_value || item.value)}}</span>
     <span *ngIf="item.sizer"
         class="sizer"
     >{{item.sizer}}</span>
