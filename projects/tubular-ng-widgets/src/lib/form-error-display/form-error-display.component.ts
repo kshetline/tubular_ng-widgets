@@ -38,6 +38,9 @@ export class FormErrorDisplayComponent {
   }
 
   private static getMessage(type: string, params: any): string {
+    if (params.message)
+      return params.message;
+
     const errorFunction = FormErrorDisplayComponent.errorMessages[type];
 
     if (errorFunction)

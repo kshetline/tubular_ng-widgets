@@ -37,7 +37,7 @@ export class TimeEditorLimit {
       this.year = new Date(this.utc).getFullYear();
     }
     else {
-      this.text = limit = limit.trim();
+      this.text = limit = limit.trim().replace(/[-:]$/, '');
 
       const dateTime = new DateTime(limit);
 
@@ -64,10 +64,10 @@ export class TimeEditorLimit {
           else
             this.wallTime.min = undefined;
         }
-        else if (!limit.includes('.'))
-          this.wallTime.millis = undefined;
         else if (!/:[^:]+:/.test(limit))
           this.wallTime.sec = undefined;
+        else if (!limit.includes('.'))
+          this.wallTime.millis = undefined;
 
         this.year = this.wallTime.y;
       }

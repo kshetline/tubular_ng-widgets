@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, forwardRef, Injector, Input, OnInit } from '@angular/core';
-import { AbstractControl, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import ttime, {
   DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone
 } from '@tubular/time';
@@ -113,7 +113,8 @@ catch (e) {
   animations: [BACKGROUND_ANIMATIONS],
   templateUrl: '../digit-sequence-editor/digit-sequence-editor.directive.html',
   styleUrls: ['../digit-sequence-editor/digit-sequence-editor.directive.scss', './time-editor.component.scss'],
-  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TimeEditorComponent), multi: true }]
+  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TimeEditorComponent), multi: true },
+              { provide: NG_VALIDATORS, useExisting: forwardRef(() => TimeEditorComponent), multi: true }]
 })
 export class TimeEditorComponent extends DigitSequenceEditorDirective<number> implements OnInit {
   static get supportsNativeDateTime(): boolean { return platformNativeDateTime; }
@@ -177,13 +178,13 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       const year = this.dateTime.wallTime.year;
 
       if (year < this.minYear())
-        return { min: `Year must be at least ${this.minYear()}` };
+        return { min: { message: `Year must be at least ${this.minYear()}` } };
       else if (year > this.maxYear())
-        return { max: `Year must not be after ${this.maxYear()}` };
+        return { max: { message: `Year must not be after ${this.maxYear()}` } };
       else if (this.minLimit.compare(this.dateTime) > 0)
-        return { min: `Date/time must be on or after ${this.minLimit.text}` };
+        return { min: { message: `Date/time must be on or after ${this.minLimit.text}` } };
       else if (this.maxLimit.compare(this.dateTime) < 0)
-        return { max: `Date/time must be on or after ${this.maxLimit.text}` };
+        return { max: { message: `Date/time must be on or after ${this.maxLimit.text}` } };
 
       return { invalid: true }; // TODO: Make more specific with min/max response
     }
@@ -469,6 +470,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   get min(): Date | number | string { return this._min; }
   @Input() set min(value: Date | number | string) {
     if (this._min !== value) {
+      const before = this.validateImpl(this.value);
+
       this._min = value;
       this.minLimit = new TimeEditorLimit(value, true, this.tai as boolean);
 
@@ -480,18 +483,32 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         this.explicitMinYear = false;
 
       this.adjustLocalTimeMin();
-      setTimeout(() => this.updateDigits());
+      setTimeout(() => {
+        this.updateDigits();
+        const after = this.validateImpl(this.value);
+
+        if (!isEqual(before, after))
+          this.valueHasChanged(true);
+      });
     }
   }
 
   get max(): Date | number | string { return this._max; }
   @Input() set max(value: Date | number | string) {
     if (this._max !== value) {
+      const before = this.validateImpl(this.value);
+
       this._max = value;
       this.maxLimit = new TimeEditorLimit(value, false, this.tai as boolean);
-      this.outOfRange = false;
       this.adjustLocalTimeMax();
-      setTimeout(() => { this.updateDigits(); this.valueHasChanged(true); });
+      this.outOfRange = false;
+      setTimeout(() => {
+        this.updateDigits();
+        const after = this.validateImpl(this.value);
+
+        if (!isEqual(before, after))
+          this.valueHasChanged(true);
+      });
     }
   }
 

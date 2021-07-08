@@ -113,18 +113,16 @@
   <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="maxGood ? 'inherit' : '#FBC'"></label>
 </div>
 
-<form #form="ngForm" class='custom-time'>
+<form #theForm="ngForm" class='custom-time'>
   &nbsp;<span>{{getCustomCaption()}}</span><br>
 
-  <tbw-time-editor #sample [ngModelOptions]="{standalone: true}"
+  <tbw-time-editor #sample="ngModel" name="sample"
       tai
       [max]="max"
       [min]="min"
       [options]="getOptions()"
       [timezone]="customTimezone"
-      [(ngModel)]="time"></tbw-time-editor><br>
-
-  &nbsp;<span class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</span><br>
-  &nbsp;<tbw-form-error-display [control]="sample.control"></tbw-form-error-display><br>
-  &nbsp;<span>{{JSON.stringify(sample?.validate())}}</span>
+      [(ngModel)]="time"></tbw-time-editor>
+ <tbw-form-error-display [control]="sample"></tbw-form-error-display>
+ <div class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</div>
 </form>
