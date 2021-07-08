@@ -39,15 +39,6 @@ export class AppComponent {
   timezoneGood = true;
   yearStyle = '0';
 
-  constructor() {
-    navigator.permissions?.query({ name: 'clipboard-read', allowWithoutGesture: false } as any)
-      .then(perms => console.log('read:', perms.state))
-      .catch(err => console.error(err.message));
-    navigator.permissions?.query({ name: 'clipboard-write', allowWithoutGesture: false } as any)
-      .then(perms => console.log('write:', perms.state))
-      .catch(err => console.error(err.message));
-  }
-
   get customLocale(): string { return this._customLocale; }
   set customLocale(newValue: string) {
     if (this._customLocale !== newValue || !this.localeGood) {

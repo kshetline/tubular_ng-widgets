@@ -671,8 +671,12 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this.hasWrapperFocus !== value) {
       this.hasWrapperFocus = value;
 
-      if (value && this.hiddenInput && !this.hiddenInput.disabled)
-        this.hiddenInput.focus();
+      if (value) {
+        if (this.hiddenInput && !this.hiddenInput.disabled)
+          this.hiddenInput.focus();
+        else
+          this.wrapper.focus(); // Chrome seems to need this redundant focus request to reliably copy/paste.
+      }
 
       this.checkFocus();
     }
