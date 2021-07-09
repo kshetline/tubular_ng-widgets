@@ -5,9 +5,11 @@ import { CommonModule } from '@angular/common';
 
 import { FormErrorDisplayComponent } from './form-error-display/form-error-display.component';
 import { TimeEditorComponent } from './time-editor/time-editor.component';
+import { AngleEditorComponent } from './angle-editor/angle-editor.component';
 
 @NgModule({
   declarations: [
+    AngleEditorComponent,
     FormErrorDisplayComponent,
     TimeEditorComponent
   ],
@@ -17,6 +19,7 @@ import { TimeEditorComponent } from './time-editor/time-editor.component';
     CommonModule
   ],
   exports: [
+    AngleEditorComponent,
     FormErrorDisplayComponent,
     TimeEditorComponent
   ]

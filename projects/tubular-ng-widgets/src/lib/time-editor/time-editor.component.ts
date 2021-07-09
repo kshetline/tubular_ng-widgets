@@ -137,8 +137,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   private _min: Date | number | string;
   private minLimit = new TimeEditorLimit('-9999');
   private _nativeDateTime = false;
-  private outOfRange = false;
   private _options: TimeEditorOptions = {};
+  private outOfRange = false;
   private readonly originalMinYear = this.minLimit.year;
   private rtlMark = false;
   private sizerDigit = '0';
@@ -483,6 +483,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         this.explicitMinYear = false;
 
       this.adjustLocalTimeMin();
+      this.outOfRange = false;
       setTimeout(() => {
         this.updateDigits();
         const after = this.validateImpl(this.value);
@@ -999,7 +1000,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   private updateDigits(dateTime?: DateTime, delta = 0, selection = -1): void {
     const programmatic = (dateTime === undefined);
 
-    dateTime = dateTime === undefined ? this.dateTime : dateTime;
+    dateTime = (dateTime === undefined ? this.dateTime : dateTime);
 
     const i = this.items as any[];
     const value = delta === 0 ? 'value' : delta < 0 ? 'swipeBelow' : 'swipeAbove';
