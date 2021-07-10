@@ -3,7 +3,7 @@ import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/form
 import ttime, {
   DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone
 } from '@tubular/time';
-import { abs, ceil, div_tt0, floor, max, min, mod } from '@tubular/math';
+import { abs, ceil, floor, max, min, mod } from '@tubular/math';
 import {
   clone, convertDigits, convertDigitsToAscii, getFontMetrics, getTextWidth, isAndroid, isArray, isChrome, isEqual,
   isIOS, isNumber, isString, padLeft, repeat, toBoolean
@@ -144,6 +144,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   private sizerDigit = '0';
   private _tai = false;
   private twoDigitYear = false;
+  private yearDigits = 4;
 
   private eraIndex = -1;
   private signIndex = -1;
@@ -643,6 +644,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
       this.twoDigitYear = opts.yearStyle !== YearStyle.AD_BC && opts.yearStyle !== YearStyle.SIGNED &&
         (opts.twoDigitYear ?? !sampleDate.includes('3333'));
+      this.yearDigits = (this.twoDigitYear ? 2 : 4);
       this.rtl = this.rtl || RTL_CHECK.test(sampleDate);
       this.rtlMark = this.rtl && sampleDate.includes('\u200F');
       ds = opts.dateFieldSeparator ||
@@ -815,7 +817,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       const i = this.items.length;
 
       switch (step) {
-        case 'year': this.yearIndex = i; addDigits(4); break;
+        case 'year': this.yearIndex = i; addDigits(this.yearDigits); break;
         case 'era':
           this.items.push({ value: es, static: true, width: '0.25em' });
           this.eraIndex = i + 1;
@@ -861,8 +863,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
     if (this.yearIndex >= 0) {
       if (this.twoDigitYear) {
-        this.items[this.yearIndex].hidden = this.items[this.yearIndex + 1].hidden = true;
-        this.items[this.yearIndex + 2].format = 'YY';
+        this.items[this.yearIndex].format = 'YY';
 
         if (!this.explicitMinYear)
           this.centuryBase = DateTime.getDefaultCenturyBase();
@@ -974,7 +975,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         ((this.timezone as Timezone).error &&
         ((this.offsetIndex >= 0 && item.index === this.offsetIndex) ||
          (this.dstIndex >= 0 && item.index === this.dstIndex))) ||
-        (this.yearIndex <= item.index && item.index < this.yearIndex + 4 && !this.yearInRange(y)))
+        (this.yearIndex <= item.index && item.index < this.yearIndex + this.yearDigits && !this.yearInRange(y)))
       qlass += ' bad-value';
 
     return qlass?.trim() || null;
@@ -1003,13 +1004,12 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     dateTime = (dateTime === undefined ? this.dateTime : dateTime);
 
     const i = this.items as any[];
-    const value = delta === 0 ? 'value' : delta < 0 ? 'swipeBelow' : 'swipeAbove';
-    const alt_value = 'alt_' + value;
-    let j: number;
+    const field = delta === 0 ? 'value' : delta < 0 ? 'swipeBelow' : 'swipeAbove';
+    const alt_field = 'alt_' + field;
 
     if (!dateTime?.valid) {
       if (delta !== 0 && selection >= 0)
-        i[selection][value] = i[selection][alt_value] = NO_BREAK_SPACE;
+        i[selection][field] = i[selection][alt_field] = NO_BREAK_SPACE;
 
       return;
     }
@@ -1052,94 +1052,51 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     let y = abs(wallTime.y);
 
     if (this.eraIndex >= 0)
-      i[this.eraIndex][value] = this.eraStrings[wallTime.y < 1 ? 0 : 1];
+      i[this.eraIndex][field] = this.eraStrings[wallTime.y < 1 ? 0 : 1];
     else if (this.signIndex >= 0)
-      i[this.signIndex][value] = (wallTime.y < 0 ? '-' : this.signIndex > 0 ? '+' : NO_BREAK_SPACE);
+      i[this.signIndex][field] = (wallTime.y < 0 ? '-' : this.signIndex > 0 ? '+' : NO_BREAK_SPACE);
 
     if (this.yearIndex >= 0) {
       if (this.signIndex < 0 && wallTime.y < 1)
         y = 1 - wallTime.y;
 
-      // noinspection JSSuspiciousNameCombination
-      const y4 = div_tt0(y, 1000);
-      const y3 = div_tt0(y - y4 * 1000, 100);
-      const y2 = div_tt0(y - y4 * 1000 - y3 * 100, 10);
-      const y1 = y % 10;
+      if (this.twoDigitYear)
+        y %= 100;
 
-      j = this.yearIndex;
-      [i[j][value], i[j + 1][value], i[j + 2][value], i[j + 3][value]] = [y4, y3, y2, y1];
+      this.setDigits(this.yearIndex, this.yearDigits, y, field);
     }
 
-    if (this.monthIndex >= 0) {
-      const M2 = div_tt0(wallTime.m, 10);
-      const M1 = wallTime.m % 10;
-
-      j = this.monthIndex;
-      [i[j][value], i[j + 1][value]] = [M2, M1];
-    }
-
-    if (this.dayIndex >= 0) {
-      const d2 = div_tt0(wallTime.d, 10);
-      const d1 = wallTime.d % 10;
-
-      j = this.dayIndex;
-      [i[j][value], i[j + 1][value]] = [d2, d1];
-    }
+    this.setDigits(this.monthIndex, 2, wallTime.m, field);
+    this.setDigits(this.dayIndex, 2, wallTime.d, field);
 
     if (this.hourIndex >= 0) {
       let h = wallTime.hrs;
 
       if (this.amPmIndex >= 0) {
-        i[this.amPmIndex][value] = this.amPmStrings[h < 12 ? 0 : 1];
+        i[this.amPmIndex][field] = this.amPmStrings[h < 12 ? 0 : 1];
         h = (h === 0 ? 12 : h <= 12 ? h : h - 12);
       }
 
-      const h2 = div_tt0(h, 10);
-      const h1 = h % 10;
-
-      j = this.hourIndex;
-      [i[j][value], i[j + 1][value]] = [h2, h1];
+      this.setDigits(this.hourIndex, 2, h, field);
     }
 
-    if (this.minuteIndex >= 0) {
-      const m2 = div_tt0(wallTime.min, 10);
-      const m1 = wallTime.min % 10;
-
-      j = this.minuteIndex;
-      [i[j][value], i[j + 1][value]] = [m2, m1];
-    }
-
-    if (this.secondIndex >= 0) {
-      const s2 = div_tt0(wallTime.sec, 10);
-      const s1 = wallTime.sec % 10;
-
-      j = this.secondIndex;
-      [i[j][value], i[j + 1][value]] = [s2, s1];
-    }
-
-    if (this.millisIndex >= 0) {
-      const digits = this._options.millisDigits;
-      let ms = floor(wallTime.millis / 10 ** (digits - 3));
-
-      for (j = this.millisIndex + digits - 1; j >= this.millisIndex; --j) {
-        i[j][value] = ms % 10;
-        ms = floor(ms / 10);
-      }
-    }
+    this.setDigits(this.minuteIndex, 2, wallTime.min, field);
+    this.setDigits(this.secondIndex, 2, wallTime.sec, field);
+    this.setDigits(this.millisIndex, this._options.millisDigits, wallTime.millis, field);
 
     if (this.occIndex >= 0)
-      i[this.occIndex][value] = (dateTime.wallTime.occurrence === 2 ? OCC2 : NO_BREAK_SPACE);
+      i[this.occIndex][field] = (dateTime.wallTime.occurrence === 2 ? OCC2 : NO_BREAK_SPACE);
 
     if (this.offsetIndex >= 0)
-      i[this.offsetIndex][value] = dateTime.timezone.getFormattedOffset(dateTime.utcMillis);
+      i[this.offsetIndex][field] = dateTime.timezone.getFormattedOffset(dateTime.utcMillis);
 
     if (this.dstIndex >= 0) {
       if ((this.timezone as Timezone).error)
-        i[this.dstIndex][value] = '?';
+        i[this.dstIndex][field] = '?';
       else if (!dateTime.dstOffsetSeconds)
-        i[this.dstIndex][value] = NO_BREAK_SPACE;
+        i[this.dstIndex][field] = NO_BREAK_SPACE;
       else {
-        i[this.dstIndex][value] = Timezone.getDstSymbol(dateTime.dstOffsetSeconds);
+        i[this.dstIndex][field] = Timezone.getDstSymbol(dateTime.dstOffsetSeconds);
       }
     }
 
@@ -1148,9 +1105,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         item.sizer = this.sizerDigit;
 
         if (this.baseDigit === '0')
-          (item as any)[alt_value] = undefined;
+          (item as any)[alt_field] = undefined;
         else
-          (item as any)[alt_value] = convertDigits((item as any)[value].toString(), this.baseDigit);
+          (item as any)[alt_field] = convertDigits((item as any)[field].toString(), this.baseDigit);
       }
     });
 
@@ -1177,17 +1134,10 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
   private getWallTimeFromDigits(): DateAndTime {
     const wt = this.dateTime.wallTime;
-    const i = this.items as any as { value: number }[];
     const is = this.items as any as { value: string }[];
     const yi = this.yearIndex;
-    const Mi = this.monthIndex;
-    const di = this.dayIndex;
-    const hi = this.hourIndex;
-    const mi = this.minuteIndex;
-    const si = this.secondIndex;
-    const msi = this.millisIndex;
 
-    let year = yi >= 0 ?  i[yi].value * 1000 + i[yi + 1].value * 100 + i[yi + 2].value * 10 + i[yi + 3].value : wt.y;
+    let year = this.getDigits(yi, this.yearDigits, wt.y);
 
     if (this.twoDigitYear) {
       year = mod(year, 100);
@@ -1199,25 +1149,14 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     else if (yi >= 0 && this.signIndex >= 0 && is[this.signIndex].value === '-')
       year *= -1;
 
-    const month  = Mi >= 0 ? i[Mi].value * 10 + i[Mi + 1].value : wt.m;
-    const date   = di >= 0 ? i[di].value * 10 + i[di + 1].value : wt.d;
-    let   hour   = hi >= 0 ? i[hi].value * 10 + i[hi + 1].value : wt.hrs;
-    const minute = mi >= 0 ? i[mi].value * 10 + i[mi + 1].value : wt.min;
-    const second = si >= 0 ? i[si].value * 10 + i[si + 1].value : wt.sec;
-    let   millis = wt.millis;
+    const month  = this.getDigits(this.monthIndex, 2, wt.m);
+    const date   = this.getDigits(this.dayIndex, 2, wt.d);
+    let   hour   = this.getDigits(this.hourIndex, 2, wt.hrs);
+    const minute = this.getDigits(this.minuteIndex, 2, wt.min);
+    const second = this.getDigits(this.secondIndex, 2, wt.sec);
+    const millis = this.getDigits(this.millisIndex, this._options.millisDigits, wt.millis);
 
-    if (msi >= 0) {
-      millis = 0;
-
-      for (let j = msi; j < msi + this._options.millisDigits; ++j) {
-        millis *= 10;
-        millis += i[j].value;
-      }
-
-      millis *= 10 ** (3 - this._options.millisDigits);
-    }
-
-    if (hi >= 0 && this.amPmIndex >= 0) {
+    if (this.hourIndex >= 0 && this.amPmIndex >= 0) {
       if (is[this.amPmIndex].value === this.amPmStrings[0])
         hour = (hour === 12 ? 0 : min(hour, 12));
       else if (hour !== 12)
@@ -1316,9 +1255,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       field = DateTimeField.MONTH;
       change = (sel === this.monthIndex ? 10 : 1);
     }
-    else if (this.yearIndex >= 0 && this.yearIndex <= sel && sel < this.yearIndex + 4) {
+    else if (this.yearIndex >= 0 && this.yearIndex <= sel && sel < this.yearIndex + this.yearDigits) {
       field = DateTimeField.YEAR;
-      change = 10 ** (3 + this.yearIndex - sel);
+      change = 10 ** (this.yearIndex + this.yearDigits - sel - 1);
     }
 
     if (updateTime)
