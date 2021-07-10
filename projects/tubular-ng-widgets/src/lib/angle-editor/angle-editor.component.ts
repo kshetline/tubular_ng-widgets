@@ -5,7 +5,7 @@ import {
   BACKGROUND_ANIMATIONS, defaultLocale, DigitSequenceEditorDirective, hasIntl, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
 import { timer } from 'rxjs';
-import { abs, floor, round } from '@tubular/math';
+import { abs, ceil, floor, mod, mod2, round } from '@tubular/math';
 
 export enum AngleStyle { DD, DD_MM, DD_MM_SS, DDD, DDD_MM, DDD_MM_SS }
 
@@ -18,6 +18,8 @@ export interface AngleEditorOptions {
   locale?: string | string[];
   minuteMark?: string;
   secondMark?: string;
+  unsigned?: boolean;
+  wrapAround?: boolean;
 }
 
 @Component({
@@ -32,12 +34,14 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
   private angleDivisor = 1;
   private compassPoints: string[];
   private decimals = 0;
+  private flipSign = false;
   private intAngle = 0;
   private leftDigits = 3;
-  private _max: number = Number.MAX_SAFE_INTEGER;
-  private _min: number = Number.MIN_SAFE_INTEGER;
+  private _max: null | number = null;
+  private _min: null | number = null;
   private _options: AngleEditorOptions = {};
   private outOfRange = false;
+  private wrapAround = true;
 
   private compassIndex = -1;
   private decimalIndex = -1;
@@ -106,12 +110,12 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'viewOnly' : 'normal'));
   }
 
-  get min(): number | string { return this._min; }
-  @Input() set min(value: number | string) {
+  get min(): null | number | string { return this._min; }
+  @Input() set min(value: null | number | string) {
     if (this._min !== value) {
       const before = this.validateImpl(this.value);
 
-      this._min = toNumber(value);
+      this._min = (value == null || value === '' ? null : toNumber(value));
 
       setTimeout(() => {
         this.updateDigits();
@@ -123,12 +127,21 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     }
   }
 
-  get max(): Date | number | string { return this._max; }
-  @Input() set max(value: Date | number | string) {
+  protected get minAngle(): number {
+    if (this._min != null)
+      return this._min;
+    else if (this.signIndex < 0 && this.compassIndex < 0)
+      return 0;
+    else
+      return this.leftDigits < 3 ? -90 : -180;
+  }
+
+  get max(): null | number | string { return this._max; }
+  @Input() set max(value: null | number | string) {
     if (this._max !== value) {
       const before = this.validateImpl(this.value);
 
-      this._max = toNumber(value);
+      this._max = (value == null || value === '' ? null : toNumber(value));
 
       this.outOfRange = false;
       setTimeout(() => {
@@ -139,6 +152,15 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
           this.valueHasChanged(true);
       });
     }
+  }
+
+  protected get maxAngle(): number {
+    if (this._max != null)
+      return this._max;
+    else if (this.signIndex < 0 && this.compassIndex < 0)
+      return this.leftDigits < 3 ? 90 : 360 - Number.EPSILON * 1000;
+    else
+      return this.leftDigits < 3 ? 90 : 180 - (this.wrapAround ? Number.EPSILON * 1000 : 0);
   }
 
   protected createDigits(): void {
@@ -159,6 +181,8 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       (hasIntl && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
     const style = opts.angleStyle ?? AngleStyle.DDD_MM_SS;
 
+    this.wrapAround = opts.wrapAround ?? style >= AngleStyle.DDD;
+
     if (isArray(opts.compass))
       this.compassPoints = opts.compass;
     else if (style < AngleStyle.DDD)
@@ -169,7 +193,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     const addDigits = (n: number, format?: string): void =>
       repeat(n, () => this.items.push({ value: 0, digit: true, editable: true, format }));
 
-    if (!opts.compass)
+    if (!opts.compass && !opts.unsigned)
       steps.push('sign');
 
     if (style < AngleStyle.DDD) {
@@ -237,13 +261,20 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     return super.getClassForItem(item);
   }
 
-  private updateDigits(intAngle?: number, delta = 0): void {
+  private updateDigits(intAngle?: number, delta = 0, selection = -1): void {
     const programmatic = (intAngle === undefined);
 
     intAngle = (intAngle === undefined ? this.intAngle : intAngle);
 
-    if (intAngle < this._min || intAngle > this._max) {
-      intAngle = (intAngle < this._min ? this._min : this._max);
+    let angle = intAngle / this.angleDivisor;
+    const field = delta === 0 ? 'value' : delta < 0 ? 'swipeBelow' : 'swipeAbove';
+
+    if (angle < this.minAngle || angle > this.maxAngle) {
+      if (delta !== 0 && selection >= 0)
+        this.items[selection][field] = '\xA0';
+
+      angle = (angle < this.minAngle ? this.minAngle : this.maxAngle);
+      intAngle = floor(angle * this.angleDivisor);
 
       if (!programmatic) {
         timer().subscribe(() => {
@@ -256,7 +287,6 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       }
     }
 
-    const field = delta === 0 ? 'value' : delta < 0 ? 'swipeBelow' : 'swipeAbove';
     const dp = this.decimals;
     let d;
     let m;
@@ -295,10 +325,19 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     this.setDigits(this.secondIndex, 2, s, field);
     this.setDigits(this.decimalIndex, dp, frac, field);
 
-    if (this.signIndex >= 0)
-      this.items[this.signIndex][field] = (intAngle < 0 ? '-' : '+');
-    else if (this.compassIndex >= 0)
-      this.items[this.signIndex][field] = this.compassPoints[intAngle < 0 ? 0 : 1];
+    if (this.signIndex >= 0) {
+      if (this.flipSign && intAngle === 0)
+        this.items[this.signIndex][field] = (this.items[this.signIndex][field] === '-' ? '+' : '-');
+      else
+        this.items[this.signIndex][field] = (intAngle < 0 ? '-' : '+');
+    }
+    else if (this.compassIndex >= 0) {
+      if (this.flipSign && intAngle === 0)
+        this.items[this.compassIndex][field] = (this.items[this.compassIndex][field] === this.compassPoints[0] ?
+          this.compassPoints[1] : this.compassPoints[0]);
+      else
+        this.items[this.compassIndex][field] = this.compassPoints[intAngle < 0 ? 0 : 1];
+    }
   }
 
   private getIntAngleFromDigits(): number {
@@ -311,7 +350,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     intAngle += this.getDigits(this.secondIndex, 2) * (div / 3600);
 
     if (this.signIndex >= 0 && this.items[this.signIndex].value === '-' ||
-        this.compassIndex >= 0 && this.items[this.signIndex].value === this.compassPoints[0])
+        this.compassIndex >= 0 && this.items[this.compassIndex].value === this.compassPoints[0])
       sign = -1;
 
     return sign * intAngle;
@@ -346,8 +385,10 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     let intAngle = this.intAngle;
     const div = this.angleDivisor;
 
-    if (sel === this.signIndex || sel === this.compassIndex)
+    if (sel === this.signIndex || sel === this.compassIndex) {
+      this.flipSign = (intAngle === 0);
       change = -sign * intAngle * 2;
+    }
     else if (this.degreeIndex <= sel && sel < this.degreeIndex + this.leftDigits)
       change = 10 ** (this.degreeIndex - sel + this.leftDigits - 1) * div;
     else if (this.minuteIndex <= sel && sel < this.minuteIndex + 2)
@@ -359,10 +400,29 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
 
     intAngle = intAngle + sign * change;
 
-    if (updateAngle)
-      this.setIntAngle(intAngle);
+    if (intAngle / this.angleDivisor < this.minAngle || intAngle / this.angleDivisor > this.maxAngle) {
+      if (this.wrapAround) {
+        if (this.signIndex < 0 && this.compassIndex < 0)
+          intAngle = mod(intAngle, ceil(this.maxAngle * this.angleDivisor));
+        else
+          intAngle = mod2(intAngle, ceil(this.maxAngle * this.angleDivisor * 2));
 
-    this.updateDigits(intAngle, sign);
+        this.warningFlash(true);
+      }
+      else {
+        if (updateAngle)
+          this.errorFlash();
+
+        return;
+      }
+    }
+
+    if (updateAngle && change !== 0)
+      this.setIntAngle(intAngle);
+    else
+      this.updateDigits(intAngle, updateAngle ? 0 : sign);
+
+    this.flipSign = false;
   }
 
   // protected onKey(key: string): void {
