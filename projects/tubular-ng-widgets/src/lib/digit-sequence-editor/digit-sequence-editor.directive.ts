@@ -317,15 +317,30 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.adjustState();
   }
 
-  protected createDigits(): void {
-    this.selection = 10;
+  protected abstract createDigits(): void;
 
-    for (let i = 0; i <= 10; ++i) {
-      this.items.push({ value: i === 5 ? ':' : i - (i > 5 ? 1 : 0), editable: i !== 5, selected: i === this.selection });
+  protected getDigits(index: number, count: number, defaultValue = 0): number {
+    if (index < 0)
+      return defaultValue;
+
+    let value = 0;
+
+    for (let i = 0; i < count; ++i)
+      value = value * 10 + (this.items[index + i].value as number);
+
+    return value;
+  }
+
+  protected setDigits(index: number, count: number, value: number, field = 'value'): void {
+    if (index < 0)
+      return;
+
+    for (let i = count - 1; i >= 0; --i) {
+      const digit = value % 10;
+
+      this.items[index + i][field] = digit;
+      value = (value - digit) / 10;
     }
-
-    this.items.push({ divider: true });
-    this.items.push({ spinner: true });
   }
 
   filterDisplayChars(value: number | string): number | string {

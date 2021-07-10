@@ -1,4 +1,11 @@
 <div class="top-grid">
+  <div>
+    <tbw-angle-editor></tbw-angle-editor>
+    <tbw-angle-editor [options]="{ angleStyle: 0 }"></tbw-angle-editor>
+    <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 2 }"></tbw-angle-editor>
+  </div>
+  <span>&nbsp;</span>
+
   <tbw-time-editor tai
       [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
       [(ngModel)]="time"
