@@ -7,7 +7,7 @@
     [attr.contenteditable]="!disabled && !disableContentEditable"
     autocomplete="off" autocapitalize="off" autocorrect="off"
     (keydown)="onKeyDown($event)" (keyup)="onKeyUp()" (keypress)="onKeyPress($event)"
-    (focus)="onFocus(true)" (blur)="onFocus(false)"
+    (focus)="onFocus(true, $event)" (blur)="onFocus(false, $event)"
     [style.background-color]="getStaticBackgroundColor()"
     [@displayState]="displayState"
     (mouseleave)="onMouseLeave()"

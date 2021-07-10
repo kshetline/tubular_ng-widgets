@@ -37,6 +37,34 @@ export interface SequenceItemInfo {
   width?: string;
 }
 
+let _hasIntl = false;
+let _defaultLocale = 'en';
+
+try {
+  _hasIntl = typeof Intl !== 'undefined' && !!Intl?.DateTimeFormat;
+
+  if (_hasIntl)
+    Intl.NumberFormat('en').format(1.2);
+  else
+    console.warn('Intl.DateTimeFormat not available');
+}
+catch (e) {
+  _hasIntl = false;
+  console.warn('Intl.DateTimeFormat not available: %s', e.message || e.toString());
+}
+
+try {
+  if (typeof process === 'object' && process.env?.LANG)
+    _defaultLocale = process.env.LANG.replace(/\..*$/, '').replace(/_/g, '-');
+  else if (typeof navigator === 'object' && navigator.language)
+    _defaultLocale = navigator.language;
+}
+catch (e) {
+  _defaultLocale = 'en';
+}
+
+export const hasIntl = _hasIntl;
+export const defaultLocale = _defaultLocale;
 export const FORWARD_TAB_DELAY = 250;
 
 const FALSE_REPEAT_THRESHOLD = 50;
@@ -679,8 +707,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
     return false;
   }
 
-  onFocus(value: boolean): void {
-    if (value && this.viewOnly)
+  ignoreFocus = false;
+
+  onFocus(value: boolean, evt: FocusEvent): void {
+    if (this.ignoreFocus || (value && this.viewOnly))
       return;
 
     if (this.hasWrapperFocus !== value) {
@@ -689,8 +719,15 @@ export abstract class DigitSequenceEditorDirective<T> implements
       if (value) {
         if (this.hiddenInput && !this.hiddenInput.disabled)
           this.hiddenInput.focus();
-        else
-          this.wrapper.focus(); // Chrome seems to need this redundant focus request to reliably copy/paste.
+        else if (evt.relatedTarget !== this.wrapper) {
+          // For some reason Chrome (and only Chrome) requires me to play this silly blur/refocus game
+          // in order to make clipboard copy work reliably.
+          this.ignoreFocus = true;
+          setTimeout(() => {
+            this.wrapper.blur();
+            setTimeout(() => { this.ignoreFocus = false; this.wrapper.focus(); });
+          });
+        }
       }
 
       this.checkFocus();

@@ -2,7 +2,7 @@ import { Component, forwardRef, Injector, Input, OnInit } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { clone, convertDigitsToAscii, isArray, isEqual, repeat, toNumber } from '@tubular/util';
 import {
-  BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, SequenceItemInfo
+  BACKGROUND_ANIMATIONS, defaultLocale, DigitSequenceEditorDirective, hasIntl, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
 import { timer } from 'rxjs';
 import { abs, floor, round } from '@tubular/math';
@@ -18,32 +18,6 @@ export interface AngleEditorOptions {
   locale?: string | string[];
   minuteMark?: string;
   secondMark?: string;
-}
-
-let hasIntl = false;
-let defaultLocale = 'en';
-
-try {
-  hasIntl = typeof Intl !== 'undefined' && !!Intl?.DateTimeFormat;
-
-  if (hasIntl)
-    Intl.NumberFormat('en').format(1.2);
-  else
-    console.warn('Intl.DateTimeFormat not available');
-}
-catch (e) {
-  hasIntl = false;
-  console.warn('Intl.DateTimeFormat not available: %s', e.message || e.toString());
-}
-
-try {
-  if (typeof process === 'object' && process.env?.LANG)
-    defaultLocale = process.env.LANG.replace(/\..*$/, '').replace(/_/g, '-');
-  else if (typeof navigator === 'object' && navigator.language)
-    defaultLocale = navigator.language;
-}
-catch (e) {
-  defaultLocale = 'en';
 }
 
 @Component({

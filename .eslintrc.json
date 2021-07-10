@@ -213,7 +213,8 @@
             "filter": {
               "regex": "^((^(alt|intl)_.+)|Mi|This)$",
               "match": false
-            }
+            },
+            "leadingUnderscore": "allow"
           }
         ],
         "@typescript-eslint/no-shadow": [

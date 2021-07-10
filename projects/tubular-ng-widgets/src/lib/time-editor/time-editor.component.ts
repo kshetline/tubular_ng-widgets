@@ -10,7 +10,7 @@ import {
 } from '@tubular/util';
 import { timer } from 'rxjs';
 import {
-  BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, SequenceItemInfo
+  BACKGROUND_ANIMATIONS, defaultLocale, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, hasIntl, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
 import { TimeEditorLimit } from './time-editor-limit';
 import parse = ttime.parse;
@@ -81,32 +81,6 @@ const namedOptions: Record<string, TimeEditorOptions> = {
 };
 
 type TimeFormat = 'date' | 'time' | 'datetime-local';
-
-let hasIntl = false;
-let defaultLocale = 'en';
-
-try {
-  hasIntl = typeof Intl !== 'undefined' && !!Intl?.DateTimeFormat;
-
-  if (hasIntl)
-    Intl.NumberFormat('en').format(1.2);
-  else
-    console.warn('Intl.DateTimeFormat not available');
-}
-catch (e) {
-  hasIntl = false;
-  console.warn('Intl.DateTimeFormat not available: %s', e.message || e.toString());
-}
-
-try {
-  if (typeof process === 'object' && process.env?.LANG)
-    defaultLocale = process.env.LANG.replace(/\..*$/, '').replace(/_/g, '-');
-  else if (typeof navigator === 'object' && navigator.language)
-    defaultLocale = navigator.language;
-}
-catch (e) {
-  defaultLocale = 'en';
-}
 
 @Component({
   selector: 'tbw-time-editor',
