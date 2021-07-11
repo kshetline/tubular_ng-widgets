@@ -358,7 +358,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
   }
 
   private getIntAngleFromDigits(): number {
-    let intAngle = this.getDigits(this.decimalIndex, this.decimals) / 10 ** this.decimals;
+    let intAngle = this.getDigits(this.decimalIndex, this.decimals);
     const div = this.angleDivisor;
     let sign = 1;
 
@@ -494,8 +494,10 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       return;
     }
 
-    if (newValue === origValue && !this.outOfRange)
+    if (newValue === origValue && !this.outOfRange) {
+      this.cursorForward();
       return;
+    }
 
     if (((sel === this.minuteIndex || sel === this.secondIndex) && newValue > 5) ||
         (sel === this.degreeIndex && this.leftDigits > 2 && newValue > (this.wrapAround ? 1 : 3))) {
@@ -518,7 +520,8 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
   }
 
   getValueAsText(): string {
-    if (this._options.copyDecimal)
+    if (this._options.copyDecimal ||
+        this._options.angleStyle === AngleStyle.DD || this._options.angleStyle === AngleStyle.DDD)
       return this.value.toString();
     else
       return this.items.map(item => item.value.toString()).join('');
