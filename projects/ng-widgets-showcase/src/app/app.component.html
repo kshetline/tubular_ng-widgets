@@ -1,11 +1,12 @@
 <div class="top-grid">
   <div>
     <tbw-angle-editor></tbw-angle-editor>
-    <tbw-angle-editor [options]="{ compass: true }"></tbw-angle-editor>
+    <tbw-angle-editor [options]="{ angleStyle: DD_MM, compass: true }"></tbw-angle-editor>
+    <tbw-angle-editor [options]="{ compass: true, copyDecimal: true }"></tbw-angle-editor>
     <tbw-angle-editor [options]="{ unsigned: true }"></tbw-angle-editor>
     <tbw-angle-editor [options]="{ angleStyle: 0 }"></tbw-angle-editor>
     <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 2 }"></tbw-angle-editor>
-    <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 1, unsigned: true }" min="5" max="30" [ngModel]="5"></tbw-angle-editor>
+    <tbw-angle-editor [options]="{ angleStyle: DD, decimalPrecision: 1, unsigned: true }" min="5" max="30" [ngModel]="5"></tbw-angle-editor>
   </div>
   <span>&nbsp;</span>
 

@@ -1297,16 +1297,24 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         newValue = ad;
       else if (i[this.eraIndex].value === ad && (key === this.eraKeys[0] || key === '2'))
         newValue = bc;
-    }
-    else if (sel === this.signIndex) {
-      if (' +=-'.indexOf(key) < 0) {
-        this.errorFlash();
+      else {
+        if ('12'.indexOf(key) < 0 && !this.eraKeys.includes(key))
+          this.errorFlash();
+
         return;
       }
-      else if (i[this.signIndex].value === '-' && (key === ' ' || key === '+' || key === '='))
+    }
+    else if (sel === this.signIndex) {
+      if (i[this.signIndex].value === '-' && (key === ' ' || key === '+' || key === '='))
         newValue = sel > 0 ? '+' : NO_BREAK_SPACE;
       else if ((i[this.signIndex].value === NO_BREAK_SPACE || i[this.signIndex].value === '+') && key === '-')
         newValue = '-';
+      else {
+        if (' +=-'.indexOf(key) < 0)
+          this.errorFlash();
+
+        return;
+      }
     }
     else if (sel === this.amPmIndex) {
       if (key === '1' || key === this.amPmKeys[0])
@@ -1314,7 +1322,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       else if (key === '2' || key === this.amPmKeys[1])
         newValue = this.amPmStrings[1];
       else {
-        this.errorFlash();
+        if ('12'.indexOf(key) < 0 && !this.amPmKeys.includes(key))
+          this.errorFlash();
+
         return;
       }
     }

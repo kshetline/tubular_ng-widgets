@@ -1,17 +1,18 @@
 import { Component, forwardRef, Injector, Input, OnInit } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { clone, convertDigitsToAscii, isArray, isEqual, repeat, toNumber } from '@tubular/util';
+import { clone, convertDigitsToAscii, isArray, isEqual, last, repeat, toNumber } from '@tubular/util';
 import {
   BACKGROUND_ANIMATIONS, defaultLocale, DigitSequenceEditorDirective, hasIntl, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
 import { timer } from 'rxjs';
-import { abs, ceil, floor, mod, mod2, round } from '@tubular/math';
+import { abs, ceil, floor, mod, mod2, round, trunc } from '@tubular/math';
 
 export enum AngleStyle { DD, DD_MM, DD_MM_SS, DDD, DDD_MM, DDD_MM_SS }
 
 export interface AngleEditorOptions {
   angleStyle?: AngleStyle;
   compass?: boolean | string[];
+  copyDecimal?: boolean;
   decimal?: string;
   decimalPrecision?: number;
   degreeMark?: string;
@@ -32,6 +33,7 @@ export interface AngleEditorOptions {
 })
 export class AngleEditorComponent extends DigitSequenceEditorDirective<number> implements OnInit {
   private angleDivisor = 1;
+  private compassKeys: string[];
   private compassPoints: string[];
   private decimals = 0;
   private flipSign = false;
@@ -63,7 +65,12 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
   }
 
   protected applyPastedText(text: string): void {
-    console.log(text);
+    const newValue = this.parseText(text);
+
+    if (newValue == null || isNaN(newValue) || newValue < this.minAngle || newValue > this.maxAngle)
+      this.errorFlash();
+    else
+      this.value = newValue;
   }
 
   protected getClipboardText(): string {
@@ -190,6 +197,16 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     else
       this.compassPoints = ['S', 'N'];
 
+    this.compassKeys = [];
+    const pts = this.compassPoints;
+
+    for (let i = 0; i < pts[0].length && pts[1].length; ++i) {
+      if (pts[0].charAt(i) !== pts[1].charAt(i)) {
+        this.compassKeys = [pts[0].charAt(i).toLocaleLowerCase(locale), pts[1].charAt(i).toLocaleLowerCase(locale)];
+        break;
+      }
+    }
+
     const addDigits = (n: number, format?: string): void =>
       repeat(n, () => this.items.push({ value: 0, digit: true, editable: true, format }));
 
@@ -274,7 +291,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
         this.items[selection][field] = '\xA0';
 
       angle = (angle < this.minAngle ? this.minAngle : this.maxAngle);
-      intAngle = floor(angle * this.angleDivisor);
+      intAngle = trunc(angle * this.angleDivisor);
 
       if (!programmatic) {
         timer().subscribe(() => {
@@ -345,7 +362,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     const div = this.angleDivisor;
     let sign = 1;
 
-    intAngle += this.getDigits(this.decimalIndex, this.leftDigits) * div;
+    intAngle += this.getDigits(this.degreeIndex, this.leftDigits) * div;
     intAngle += this.getDigits(this.minuteIndex, 2) * (div / 60);
     intAngle += this.getDigits(this.secondIndex, 2) * (div / 3600);
 
@@ -407,7 +424,8 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
         else
           intAngle = mod2(intAngle, ceil(this.maxAngle * this.angleDivisor * 2));
 
-        this.warningFlash(true);
+        if (updateAngle)
+          this.warningFlash(true);
       }
       else {
         if (updateAngle)
@@ -418,35 +436,140 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     }
 
     if (updateAngle && change !== 0)
-      this.setIntAngle(intAngle);
+      this.setIntAngle(intAngle, true);
     else
       this.updateDigits(intAngle, updateAngle ? 0 : sign);
 
     this.flipSign = false;
   }
 
-  // protected onKey(key: string): void {
-  //   const keyLc = key.toLocaleLowerCase(this._options.locale);
-  //   const editable = !this.disabled && !this.viewOnly;
-  //
-  //   super.onKey(key);
-  // }
-  //
-  // protected digitTyped(charCode: number, key: string): void {
-  //   const i = this.items;
-  //   const sel = this.selection;
-  //   const origValue = i[sel].value;
-  //   let newValue: number | string = origValue;
-  //
-  //   this.cursorForward();
-  // }
+  protected onKey(key: string): void {
+    const keyLc = key.toLocaleLowerCase(this._options.locale);
+    const editable = !this.disabled && !this.viewOnly;
 
-  getValueAsText(): string {
-    return null;
+    if (editable &&
+        ((this.selection === this.signIndex && ' -+='.includes(key)) ||
+         (this.selection === this.compassIndex && (key === '1' || key === '2' || this.compassKeys.includes(keyLc)))))
+      this.digitTyped(keyLc.charCodeAt(0), keyLc);
+    else
+      super.onKey(key);
   }
 
-  private parseText(_s: string): number {
-    // s = s.trim();
+  protected digitTyped(charCode: number, key: string): void {
+    const i = this.items;
+    const sel = this.selection;
+    const origValue = i[sel].value;
+    let newValue: number | string = origValue;
+
+    if (sel === this.compassIndex) {
+      const [neg, pos] = this.compassPoints;
+
+      if (i[this.compassIndex].value === neg && (key === this.compassKeys[1] || key === '1'))
+        newValue = neg;
+      else if (i[this.compassIndex].value === pos && (key === this.compassKeys[0] || key === '2'))
+        newValue = pos;
+      else {
+        if ('12'.indexOf(key) < 0 && !this.compassKeys.includes(key))
+          this.errorFlash();
+
+        return;
+      }
+    }
+    else if (sel === this.signIndex) {
+      if (i[this.signIndex].value === '-' && (key === ' ' || key === '+' || key === '='))
+        newValue = '+';
+      else if (i[this.signIndex].value === '+' && key === '-')
+        newValue = '-';
+      else {
+        if (' +=-'.indexOf(key) < 0)
+          this.errorFlash();
+
+        return;
+      }
+    }
+    else if (48 <= charCode && charCode < 58)
+      newValue = charCode - 48;
+    else {
+      this.errorFlash();
+      return;
+    }
+
+    if (newValue === origValue && !this.outOfRange)
+      return;
+
+    if (((sel === this.minuteIndex || sel === this.secondIndex) && newValue > 5) ||
+        (sel === this.degreeIndex && this.leftDigits > 2 && newValue > (this.wrapAround ? 1 : 3))) {
+      this.errorFlash();
+      return;
+    }
+
+    i[sel].value = newValue;
+
+    let newIntAngle = this.getIntAngleFromDigits();
+    const angle = newIntAngle / this.angleDivisor;
+
+    if (angle < this.minAngle)
+      newIntAngle = trunc(this.minAngle * this.angleDivisor);
+    else if (angle > this.maxAngle)
+      newIntAngle = trunc(this.maxAngle * this.angleDivisor);
+
+    this.setIntAngle(newIntAngle, true);
+    this.cursorForward();
+  }
+
+  getValueAsText(): string {
+    if (this._options.copyDecimal)
+      return this.value.toString();
+    else
+      return this.items.map(item => item.value.toString()).join('');
+  }
+
+  private parseText(text: string): number {
+    text = text.trim().toLowerCase().replace(',', '.').replace(/[\u2212\uFE63\uFF0D]/g, '-').replace(/[\uFE62\uFF0B]/g, '+');
+
+    if (/^[-+.\d]+°?$/.test(text))
+      return toNumber(text.replace('°', ''), NaN);
+    else {
+      let sign = text.startsWith('-') ? -1 : 1;
+
+      text = text.replace(/^[-+]/, '');
+
+      if (text.endsWith(this.compassPoints[0].toLowerCase())) {
+        sign = -1;
+        text = text.slice(0, -this.compassPoints[0].length).trim();
+      }
+      else if (text.endsWith(this.compassKeys[0])) {
+        sign = -1;
+        text = text.slice(0, -1).trim();
+      }
+      else if (text.endsWith(this.compassPoints[1].toLowerCase()))
+        text = text.slice(0, -this.compassPoints[0].length).trim();
+      else if (text.endsWith(this.compassKeys[1]))
+        text = text.slice(0, -1).trim();
+
+      if (/^[., °"“”`'‘’dms\d]+$/.test(text)) {
+        const parts = text.split(/([\D+])/).map(part => part.trim());
+        const values: number[] = [];
+        let hasDecimal = false;
+
+        for (let i = 0; i < parts.length; ++i) {
+          const part = parts[i];
+
+          if (i % 2 === 0) {
+            if (hasDecimal) {
+              values[values.length - 1] = toNumber((last(values) ?? '0') + '.' + part);
+              break;
+            }
+            else
+              values.push(toNumber(part));
+          }
+          else if (part === '.')
+            hasDecimal = true;
+        }
+
+        return sign * (values[0] + (values[1] ?? 0) / 60 + (values[2] ?? 0) / 3600);
+      }
+    }
 
     return null;
   }

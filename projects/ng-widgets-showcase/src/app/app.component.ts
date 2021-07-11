@@ -4,6 +4,7 @@ import { isAndroid, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
 import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle }
   from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
 import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
+import { AngleStyle } from '../../../tubular-ng-widgets/src/lib/angle-editor/angle-editor.component';
 
 const intl_DisplayNames = (Intl as any).DisplayNames;
 
@@ -15,6 +16,8 @@ const intl_DisplayNames = (Intl as any).DisplayNames;
 export class AppComponent {
   AD_BC = YearStyle.AD_BC;
   AM_PM = HourStyle.AM_PM;
+  DD = AngleStyle.DD;
+  DD_MM = AngleStyle.DD_MM;
   POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
   SIGNED = YearStyle.SIGNED;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;
