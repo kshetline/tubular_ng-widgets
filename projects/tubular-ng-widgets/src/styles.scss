@@ -2,6 +2,26 @@
   color: #C00;
 }
 
+.tbw-normal-background {
+  color: white;
+}
+
+.tbw-disabled-background {
+  color: #CCC;
+}
+
+.tbw-error-background {
+  color: #F67;
+}
+
+.tbw-view-only-background {
+  color: black;
+}
+
+.tbw-warning-background {
+  color: #FC6;
+}
+
 .tbw-dse-wrapper {
   align-items: baseline;
   border: #A6A6A6 solid max(1px, 0.0836em);

@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { abs, floor, max, min, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isNumber, isString, noop, processMillis, toBoolean
+  eventToKey, getCssValue, isAndroid, isChromeOS, isEdge, isIOS, isNumber, isString, noop, processMillis, toBoolean
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
@@ -83,14 +83,26 @@ const NO_SELECTION = -1;
 const SPIN_UP      = -2;
 const SPIN_DOWN    = -3;
 
-const NORMAL_BACKGROUND    = 'white';
-const DISABLED_BACKGROUND  = '#CCC';
-const ERROR_BACKGROUND     = '#F67';
-const VIEW_ONLY_BACKGROUND = 'black';
-const WARNING_BACKGROUND   = '#FC6';
-
 const addFocusOutline = isEdge() || isIOS();
 const disableContentEditable = isEdge();
+
+function getCssColor(className: string): string {
+  const elem = document.createElement('div');
+
+  document.body.appendChild(elem);
+  elem.classList.add('tbw-' + className);
+  const result = getCssValue(elem, 'color');
+  document.body.removeChild(elem);
+
+  console.log(className, result);
+  return result;
+}
+
+const NORMAL_BACKGROUND    = getCssColor('normal-background');
+const DISABLED_BACKGROUND  = getCssColor('disabled-background');
+const ERROR_BACKGROUND     = getCssColor('error-background');
+const VIEW_ONLY_BACKGROUND = getCssColor('view-only-background');
+const WARNING_BACKGROUND   = getCssColor('warning-background');
 
 export const BACKGROUND_ANIMATIONS = trigger('displayState', [
   state('error',    style({ backgroundColor: ERROR_BACKGROUND })),
@@ -151,7 +163,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   private static lastKeyTimestamp = 0;
   private static lastKeyKey = '';
-  private static useHiddenInput = isAndroid();
+  private static useHiddenInput = isAndroid() || isChromeOS();
   private static checkForRepeatedKeyTimestamps = isIOS();
 
   static touchHasOccurred = false;
@@ -164,6 +176,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private getCharFromInputEvent = false;
   private hasHiddenInputFocus = false;
   private hasWrapperFocus = false;
+  private ignoreFocus = 0;
   private initialTouchTime = 0;
   private keyTimer: Subscription;
   private lastDelta = 1;
@@ -435,6 +448,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     this.wrapper.parentElement.appendChild(this.hiddenInput);
     this.wrapper.setAttribute('tabindex', '-1');
+    this.prepHiddenInput(false);
   }
 
   getAlignmentForItem(item: SequenceItemInfo): string {
@@ -713,10 +727,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
     return false;
   }
 
-  ignoreFocus = false;
-
   onFocus(value: boolean, evt: FocusEvent): void {
-    if (this.ignoreFocus || (value && this.viewOnly))
+    if (this.ignoreFocus > 0 || (value && this.viewOnly))
       return;
 
     if (this.hasWrapperFocus !== value) {
@@ -728,11 +740,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
         else if (evt.relatedTarget !== this.wrapper) {
           // For some reason Chrome (and only Chrome) requires me to play this silly blur/refocus game
           // in order to make clipboard copy work reliably.
-          this.ignoreFocus = true;
-          setTimeout(() => {
-            this.wrapper.blur();
-            setTimeout(() => { this.ignoreFocus = false; this.wrapper.focus(); });
-          });
+          this.blurAndRefocusHack();
         }
       }
 
@@ -740,11 +748,33 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
+  protected blurAndRefocusHack(): void {
+    ++this.ignoreFocus;
+    setTimeout(() => {
+      this.wrapper.blur();
+      setTimeout(() => { --this.ignoreFocus; this.wrapper.focus(); });
+    });
+  }
+
+  protected prepHiddenInput(repeatAfterTimeout = true): void {
+    if (!this.hiddenInput)
+      return;
+
+    this.hiddenInput.value = '››‹‹';
+    this.hiddenInput.setSelectionRange(2, 2);
+
+    if (repeatAfterTimeout)
+      setTimeout(() => this.prepHiddenInput(false));
+  }
+
   onHiddenInputFocus(value: boolean): void {
     if (value && this.viewOnly)
       return;
 
     if (this.hasHiddenInputFocus !== value) {
+      if (value)
+        this.prepHiddenInput();
+
       this.hasHiddenInputFocus = value;
       this.checkFocus();
     }
@@ -788,6 +818,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected lostFocus(): void {}
 
   onKeyDown(evt: KeyboardEvent): boolean {
+    this.prepHiddenInput();
+
     const key = eventToKey(evt);
 
     // For some strange reason, iOS external mobile keyboards (at least one Logitech model, and one Apple model)
@@ -845,6 +877,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
     DigitSequenceEditorDirective.lastKeyTimestamp = evt.timeStamp;
     DigitSequenceEditorDirective.lastKeyKey = key;
 
+    if (this.hiddenInput && (key === 'Backspace' || key === 'Delete')) {
+      evt.stopPropagation();
+      this.blurAndRefocusHack();
+    }
+
     return false;
   }
 
@@ -877,8 +914,9 @@ export abstract class DigitSequenceEditorDirective<T> implements
     return true;
   }
 
-  // noinspection JSMethodCanBeStatic
   onKeyPress(evt: KeyboardEvent): boolean {
+    this.prepHiddenInput();
+
     const key = eventToKey(evt);
 
     if (key === 'Tab')
@@ -888,18 +926,17 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return true;
 
     evt.preventDefault();
-    return false;
+
+    return key === 'Backspace' || key === 'Delete';
   }
 
   onInput(): void {
     if (this.getCharFromInputEvent) {
-      const currInput = this.hiddenInput.value;
+      const currInput = this.hiddenInput.value?.replace(/[›‹]/g, '');
 
       if (currInput && currInput.length > 0)
-        this.onKey(currInput.substr(currInput.length - 1));
+        this.onKey(currInput.charAt(0));
     }
-
-    this.hiddenInput.value = '';
   }
 
   protected onKey(key: string): void {

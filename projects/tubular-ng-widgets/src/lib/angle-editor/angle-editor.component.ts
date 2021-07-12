@@ -459,9 +459,9 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       const [neg, pos] = this.compassPoints;
 
       if (i[this.compassIndex].value === neg && (key === this.compassKeys[1] || key === '1'))
-        newValue = neg;
-      else if (i[this.compassIndex].value === pos && (key === this.compassKeys[0] || key === '2'))
         newValue = pos;
+      else if (i[this.compassIndex].value === pos && (key === this.compassKeys[0] || key === '2'))
+        newValue = neg;
       else {
         if ('12'.indexOf(key) < 0 && !this.compassKeys.includes(key))
           this.errorFlash();
