@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { abs, floor, max, min, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, isAndroid, isChromeOS, isEdge, isIOS, isNumber, isString, noop, processMillis, toBoolean
+  eventToKey, getCssValue, isAndroid, isChrome, isChromeOS, isEdge, isIOS, isNumber, isString, noop, processMillis, toBoolean
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
@@ -426,7 +426,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return;
 
     this.hiddenInput = document.createElement('input');
-    this.hiddenInput.type = 'text';
+    this.hiddenInput.name = 'hidden';
+    this.hiddenInput.type = 'password';
     this.hiddenInput.autocomplete = 'off';
     this.hiddenInput.setAttribute('autocapitalize', 'off');
     this.hiddenInput.setAttribute('autocomplete', 'off');
@@ -737,7 +738,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       if (value) {
         if (this.hiddenInput && !this.hiddenInput.disabled)
           this.hiddenInput.focus();
-        else if (evt.relatedTarget !== this.wrapper) {
+        else if (isChrome() && evt.relatedTarget !== this.wrapper) {
           // For some reason Chrome (and only Chrome) requires me to play this silly blur/refocus game
           // in order to make clipboard copy work reliably.
           this.blurAndRefocusHack();
@@ -749,10 +750,15 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   protected blurAndRefocusHack(): void {
+    if (this.ignoreFocus > 0)
+      return;
+
+    const elem = this.hiddenInput ?? this.wrapper;
+
     ++this.ignoreFocus;
     setTimeout(() => {
-      this.wrapper.blur();
-      setTimeout(() => { --this.ignoreFocus; this.wrapper.focus(); });
+      elem.blur();
+      setTimeout(() => { --this.ignoreFocus; elem.focus(); });
     });
   }
 

@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, forwardRef, Injector, Input, OnInit } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import ttime, {
-  DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone
+  DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone, utToTaiMillis
 } from '@tubular/time';
 import { abs, ceil, floor, max, min, mod } from '@tubular/math';
 import {
@@ -137,6 +137,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   localTimeFormat: TimeFormat = 'datetime-local';
   localTimeMin: string;
   localTimeMax: string;
+  timeStep = '60';
 
   constructor(injector: Injector, private cd: ChangeDetectorRef) {
     super(injector);
@@ -161,7 +162,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       else if (this.maxLimit.compare(this.dateTime) < 0)
         return { max: { message: `Date/time must be on or after ${this.maxLimit.text}` } };
 
-      return { invalid: true }; // TODO: Make more specific with min/max response
+      return { invalid: true };
     }
 
     return null;
@@ -253,10 +254,10 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
           newTime = new DateTime({ y: d[0], m: d[1], d: d[2], hrs: d[3], min: d[4], sec: 0 },
             this.timezone, this._gregorianChangeDate).utcMillis;
         }
-        else if (($ = /(\d\d):(\d\d)/.exec(newValue))) {
+        else if (($ = /(\d\d):(\d\d)(?:(\d\d))?/.exec(newValue))) {
           const t = $.slice(1).map(n => Number(n));
 
-          newTime = new DateTime({ y: w.y, m: w.m, d: w.d, hrs: t[0], min: t[1], sec: 0 },
+          newTime = new DateTime({ y: w.y, m: w.m, d: w.d, hrs: t[0], min: t[1], sec: t[2] ?? 0 },
             this.timezone, this._gregorianChangeDate).utcMillis;
         }
       }
@@ -264,7 +265,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         newTime = Date.now();
 
       if (newTime !== undefined && !isNaN(newTime))
-        this.value = newTime;
+        this.value = !!this.tai ? utToTaiMillis(newTime, true) : newTime;
 
       if (!this.localTimeValue)
         setTimeout(() => this.updateLocalTime());
@@ -300,6 +301,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     this.localTime.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);
     this.localTime.setAttribute('min', this.localTimeMin);
     this.localTime.setAttribute('max', this.localTimeMax);
+    this.localTime.setAttribute('step', this.timeStep);
     this.localTime.style.position = 'absolute';
     this.localTime.style.opacity = '0';
     (this.localTime.style as any)['caret-color'] = 'transparent';
@@ -372,24 +374,26 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return false;
   }
 
-  protected onTouchStartAlternate(index: number, _event: TouchEvent): void {
-    let format: TimeFormat = 'datetime-local';
+  protected onTouchStartAlternate(_index: number, _event: TouchEvent): void {
+    const style = this._options.dateTimeStyle;
+    const format: TimeFormat = (style === DateTimeStyle.TIME_ONLY ? 'time' :
+      (style === DateTimeStyle.DATE_ONLY ? 'date' : 'datetime-local'));
+    const timeStep = this._options.showSeconds ? '1' : '60';
 
-    if (isIOS())
-      format = (this.hourIndex < 0 && index < this.hourIndex ? 'date' : 'time'); // TODO: Handle time-first formats
-
-    if (this.localTimeFormat !== format) {
+    if (this.localTimeFormat !== format || this.timeStep !== timeStep) {
       // Changing the format of the input (using the "type" attribute) sets off a number of updates
       // that don't stabilize very well if we leave it up to Angular's change detection process to do
       // all of the updating, so we'll update all of the changing input attributes and input value
       // directly, all in one go.
       this.localTimeFormat = format;
+      this.timeStep = timeStep;
       this.adjustLocalTimeMin();
       this.adjustLocalTimeMax();
       this.updateLocalTime();
       this.localTime.type = format;
       this.localTime.min = this.localTimeMin;
       this.localTime.max = this.localTimeMax;
+      this.localTime.setAttribute('step', this.timeStep);
       this.localTime.value = this.localTimeValue;
       this.cd.detectChanges();
     }
