@@ -443,11 +443,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   getClassForItem(item: SequenceItemInfo): string {
     if (item.monospaced && item.indicator)
-      return 'mono-indicator-font';
+      return 'tbw-dse-mono-indicator-font';
     else if (item.indicator)
-      return 'indicator-font';
+      return 'tbw-dse-indicator-font';
     else if (item.monospaced)
-      return 'mono-font';
+      return 'tbw-dse-mono-font';
     else
       return null;
   }

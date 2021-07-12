@@ -1,8 +1,8 @@
-<div #wrapper class="wrapper"
-    [class.no-focus]="disabled"
-    [class.explicit-focus-outline]="addFocusOutline && hasFocus"
-    [class.clear-focus-outline]="addFocusOutline && !hasFocus"
-    [class.dse-rtl]="rtl"
+<div #wrapper class="tbw-dse-wrapper"
+    [class.tbw-dse-no-focus]="disabled"
+    [class.tbw-dse-explicit-focus-outline]="addFocusOutline && hasFocus"
+    [class.tbw-dse-clear-focus-outline]="addFocusOutline && !hasFocus"
+    [class.tbw-dse-dse-rtl]="rtl"
     [tabindex]="disabled ? -1 : tabindex"
     [attr.contenteditable]="!disabled && !disableContentEditable"
     autocomplete="off" autocapitalize="off" autocorrect="off"
@@ -15,9 +15,9 @@
     (touchmove)="onTouchMove($event)"
     (touchend)="onTouchEnd($event)">
   <div *ngFor="let item of displayItems"
-      class="digit dse-item-{{item.index}}"
+      class="tbw-dse-digit dse-item-{{item.index}}"
       [ngClass]="getClassForItem(item)"
-      [class.spinner]="item.spinner"
+      [class.tbw-dse-spinner]="item.spinner"
       contenteditable=false
       [style.align-items]="getAlignmentForItem(item)"
       [style.color]="getColorForItem(item)"
@@ -30,27 +30,27 @@
       (mouseup)="onMouseUp($event)"
       (contextmenu)="returnFalse()"
       (touchstart)="onTouchStart(item.index, $event)">
-    <div class="backgrounder"
+    <div class="tbw-dse-backgrounder"
         [style.background-color]="getBackgroundColorForItem(item)"
         [style.bottom]="item.spinner || item.divider ? '0' : baselineShift">&nbsp;</div>
     <span *ngIf="swipeable(item, 1)"
-        class="draggable-extra"
+        class="tbw-dse-draggable-extra"
         [style.top]="'calc(' + (-digitHeight + smoothedDeltaY) + 'px + ' + (item.deltaY || 0) + 'em)'"
     >{{(item.alt_swipeAbove || item.swipeAbove) ?? '\u00A0'}}</span>
     <span *ngIf="swipeable(item, -1)"
-        class="draggable-extra"
+        class="tbw-dse-draggable-extra"
         [style.top]="'calc(' + (digitHeight + smoothedDeltaY) + 'px + ' + (item.deltaY || 0) + 'em)'"
     >{{(item.alt_swipeBelow || item.swipeBelow) ?? '\u00A0'}}</span>
     <span *ngIf="!item.spinner && !item.divider; else dividerOrSpinner"
-        class="draggable dse-item-{{item.index}}"
-        [class.sized]="!!item.sizer"
+        class="tbw-dse-draggable dse-item-{{item.index}}"
+        [class.tbw-dse-sized]="!!item.sizer"
         [style.top]="'calc(' + (swipeable(item, 0) ? smoothedDeltaY : 0) + 'px + ' + (item.deltaY || 0) + 'em)'"
     >{{filterDisplayChars(item.alt_value || item.value)}}</span>
     <span *ngIf="item.sizer"
-        class="sizer"
+        class="tbw-dse-sizer"
     >{{item.sizer}}</span>
     <ng-template #dividerOrSpinner>
-      <div *ngIf="item.divider; else spinner" class="divider">.</div>
+      <div *ngIf="item.divider; else spinner" class="tbw-dse-divider">.</div>
       <ng-template #spinner>
         <svg width="0.574em" height="1em" viewBox="0 0 353 614.6">
           <g>
@@ -71,5 +71,5 @@
       </ng-template>
     </ng-template>
   </div>
-  <div #emSizer class="em-sizer">&nbsp;</div>
+  <div #emSizer class="tbw-dse-em-sizer">&nbsp;</div>
 </div>

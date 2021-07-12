@@ -272,6 +272,9 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       }
     }
 
+    this.items.push({ divider: true });
+    this.items.push({ spinner: true });
+
     this.updateDigits();
   }
 
@@ -279,7 +282,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     let qlass = super.getClassForItem(item) ?? '';
 
     if (this.outOfRange && item.editable)
-      qlass += ' bad-value';
+      qlass += ' tbw-dse-bad-value';
 
     return qlass?.trim() || null;
   }

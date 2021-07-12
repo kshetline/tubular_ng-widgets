@@ -62,7 +62,8 @@
               "projects/ng-widgets-showcase/src/assets"
             ],
             "styles": [
-              "projects/ng-widgets-showcase/src/styles.scss"
+              "projects/ng-widgets-showcase/src/styles.scss",
+              "projects/tubular-ng-widgets/src/styles.scss"
             ],
             "scripts": []
           },

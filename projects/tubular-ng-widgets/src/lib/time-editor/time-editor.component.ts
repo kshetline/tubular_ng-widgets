@@ -939,7 +939,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     let qlass: string;
 
     if (item?.name === '2occ')
-      qlass = 'subscript';
+      qlass = 'tbw-te-subscript';
     else
       qlass = super.getClassForItem(item) ?? '';
 
@@ -950,7 +950,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         ((this.offsetIndex >= 0 && item.index === this.offsetIndex) ||
          (this.dstIndex >= 0 && item.index === this.dstIndex))) ||
         (this.yearIndex <= item.index && item.index < this.yearIndex + this.yearDigits && !this.yearInRange(y)))
-      qlass += ' bad-value';
+      qlass += ' tbw-dse-bad-value';
 
     return qlass?.trim() || null;
   }
