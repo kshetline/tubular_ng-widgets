@@ -2,9 +2,9 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import {
   AfterViewInit, Directive, ElementRef, EventEmitter, Injector, Input, OnDestroy, OnInit, Output, ViewChild
 } from '@angular/core';
-import { abs, max, min, mod, Point, round, sign } from '@tubular/math';
+import { abs, floor, max, min, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isNumber, isString, noop, processMillis, toBoolean, toNumber
+  eventToKey, getCssValue, isAndroid, isEdge, isIOS, isNumber, isString, noop, processMillis, toBoolean
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
@@ -366,7 +366,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     for (let i = count - 1; i >= 0; --i) {
       const digit = value % 10;
 
-      this.items[index + i][field] = digit;
+      this.items[index + i][field] = floor(digit);
       value = (value - digit) / 10;
     }
   }
@@ -501,17 +501,19 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   createSwipeValues(index: number): void {
-    const item = this.items[index];
-    const value = toNumber(item.value);
+    this.roll(1, index, false);
+    this.roll(-1, index, false);
 
-    if (this.canSwipe(item)) {
-      if (index !== 0 || value < 9)
-        item.swipeAbove = mod(toNumber(item.value) + 1, 10).toString();
+    for (let i = 0; i < this.items.length; ++i) {
+      const item = this.items[i];
 
-      if (index !== 0 || value > 0)
-        item.swipeBelow = mod(toNumber(item.value) - 1, 10).toString();
+      if (i !== index && !item.divider && !item.static &&
+          item.value === item.swipeAbove && item.value === item.swipeBelow)
+        item.swipeAbove = item.swipeBelow = null;
     }
   }
+
+  protected roll(_sign: number, _sel = this.selection, _updateValue = true): void {}
 
   returnFalse(): boolean {
     return false;
@@ -627,8 +629,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this._disabled || this.viewOnly)
       return;
 
-    evt.preventDefault();
-    evt.stopPropagation();
+    if (evt.cancelable) {
+      evt.preventDefault();
+      evt.stopPropagation();
+    }
 
     if (this.selection >= 0 && this.firstTouchPoint) {
       const pt = getPageXYForTouchEvent(evt);
@@ -638,13 +642,15 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
-  onTouchEnd(event: TouchEvent): void {
+  onTouchEnd(evt: TouchEvent): void {
     const lastDeltaY = this.touchDeltaY;
 
     if (this._disabled || this.viewOnly)
       return;
 
-    event.preventDefault();
+    if (evt.cancelable)
+      evt.preventDefault();
+
     this.onMouseUp(null);
 
     if (this.swipeIndex >= 0 && this.firstTouchPoint) {
@@ -1005,11 +1011,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   protected increment(): void {
-    this.items[this.selection].value = ((this.items[this.selection].value as number) + 1) % 10;
+    this.roll(1);
   }
 
   protected decrement(): void {
-    this.items[this.selection].value = ((this.items[this.selection].value as number) + 9) % 10;
+    this.roll(-1);
   }
 
   protected digitTyped(charCode: number, _key: string): void {

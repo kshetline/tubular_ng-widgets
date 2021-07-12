@@ -28,6 +28,7 @@ export class AppComponent {
   private _min = '';
   private _numSystem = '';
 
+  angle = 0;
   customCycle = '0';
   customStyle = '0';
   customYear = 'false';

@@ -1143,43 +1143,28 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     };
   }
 
-  createSwipeValues(index: number): void {
-    this.roll(1, index, false);
-    this.roll(-1, index, false);
-
-    for (let i = 0; i < this.items.length; ++i) {
-      const item = this.items[i];
-
-      if (i === index || item.divider || item.static)
-        continue;
-      if (item.value === item.swipeAbove && item.value === item.swipeBelow)
-        item.swipeAbove = item.swipeBelow = null;
-      else if (item.editable)
-        break;
-    }
-  }
-
-  protected increment(): void {
-    this.roll(1);
-  }
-
-  protected decrement(): void {
-    this.roll(-1);
-  }
-
-  private roll(sign: number, sel = this.selection, updateTime = true): void {
+  protected roll(sign: number, sel = this.selection, updateTime = true): void {
     const dateTime = this.dateTime.clone();
     const tai = this._tai;
     let change = 0;
     let field = DateTimeField.YEAR;
     const wallTime = this.dateTime.wallTime;
+    let newWallTime: DateAndTime;
     const wasNegative = (this.items[this.signIndex]?.value === '-');
     const mDigits = this._options.millisDigits;
     const minYear = this.minYear();
     const maxYear = this.maxYear();
     const wasOutOfRange = this.outOfRange;
 
-    if (this.eraIndex >= 0 && sel === this.eraIndex) {
+    if (wasOutOfRange && this.minLimit.compare(dateTime) > 0)
+      newWallTime = this.minLimit.wallTime;
+    else if (wasOutOfRange && this.maxLimit.compare(dateTime) < 0)
+      newWallTime = this.maxLimit.wallTime;
+    else if (wallTime.y < minYear)
+      newWallTime = Object.assign(this.dateTime.wallTimeSparse, { y: minYear });
+    else if (wallTime.y > maxYear)
+      newWallTime = Object.assign(this.dateTime.wallTimeSparse, { y: maxYear });
+    else if (this.eraIndex >= 0 && sel === this.eraIndex) {
       const newYear = 1 - wallTime.y;
 
       if (newYear < minYear || newYear > maxYear) {
@@ -1237,10 +1222,13 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     if (updateTime)
       this.outOfRange = false;
 
-    if (change === 0)
+    if (change === 0 && !newWallTime)
       return;
 
-    dateTime.add(field, change * sign);
+    if (newWallTime)
+      dateTime.wallTime = newWallTime;
+    else
+      dateTime.add(field, change * sign);
 
     if (this.minLimit.compare(dateTime) > 0 || this.maxLimit.compare(dateTime) < 0 ||
         dateTime.wallTime.y < minYear || dateTime.wallTime.y > maxYear) {

@@ -36,11 +36,11 @@
     <span *ngIf="swipeable(item, 1)"
         class="draggable-extra"
         [style.top]="'calc(' + (-digitHeight + smoothedDeltaY) + 'px + ' + (item.deltaY || 0) + 'em)'"
-    >{{item.alt_swipeAbove || item.swipeAbove}}</span>
+    >{{(item.alt_swipeAbove || item.swipeAbove) ?? '\u00A0'}}</span>
     <span *ngIf="swipeable(item, -1)"
         class="draggable-extra"
         [style.top]="'calc(' + (digitHeight + smoothedDeltaY) + 'px + ' + (item.deltaY || 0) + 'em)'"
-    >{{item.alt_swipeBelow || item.swipeBelow}}</span>
+    >{{(item.alt_swipeBelow || item.swipeBelow) ?? '\u00A0'}}</span>
     <span *ngIf="!item.spinner && !item.divider; else dividerOrSpinner"
         class="draggable dse-item-{{item.index}}"
         [class.sized]="!!item.sizer"

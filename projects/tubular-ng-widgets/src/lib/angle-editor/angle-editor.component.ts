@@ -59,6 +59,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
 
   protected validateImpl(_value: number, _control?: AbstractControl): { [key: string]: any } {
     if (this.outOfRange) {
+      // TODO
     }
 
     return null;
@@ -188,14 +189,14 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       (hasIntl && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
     const style = opts.angleStyle ?? AngleStyle.DDD_MM_SS;
 
-    this.wrapAround = opts.wrapAround ?? style >= AngleStyle.DDD;
+    this.wrapAround = opts.wrapAround ?? (!opts.unsigned && style >= AngleStyle.DDD);
 
     if (isArray(opts.compass))
       this.compassPoints = opts.compass;
     else if (style < AngleStyle.DDD)
-      this.compassPoints = ['W', 'E'];
-    else
       this.compassPoints = ['S', 'N'];
+    else
+      this.compassPoints = ['W', 'E'];
 
     this.compassKeys = [];
     const pts = this.compassPoints;
@@ -275,7 +276,12 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
   }
 
   getClassForItem(item: SequenceItemInfo): string {
-    return super.getClassForItem(item);
+    let qlass = super.getClassForItem(item) ?? '';
+
+    if (this.outOfRange && item.editable)
+      qlass += ' bad-value';
+
+    return qlass?.trim() || null;
   }
 
   private updateDigits(intAngle?: number, delta = 0, selection = -1): void {
@@ -287,22 +293,27 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     const field = delta === 0 ? 'value' : delta < 0 ? 'swipeBelow' : 'swipeAbove';
 
     if (angle < this.minAngle || angle > this.maxAngle) {
+      if (delta === 0)
+        this.outOfRange = true;
+
       if (delta !== 0 && selection >= 0)
         this.items[selection][field] = '\xA0';
 
-      angle = (angle < this.minAngle ? this.minAngle : this.maxAngle);
-      intAngle = trunc(angle * this.angleDivisor);
-
       if (!programmatic) {
+        angle = (angle < this.minAngle ? this.minAngle : this.maxAngle);
+        intAngle = trunc(angle * this.angleDivisor);
+
         timer().subscribe(() => {
           this.errorFlash();
           this.setIntAngle(intAngle);
           this.updateDigits();
         });
-
-        return;
       }
+
+      return;
     }
+    else if (delta === 0)
+      this.outOfRange = false;
 
     const dp = this.decimals;
     let d;
@@ -373,36 +384,16 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     return sign * intAngle;
   }
 
-  createSwipeValues(index: number): void {
-    this.roll(1, index, false);
-    this.roll(-1, index, false);
-
-    for (let i = 0; i < this.items.length; ++i) {
-      const item = this.items[i];
-
-      if (i === index || item.divider || item.static)
-        continue;
-      if (item.value === item.swipeAbove && item.value === item.swipeBelow)
-        item.swipeAbove = item.swipeBelow = null;
-      else if (item.editable)
-        break;
-    }
-  }
-
-  protected increment(): void {
-    this.roll(1);
-  }
-
-  protected decrement(): void {
-    this.roll(-1);
-  }
-
-  private roll(sign: number, sel = this.selection, updateAngle = true): void {
+  protected roll(sign: number, sel = this.selection, updateAngle = true): void {
     let change = 0;
     let intAngle = this.intAngle;
     const div = this.angleDivisor;
 
-    if (sel === this.signIndex || sel === this.compassIndex) {
+    if (this.outOfRange && intAngle / this.angleDivisor < this.minAngle)
+      change = trunc(this.minAngle * this.angleDivisor - intAngle) * sign;
+    else if (this.outOfRange && intAngle / this.angleDivisor > this.maxAngle)
+      change = trunc(this.maxAngle * this.angleDivisor - intAngle) * sign;
+    else if (sel === this.signIndex || sel === this.compassIndex) {
       this.flipSign = (intAngle === 0);
       change = -sign * intAngle * 2;
     }
@@ -510,10 +501,19 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     let newIntAngle = this.getIntAngleFromDigits();
     const angle = newIntAngle / this.angleDivisor;
 
-    if (angle < this.minAngle)
-      newIntAngle = trunc(this.minAngle * this.angleDivisor);
-    else if (angle > this.maxAngle)
-      newIntAngle = trunc(this.maxAngle * this.angleDivisor);
+    if (angle < this.minAngle || angle > this.maxAngle) {
+      if (!this.outOfRange && sel !== this.degreeIndex && sel !== this.minuteIndex && sel !== this.secondIndex) {
+        i[sel].value = origValue;
+        this.errorFlash();
+        return;
+      }
+      else if (angle < this.minAngle)
+        newIntAngle = trunc(this.minAngle * this.angleDivisor);
+      else
+        newIntAngle = trunc(this.maxAngle * this.angleDivisor);
+
+      this.updateDigits(newIntAngle);
+    }
 
     this.setIntAngle(newIntAngle, true);
     this.cursorForward();
