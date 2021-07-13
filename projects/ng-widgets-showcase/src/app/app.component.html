@@ -1,139 +1,142 @@
-<div class="top-grid">
-  <div>
-    <tbw-angle-editor></tbw-angle-editor>
-    <tbw-angle-editor [options]="{ angleStyle: DD_MM, compass: true }"></tbw-angle-editor>
-    <tbw-angle-editor [(ngModel)]="angle" [options]="{ compass: true, copyDecimal: true }"></tbw-angle-editor>
-    <tbw-angle-editor [(ngModel)]="angle" [options]="{ unsigned: true }"></tbw-angle-editor>
-    <tbw-angle-editor [options]="{ angleStyle: 0 }"></tbw-angle-editor>
-    <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 2 }"></tbw-angle-editor>
-    <tbw-angle-editor [options]="{ angleStyle: DD, decimalPrecision: 1, unsigned: true }" min="5" max="30" [ngModel]="5"></tbw-angle-editor>
+<div [ngClass]="{'content': true, 'app-dark-mode': darkMode, 'tbw-dark-mode': darkMode}">
+  <div class="top-grid">
+    <div>
+      <label><input type="checkbox" [(ngModel)]="darkMode">Dark mode&nbsp;&nbsp;&nbsp;&nbsp;</label>
+      <tbw-angle-editor></tbw-angle-editor>
+      <tbw-angle-editor [options]="{ angleStyle: DD_MM, compass: true }"></tbw-angle-editor>
+      <tbw-angle-editor [(ngModel)]="angle" [options]="{ compass: true, copyDecimal: true }"></tbw-angle-editor>
+      <tbw-angle-editor [(ngModel)]="angle" [options]="{ unsigned: true }"></tbw-angle-editor>
+      <tbw-angle-editor [options]="{ angleStyle: 0 }"></tbw-angle-editor>
+      <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 2 }"></tbw-angle-editor>
+      <tbw-angle-editor [options]="{ angleStyle: DD, decimalPrecision: 1, unsigned: true }" min="5" max="30" [ngModel]="5"></tbw-angle-editor>
+    </div>
+    <span>&nbsp;</span>
+
+    <tbw-time-editor tai
+        [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
+        [(ngModel)]="time"
+        [nativeDateTime]="native"></tbw-time-editor>
+    <span>Locale time, with occurrence, UTC offset and DST symbol</span>
+    <div>
+        <button (click)="setCurrentTime()">Set now</button>
+        <button (click)="time = 1636264837000">Sample time</button>
+        <button (click)="time = 1483228836000">Sample leap second</button>
+        <label *ngIf="mobile" for="native">Mobile native date/time</label>
+        <input *ngIf="mobile" id="native" type="checkbox" (change)="native = $any($event.target).checked"/><br>
+    </div>
+    <span>&nbsp;</span>
+
+    <tbw-time-editor tai
+        [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
+        timezone="UTC"
+        [(ngModel)]="time"></tbw-time-editor>
+    <span>UTC, in signed ISO-8601 date/time format</span>
+
+    <tbw-time-editor tai
+        [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
+        [(ngModel)]="time"></tbw-time-editor>
+    <span>Local with AD/BC</span>
+
+    <tbw-time-editor tai
+        [options]="{ twoDigitYear: true, yearStyle: POSITIVE_ONLY }"
+        [(ngModel)]="time"></tbw-time-editor>
+    <span>Local with two-digit year</span>
+
+    <tbw-time-editor tai
+        [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
+        timezone="UTC"
+        [(ngModel)]="time"></tbw-time-editor>
+    <span>UTC time only, with milliseconds</span>
+  </div><br>
+
+  <div class="bottom-grid">
+    <span>Arabic, general, AD/BC</span>
+    <span>Arabic, Egypt</span>
+    <span>Hebrew, forced AM/PM form</span>
+
+    <tbw-time-editor tai
+        [options]="$any({ locale: 'ar', yearStyle: AD_BC, numbering: 'latn' })"
+        timezone="Africa/Cairo"
+        [(ngModel)]="time"></tbw-time-editor>
+    <tbw-time-editor tai
+        [options]="{ locale: 'ar-EG' }"
+        timezone="Africa/Cairo"
+        [(ngModel)]="time"></tbw-time-editor>
+    <tbw-time-editor tai
+        [options]="{ hourStyle: AM_PM, locale: 'he' }"
+        timezone="Asia/Jerusalem"
+        [(ngModel)]="time"></tbw-time-editor>
+
+    <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar', 'Y/MM/DD N hh:mm A')}}</span>
+    <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar-EG', 'ISS')}}</span>
+    <span class="text-time" dir="rtl">{{ format('Asia/Jerusalem', 'he', 'DD.MM.Y, hh:mm A')}}</span>
+
+    <span>Bengali</span>
+    <span>German</span>
+    <span>Chinese</span>
+
+    <tbw-time-editor tai
+        [options]="{ locale: 'bn' }"
+        timezone="Asia/Dhaka"
+        [(ngModel)]="time"></tbw-time-editor>
+    <tbw-time-editor tai
+        [options]="{ locale: 'de' }"
+        timezone="Europe/Berlin"
+        [(ngModel)]="time"></tbw-time-editor>
+    <tbw-time-editor tai
+        [options]="{ locale: 'zh' }"
+        timezone="Asia/Shanghai"
+        [(ngModel)]="time"></tbw-time-editor>
+
+    <span class="text-time">{{format('Asia/Dhaka', 'bn', 'DD/MM/Y hh:mm A')}}</span>
+    <span class="text-time">{{format('Europe/Berlin', 'de', 'DD.MM.Y, HH:mm')}}</span>
+    <span class="text-time">{{format('Asia/Shanghai', 'zh', 'ISS')}}</span>
+  </div><br>
+
+  <div class='custom-config'>
+    <label>Locale: <input type="text" autocorrect="off" [(ngModel)]="customLocale" [style.background-color]="localeGood ? 'inherit' : '#FBC'"></label>
+    <label>IANA timezone: <input type="text" autocorrect="off" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"></label>
+    <label>Numbering: <input type="text" autocorrect="off" [(ngModel)]="numSystem" [style.background-color]="numSystemGood ? 'inherit' : '#FBC'"></label>
+    <div class="wrap">&nbsp;</div>
+
+    <select class="line-start" [(ngModel)]="customStyle">
+      <option value="0">Date and time</option>
+      <option value="1">Date only</option>
+      <option value="2">Time only</option>
+    </select>
+    <select *ngIf="customStyle !== '2'" [(ngModel)]="yearStyle">
+      <option value="0">Positive-only years</option>
+      <option value="1">AD/BC years</option>
+      <option value="2">Signed years</option>
+    </select>
+    <select *ngIf="customStyle !== '2'" [(ngModel)]="customYear">
+      <option value="">Year length per locale</option>
+      <option value="false">4/variable-digit year</option>
+      <option value="true">2-digit year</option>
+    </select>
+    <select *ngIf="customStyle !== '1'" [(ngModel)]="customCycle">
+      <option value="0">12/24 hours, per locale</option>
+      <option value="1">24-hour time</option>
+      <option value="2">AM/PM time</option>
+    </select>
+    <label *ngIf="customStyle !== '1'"><input type="checkbox" [(ngModel)]="showSeconds">Show seconds</label>
+    <div class="wrap">&nbsp;</div>
+
+    <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="minGood ? 'inherit' : '#FBC'"></label>
+    <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="maxGood ? 'inherit' : '#FBC'"></label>
   </div>
-  <span>&nbsp;</span>
 
-  <tbw-time-editor tai
-      [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
-      [(ngModel)]="time"
-      [nativeDateTime]="native"></tbw-time-editor>
-  <span>Locale time, with occurrence, UTC offset and DST symbol</span>
-  <div>
-      <button (click)="setCurrentTime()">Set now</button>
-      <button (click)="time = 1636264837000">Sample time</button>
-      <button (click)="time = 1483228836000">Sample leap second</button>
-      <label *ngIf="mobile" for="native">Mobile native date/time</label>
-      <input *ngIf="mobile" id="native" type="checkbox" (change)="native = $any($event.target).checked"/><br>
-  </div>
-  <span>&nbsp;</span>
+  <form #theForm="ngForm" class='custom-time'>
+    &nbsp;<span>{{getCustomCaption()}}</span><br>
 
-  <tbw-time-editor tai
-      [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
-      timezone="UTC"
-      [(ngModel)]="time"></tbw-time-editor>
-  <span>UTC, in signed ISO-8601 date/time format</span>
-
-  <tbw-time-editor tai
-      [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
-      [(ngModel)]="time"></tbw-time-editor>
-  <span>Local with AD/BC</span>
-
-  <tbw-time-editor tai
-      [options]="{ twoDigitYear: true, yearStyle: POSITIVE_ONLY }"
-      [(ngModel)]="time"></tbw-time-editor>
-  <span>Local with two-digit year</span>
-
-  <tbw-time-editor tai
-      [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
-      timezone="UTC"
-      [(ngModel)]="time"></tbw-time-editor>
-  <span>UTC time only, with milliseconds</span>
-</div><br>
-
-<div class="bottom-grid">
-  <span>Arabic, general, AD/BC</span>
-  <span>Arabic, Egypt</span>
-  <span>Hebrew, forced AM/PM form</span>
-
-  <tbw-time-editor tai
-      [options]="$any({ locale: 'ar', yearStyle: AD_BC, numbering: 'latn' })"
-      timezone="Africa/Cairo"
-      [(ngModel)]="time"></tbw-time-editor>
-  <tbw-time-editor tai
-      [options]="{ locale: 'ar-EG' }"
-      timezone="Africa/Cairo"
-      [(ngModel)]="time"></tbw-time-editor>
-  <tbw-time-editor tai
-      [options]="{ hourStyle: AM_PM, locale: 'he' }"
-      timezone="Asia/Jerusalem"
-      [(ngModel)]="time"></tbw-time-editor>
-
-  <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar', 'Y/MM/DD N hh:mm A')}}</span>
-  <span class="text-time" dir="rtl">{{ format('Africa/Cairo', 'ar-EG', 'ISS')}}</span>
-  <span class="text-time" dir="rtl">{{ format('Asia/Jerusalem', 'he', 'DD.MM.Y, hh:mm A')}}</span>
-
-  <span>Bengali</span>
-  <span>German</span>
-  <span>Chinese</span>
-
-  <tbw-time-editor tai
-      [options]="{ locale: 'bn' }"
-      timezone="Asia/Dhaka"
-      [(ngModel)]="time"></tbw-time-editor>
-  <tbw-time-editor tai
-      [options]="{ locale: 'de' }"
-      timezone="Europe/Berlin"
-      [(ngModel)]="time"></tbw-time-editor>
-  <tbw-time-editor tai
-      [options]="{ locale: 'zh' }"
-      timezone="Asia/Shanghai"
-      [(ngModel)]="time"></tbw-time-editor>
-
-  <span class="text-time">{{format('Asia/Dhaka', 'bn', 'DD/MM/Y hh:mm A')}}</span>
-  <span class="text-time">{{format('Europe/Berlin', 'de', 'DD.MM.Y, HH:mm')}}</span>
-  <span class="text-time">{{format('Asia/Shanghai', 'zh', 'ISS')}}</span>
-</div><br>
-
-<div class='custom-config'>
-  <label>Locale: <input type="text" autocorrect="off" [(ngModel)]="customLocale" [style.background-color]="localeGood ? 'inherit' : '#FBC'"></label>
-  <label>IANA timezone: <input type="text" autocorrect="off" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"></label>
-  <label>Numbering: <input type="text" autocorrect="off" [(ngModel)]="numSystem" [style.background-color]="numSystemGood ? 'inherit' : '#FBC'"></label>
-  <div class="wrap">&nbsp;</div>
-
-  <select class="line-start" [(ngModel)]="customStyle">
-    <option value="0">Date and time</option>
-    <option value="1">Date only</option>
-    <option value="2">Time only</option>
-  </select>
-  <select *ngIf="customStyle !== '2'" [(ngModel)]="yearStyle">
-    <option value="0">Positive-only years</option>
-    <option value="1">AD/BC years</option>
-    <option value="2">Signed years</option>
-  </select>
-  <select *ngIf="customStyle !== '2'" [(ngModel)]="customYear">
-    <option value="">Year length per locale</option>
-    <option value="false">4/variable-digit year</option>
-    <option value="true">2-digit year</option>
-  </select>
-  <select *ngIf="customStyle !== '1'" [(ngModel)]="customCycle">
-    <option value="0">12/24 hours, per locale</option>
-    <option value="1">24-hour time</option>
-    <option value="2">AM/PM time</option>
-  </select>
-  <label *ngIf="customStyle !== '1'"><input type="checkbox" [(ngModel)]="showSeconds">Show seconds</label>
-  <div class="wrap">&nbsp;</div>
-
-  <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="minGood ? 'inherit' : '#FBC'"></label>
-  <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="maxGood ? 'inherit' : '#FBC'"></label>
+    <tbw-time-editor #sample="ngModel" name="sample"
+        tai
+        [max]="max"
+        [min]="min"
+        [options]="getOptions()"
+        [timezone]="customTimezone"
+        [(ngModel)]="time"></tbw-time-editor>
+   <tbw-form-error-display [control]="sample"></tbw-form-error-display>
+   <div class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</div>
+  </form>
 </div>
-
-<form #theForm="ngForm" class='custom-time'>
-  &nbsp;<span>{{getCustomCaption()}}</span><br>
-
-  <tbw-time-editor #sample="ngModel" name="sample"
-      tai
-      [max]="max"
-      [min]="min"
-      [options]="getOptions()"
-      [timezone]="customTimezone"
-      [(ngModel)]="time"></tbw-time-editor>
- <tbw-form-error-display [control]="sample"></tbw-form-error-display>
- <div class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</div>
-</form>

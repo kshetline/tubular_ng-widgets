@@ -32,6 +32,7 @@ export class AppComponent {
   customCycle = '0';
   customStyle = '0';
   customYear = 'false';
+  darkMode = false;
   localeGood = true;
   maxGood = true;
   minGood = true;

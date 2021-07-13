@@ -4,7 +4,8 @@ import {
 } from '@angular/core';
 import { abs, floor, max, min, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, isAndroid, isChrome, isChromeOS, isEdge, isIOS, isNumber, isString, noop, processMillis, toBoolean
+  eventToKey, getCssValue, isAndroid, isChrome, isChromeOS, isEdge, isIOS, isNumber, isString, noop, processMillis,
+  toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
@@ -86,43 +87,70 @@ const SPIN_DOWN    = -3;
 const addFocusOutline = isEdge() || isIOS();
 const disableContentEditable = isEdge();
 
-function getCssColor(className: string): string {
+function getBackgroundColor(className: string, darkMode = false): string {
+  const outer = document.createElement('div');
   const elem = document.createElement('div');
 
-  document.body.appendChild(elem);
-  elem.classList.add('tbw-' + className);
-  const result = getCssValue(elem, 'color');
-  document.body.removeChild(elem);
+  if (darkMode)
+    outer.classList.add('tbw-dark-mode');
 
-  console.log(className, result);
+  document.body.appendChild(outer);
+  elem.classList.add(className);
+  outer.appendChild(elem);
+  const result = getCssValue(elem, 'background-color');
+  document.body.removeChild(outer);
+
   return result;
 }
 
-const NORMAL_BACKGROUND    = getCssColor('normal-background');
-const DISABLED_BACKGROUND  = getCssColor('disabled-background');
-const ERROR_BACKGROUND     = getCssColor('error-background');
-const VIEW_ONLY_BACKGROUND = getCssColor('view-only-background');
-const WARNING_BACKGROUND   = getCssColor('warning-background');
+function getBackgroundLevel(elem: HTMLElement): number {
+  const color = getCssValue(elem, 'background-color');
+
+  if (color === 'transparent')
+    return elem.parentElement ? getBackgroundLevel(elem.parentElement) : 255;
+
+  const channels = (/(\d+)\b.*?\b(\d+).*?\b(\d+)(?:.*?\b(\d+))?/.exec(color) ?? [0, 0, 0, 0, 0]).map(n => toNumber(n, 255));
+
+  if (channels[4] != null && channels[4] === 0)
+    return elem.parentElement ? getBackgroundLevel(elem.parentElement) : 255;
+
+  return channels[1] * 0.21 + channels[2] * 0.72 + channels[3] * 0.07;
+}
+
+const DISABLED_ARROW_COLOR = 'tbw-disabled-arrow-color';
+const DISABLED_BACKGROUND  = 'tbw-disabled-background';
+const DISABLED_TEXT        = 'tbw-disabled-text';
+const ERROR_BACKGROUND     = 'tbw-error-background';
+const INDICATOR_TEXT       = 'tbw-indicator-text';
+const NORMAL_BACKGROUND    = 'tbw-normal-background';
+const NORMAL_TEXT          = 'tbw-normal-text';
+const SELECTED_BACKGROUND  = 'tbw-selected-background';
+const SELECTED_TEXT        = 'tbw-selected-text';
+const SPINNER_FILL         = 'tbw-spinner-fill';
+const VIEW_ONLY_TEXT       = 'tbw-view-only-text';
+const VIEW_ONLY_BACKGROUND = 'tbw-view-only-background';
+const WARNING_BACKGROUND   = 'tbw-warning-background';
 
 export const BACKGROUND_ANIMATIONS = trigger('displayState', [
-  state('error',    style({ backgroundColor: ERROR_BACKGROUND })),
-  state('normal',   style({ backgroundColor: NORMAL_BACKGROUND })),
-  state('warning',  style({ backgroundColor: WARNING_BACKGROUND })),
-  state('viewOnly', style({ backgroundColor: VIEW_ONLY_BACKGROUND })),
-  state('disabled', style({ backgroundColor: DISABLED_BACKGROUND })),
+  state('error',    style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND) })),
+  state('normal',   style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND) })),
+  state('warning',  style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND) })),
+  state('viewOnly', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND) })),
+  state('disabled', style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND) })),
+  state('dark-error',    style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, true) })),
+  state('dark-normal',   style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, true) })),
+  state('dark-warning',  style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, true) })),
+  state('dark-viewOnly', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, true) })),
+  state('dark-disabled', style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, true) })),
   transition('normal => error',  animate(FLASH_DURATION)),
   transition('error => normal',  animate(FLASH_DURATION)),
   transition('warning => error', animate(FLASH_DURATION)),
-  transition('error => warning', animate(FLASH_DURATION))
+  transition('error => warning', animate(FLASH_DURATION)),
+  transition('dark-normal => dark-error',  animate(FLASH_DURATION)),
+  transition('dark-error => dark-normal',  animate(FLASH_DURATION)),
+  transition('dark-warning => dark-error', animate(FLASH_DURATION)),
+  transition('dark-error => dark-warning', animate(FLASH_DURATION))
 ]);
-
-const NORMAL_TEXT          = getCssColor('normal-text');
-const DISABLED_ARROW_COLOR = getCssColor('disabled-arrow-color');
-const DISABLED_TEXT        = getCssColor('disabled-text');
-const INDICATOR_TEXT       = getCssColor('indicator-text');
-const SELECTED_TEXT        = getCssColor('selected-text');
-const SPINNER_FILL         = getCssColor('spinner-fill');
-const VIEW_ONLY_TEXT       = getCssColor('view-only-text');
 
 const touchListener = (): void => {
   DigitSequenceEditorDirective.touchHasOccurred = true;
@@ -134,6 +162,8 @@ document.addEventListener('touchstart', touchListener);
 export function isNilOrBlank(v: any): boolean {
   return v == null || v === '';
 }
+
+let This: typeof DigitSequenceEditorDirective;
 
 @Directive()
 export abstract class DigitSequenceEditorDirective<T> implements
@@ -161,8 +191,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   // DigitSequenceEditorDirective specifics
 
+  private static instances = new Set<DigitSequenceEditorDirective<any>>();
   private static lastKeyTimestamp = 0;
   private static lastKeyKey = '';
+  private static mutationObserver: MutationObserver;
   private static useHiddenInput = isAndroid() || isChromeOS();
   private static checkForRepeatedKeyTimestamps = isIOS();
 
@@ -170,6 +202,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   private activeSpinner = NO_SELECTION;
   private clickTimer: Subscription;
+  private darkMode = false;
   private errorTimer: Subscription;
   private firstTouchPoint: Point;
   private focusTimer: any;
@@ -214,7 +247,31 @@ export abstract class DigitSequenceEditorDirective<T> implements
   @ViewChild('emSizer', { static: true }) private emSizerRef: ElementRef;
   @ViewChild('wrapper', { static: true }) private wrapperRef: ElementRef;
 
-  protected constructor(protected injector: Injector) {}
+  protected constructor(protected injector: Injector) {
+    This.instances.add(this);
+
+    if (!This.mutationObserver) {
+      This.mutationObserver = new MutationObserver(mutations => {
+        let modeChanged = false;
+
+        for (const mutation of mutations) {
+          const wasDark = /\btbw-dark-mode\b/.test(mutation.oldValue || '');
+          const isDark = /\btbw-dark-mode\b/.test((mutation.target as HTMLElement)?.className || '');
+
+          if (wasDark !== isDark) {
+            modeChanged = true;
+            break;
+          }
+        }
+
+        if (modeChanged)
+          This.instances.forEach(instance => instance.checkDarkMode());
+      });
+
+      This.mutationObserver.observe(document.body,
+        { subtree: true, attributeFilter: ['class'], attributeOldValue: true });
+    }
+  }
 
   // Angular lifecycle
 
@@ -242,6 +299,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   ngAfterViewInit(): void {
+    this.checkDarkMode();
+
     setTimeout(() => {
       this.afterViewInit = true;
 
@@ -255,6 +314,12 @@ export abstract class DigitSequenceEditorDirective<T> implements
   ngOnDestroy(): void {
     this.stopKeyTimer();
     this.stopClickTimer();
+    This.instances.delete(this);
+
+    if (This.mutationObserver && This.instances.size === 0) {
+      This.mutationObserver.disconnect();
+      This.mutationObserver = undefined;
+    }
   }
 
   // ControlValueAccessor interface
@@ -479,11 +544,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
   getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
     if (!this._disabled && this.showFocus && !this.selectionHidden &&
         ((item && index === this.selection) || (!item && this.activeSpinner === index)))
-      return NORMAL_TEXT;
+      return SELECTED_BACKGROUND;
     else if (!this._disabled && !this.viewOnly && (index === SPIN_UP || index === SPIN_DOWN))
       return SPINNER_FILL;
     else
-      return 'transparent';
+      return 'tbw-transparent';
   }
 
   getColorForItem(item?: SequenceItemInfo, index = item?.index): string {
@@ -539,11 +604,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return;
 
     if (!this.errorTimer)
-      this.displayState = 'warning';
+      this.displayState = (this.darkMode ? 'dark-' : '') + 'warning';
 
     this.warningTimer = timer(longer ? LONG_WARNING_DURATION : FLASH_DURATION).subscribe(() => {
       this.warningTimer = undefined;
-      this.displayState = (this.errorTimer ? 'error' : 'normal');
+      this.displayState = (this.darkMode ? 'dark-' : '') + (this.errorTimer ? 'error' : 'normal');
     });
   }
 
@@ -551,10 +616,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this.errorTimer)
       return;
 
-    this.displayState = 'error';
+    this.displayState = (this.darkMode ? 'dark-' : '') + 'error';
     this.errorTimer = timer(FLASH_DURATION).subscribe(() => {
       this.errorTimer = undefined;
-      this.displayState = (this.warningTimer ? 'warning' : 'normal');
+      this.displayState = (this.darkMode ? 'dark-' : '') + (this.warningTimer ? 'warning' : 'normal');
     });
   }
 
@@ -1068,8 +1133,23 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
+  protected checkDarkMode(): void {
+    let newState: string;
+
+    this.darkMode = (getBackgroundLevel(this.wrapper.parentElement) < 128);
+
+    if (this.darkMode && !this.displayState.startsWith('dark-'))
+      newState = 'dark-' + this.displayState;
+    else if (!this.darkMode && this.displayState.startsWith('dark-'))
+      newState = this.displayState.substr(5);
+
+    if (newState)
+      setTimeout(() => this.displayState = newState);
+  }
+
   protected adjustState(): void {
-    this.displayState = this._viewOnly ? 'viewOnly' : (this._disabled ? 'disabled' : 'normal');
+    this.displayState = (this.darkMode ? 'dark-' : '') +
+      this._viewOnly ? 'viewOnly' : (this._disabled ? 'disabled' : 'normal');
 
     if (this.hiddenInput)
       this.hiddenInput.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);
@@ -1107,3 +1187,5 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.items.forEach(item => item.swipeAbove = item.swipeBelow = null);
   }
 }
+
+This = DigitSequenceEditorDirective;

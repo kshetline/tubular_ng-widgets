@@ -1,16 +1,21 @@
-.tbw-disabled-arrow-color { color: #060; }
-.tbw-disabled-background {color: #CCC;  }
-.tbw-disabled-text { color: #999; }
-.tbw-error-background { color: #F67; }
-.tbw-indicator-text { color: blue; }
-.tbw-normal-background { color: white; }
-.tbw-normal-text { color: black; }
-.tbw-selected-text { color: white; }
-.tbw-spinner-fill { color: #EEE; }
-.tbw-view-only-background { color: black; }
-.tbw-view-only-text { color: #0F0; }
-.tbw-warning-text { color: #C00; }
-.tbw-warning-background { color: #FC6; }
+.tbw-disabled-arrow-color { color: #060; stroke: #060; }
+.tbw-disabled-background { background-color: #CCC; fill: #CCC; }
+.tbw-disabled-text { color: #999; stroke: #999; }
+.tbw-error-background { background-color: #F67; fill: #F67; }
+.tbw-indicator-text { color: blue; stroke: blue; }
+.tbw-normal-background { background-color: white; fill: white; }
+.tbw-normal-text { color: black; stroke: black; }
+.tbw-selected-background { background-color: black; fill: black; }
+.tbw-selected-text { color: white; stroke: white; }
+.tbw-spinner-fill { background-color: #EEE; fill: #EEE; }
+.tbw-view-only-background { background-color: black; fill: black; }
+.tbw-view-only-text { color: #0F0; stroke: #0F0; }
+.tbw-warning-text { color: #C00; stroke: #C00; }
+.tbw-warning-background { background-color: #FC6; fill: #FC6; }
+
+.tbw-transparent {
+  background-color: transparent;
+}
 
 .tbw-dse-wrapper {
   align-items: baseline;
@@ -92,4 +97,39 @@
 
 .tbw-fed-error {
   font-size: 12px;
+}
+
+.tbw-dark-mode {
+  background-color: #333;
+
+  .tbw-dse-wrapper {
+    border-color: #A6A6A6;
+  }
+
+  .tbw-dse-divider {
+    background-color: #A6A6A6;
+  }
+
+  .tbw-dse-bad-value {
+    color: #C00 !important;
+  }
+
+  .tbw-dse-explicit-focus-outline {
+    outline-color: #3B99FC;
+  }
+
+  .tbw-disabled-arrow-color { color: #060; stroke: #060; }
+  .tbw-disabled-background { background-color: #CCC; fill: #CCC; }
+  .tbw-disabled-text { color: #999; stroke: #999; }
+  .tbw-error-background { background-color: #F67; fill: #F67; }
+  .tbw-indicator-text { color: blue; stroke: blue; }
+  .tbw-normal-background { background-color: #333; fill: #333; }
+  .tbw-normal-text { color: #EEE; stroke: #EEE; }
+  .tbw-selected-background { background-color: #EEE; fill: #EEE; }
+  .tbw-selected-text { color: #333; stroke: #333; }
+  .tbw-spinner-fill { background-color: #555; fill: #555; }
+  .tbw-view-only-background { background-color: black; fill: black; }
+  .tbw-view-only-text { color: #0F0; stroke: #0F0; }
+  .tbw-warning-text { color: #C00; stroke: #C00; }
+  .tbw-warning-background { background-color: #FC6; fill: #FC6; }
 }
