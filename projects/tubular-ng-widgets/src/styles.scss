@@ -1,26 +1,16 @@
-.tbw-warn {
-  color: #C00;
-}
-
-.tbw-normal-background {
-  color: white;
-}
-
-.tbw-disabled-background {
-  color: #CCC;
-}
-
-.tbw-error-background {
-  color: #F67;
-}
-
-.tbw-view-only-background {
-  color: black;
-}
-
-.tbw-warning-background {
-  color: #FC6;
-}
+.tbw-disabled-arrow-color { color: #060; }
+.tbw-disabled-background {color: #CCC;  }
+.tbw-disabled-text { color: #999; }
+.tbw-error-background { color: #F67; }
+.tbw-indicator-text { color: blue; }
+.tbw-normal-background { color: white; }
+.tbw-normal-text { color: black; }
+.tbw-selected-text { color: white; }
+.tbw-spinner-fill { color: #EEE; }
+.tbw-view-only-background { color: black; }
+.tbw-view-only-text { color: #0F0; }
+.tbw-warning-text { color: #C00; }
+.tbw-warning-background { color: #FC6; }
 
 .tbw-dse-wrapper {
   align-items: baseline;

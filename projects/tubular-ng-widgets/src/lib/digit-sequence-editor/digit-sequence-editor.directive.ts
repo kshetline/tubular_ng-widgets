@@ -116,13 +116,13 @@ export const BACKGROUND_ANIMATIONS = trigger('displayState', [
   transition('error => warning', animate(FLASH_DURATION))
 ]);
 
-const NORMAL_TEXT          = 'black';
-const DISABLED_ARROW_COLOR = '#060';
-const DISABLED_TEXT        = '#999';
-const INDICATOR_TEXT       = 'blue';
-const SELECTED_TEXT        = 'white';
-const SPINNER_FILL         = '#EEE';
-const VIEW_ONLY_TEXT       = '#0F0';
+const NORMAL_TEXT          = getCssColor('normal-text');
+const DISABLED_ARROW_COLOR = getCssColor('disabled-arrow-color');
+const DISABLED_TEXT        = getCssColor('disabled-text');
+const INDICATOR_TEXT       = getCssColor('indicator-text');
+const SELECTED_TEXT        = getCssColor('selected-text');
+const SPINNER_FILL         = getCssColor('spinner-fill');
+const VIEW_ONLY_TEXT       = getCssColor('view-only-text');
 
 const touchListener = (): void => {
   DigitSequenceEditorDirective.touchHasOccurred = true;
