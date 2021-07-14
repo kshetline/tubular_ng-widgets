@@ -441,7 +441,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
   setDisabledState?(isDisabled: boolean): void {
     super.setDisabledState(isDisabled);
-    this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'viewOnly' : 'normal'));
+    this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'view-only' : 'normal'));
   }
 
   get wallTime(): DateAndTime { return this.dateTime.wallTime; }

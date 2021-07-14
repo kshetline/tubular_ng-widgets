@@ -115,7 +115,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
 
   setDisabledState?(isDisabled: boolean): void {
     super.setDisabledState(isDisabled);
-    this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'viewOnly' : 'normal'));
+    this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'view-only' : 'normal'));
   }
 
   get min(): null | number | string { return this._min; }

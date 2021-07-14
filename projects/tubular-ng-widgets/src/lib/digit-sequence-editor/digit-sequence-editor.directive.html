@@ -3,7 +3,7 @@
     [class.tbw-dse-explicit-focus-outline]="addFocusOutline && hasFocus"
     [class.tbw-dse-clear-focus-outline]="addFocusOutline && !hasFocus"
     [class.tbw-dse-dse-rtl]="rtl"
-    [tabindex]="disabled ? -1 : tabindex"
+    [tabindex]="disabled || hasHiddenInput ? -1 : tabindex"
     [attr.contenteditable]="!disabled && !disableContentEditable"
     autocomplete="off" autocapitalize="off" autocorrect="off"
     (keydown)="onKeyDown($event)" (keyup)="onKeyUp()" (keypress)="onKeyPress($event)"

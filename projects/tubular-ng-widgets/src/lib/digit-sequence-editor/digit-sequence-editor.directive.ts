@@ -132,16 +132,16 @@ const VIEW_ONLY_BACKGROUND = 'tbw-view-only-background';
 const WARNING_BACKGROUND   = 'tbw-warning-background';
 
 export const BACKGROUND_ANIMATIONS = trigger('displayState', [
-  state('error',    style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND) })),
-  state('normal',   style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND) })),
-  state('warning',  style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND) })),
-  state('viewOnly', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND) })),
-  state('disabled', style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND) })),
-  state('dark-error',    style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, true) })),
-  state('dark-normal',   style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, true) })),
-  state('dark-warning',  style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, true) })),
-  state('dark-viewOnly', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, true) })),
-  state('dark-disabled', style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, true) })),
+  state('error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND) })),
+  state('normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND) })),
+  state('warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND) })),
+  state('view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND) })),
+  state('disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND) })),
+  state('dark-error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, true) })),
+  state('dark-normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, true) })),
+  state('dark-warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, true) })),
+  state('dark-view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, true) })),
+  state('dark-disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, true) })),
   transition('normal => error',  animate(FLASH_DURATION)),
   transition('error => normal',  animate(FLASH_DURATION)),
   transition('warning => error', animate(FLASH_DURATION)),
@@ -265,7 +265,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
         }
 
         if (modeChanged)
-          This.instances.forEach(instance => instance.checkDarkMode());
+          setTimeout(() => This.instances.forEach(instance => instance.checkDarkMode(true)));
       });
 
       This.mutationObserver.observe(document.body,
@@ -422,6 +422,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this._viewOnly = value;
     this.adjustState();
   }
+
+  get hasHiddenInput(): boolean { return !!this.hiddenInput; }
 
   protected abstract createDigits(): void;
 
@@ -1133,7 +1135,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
-  protected checkDarkMode(): void {
+  protected checkDarkMode(immediate = false): void {
     let newState: string;
 
     this.darkMode = (getBackgroundLevel(this.wrapper.parentElement) < 128);
@@ -1143,13 +1145,17 @@ export abstract class DigitSequenceEditorDirective<T> implements
     else if (!this.darkMode && this.displayState.startsWith('dark-'))
       newState = this.displayState.substr(5);
 
-    if (newState)
-      setTimeout(() => this.displayState = newState);
+    if (newState) {
+      if (immediate)
+        this.displayState = newState;
+      else
+        setTimeout(() => this.displayState = newState);
+    }
   }
 
   protected adjustState(): void {
     this.displayState = (this.darkMode ? 'dark-' : '') +
-      this._viewOnly ? 'viewOnly' : (this._disabled ? 'disabled' : 'normal');
+      (this._viewOnly ? 'view-only' : (this._disabled ? 'disabled' : 'normal'));
 
     if (this.hiddenInput)
       this.hiddenInput.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);

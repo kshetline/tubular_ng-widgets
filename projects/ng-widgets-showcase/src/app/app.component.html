@@ -34,11 +34,13 @@
 
     <tbw-time-editor tai
         [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
+        [viewOnly]="viewOnly"
         [(ngModel)]="time"></tbw-time-editor>
     <span>Local with AD/BC</span>
 
     <tbw-time-editor tai
         [options]="{ twoDigitYear: true, yearStyle: POSITIVE_ONLY }"
+        [disabled]="timeDisabled"
         [(ngModel)]="time"></tbw-time-editor>
     <span>Local with two-digit year</span>
 

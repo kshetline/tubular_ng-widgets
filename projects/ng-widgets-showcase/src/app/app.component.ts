@@ -32,7 +32,7 @@ export class AppComponent {
   customCycle = '0';
   customStyle = '0';
   customYear = 'false';
-  darkMode = false;
+  darkMode = true;
   localeGood = true;
   maxGood = true;
   minGood = true;
@@ -41,7 +41,9 @@ export class AppComponent {
   numSystemGood = true;
   showSeconds = false;
   time = new DateTime().taiMillis;
+  timeDisabled = true;
   timezoneGood = true;
+  viewOnly = true;
   yearStyle = '0';
 
   get customLocale(): string { return this._customLocale; }
