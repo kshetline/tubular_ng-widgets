@@ -9,11 +9,11 @@
       <tbw-angle-editor [(ngModel)]="angle" [options]="{ unsigned: true }"></tbw-angle-editor>
       <tbw-angle-editor [options]="{ angleStyle: 0 }"></tbw-angle-editor>
       <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 2 }"></tbw-angle-editor>
-      <form class="angle-min-max">
+      <div class="angle-min-max">
         <tbw-angle-editor #angleMinMax="ngModel" name="angleMinMax" [options]="{ angleStyle: DD, decimalPrecision: 1, unsigned: true }"
-                          min="5" max="30" [(ngModel)]="minMaxAngle"></tbw-angle-editor>
+                          validateAll min="5" max="30" [(ngModel)]="minMaxAngle"></tbw-angle-editor>
         <tbw-form-error-display [control]="angleMinMax"></tbw-form-error-display>
-      </form>
+      </div>
     </div>
     <span>&nbsp;</span>
 
@@ -139,7 +139,7 @@
     <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="maxGood ? 'inherit' : '#FBC'"></label>
   </div>
 
-  <form class='custom-time'>
+  <div class='custom-time'>
     &nbsp;<span>{{getCustomCaption()}}</span><br>
 
     <tbw-time-editor #sample="ngModel" name="sample"
@@ -151,5 +151,5 @@
         [(ngModel)]="time"></tbw-time-editor>
    <tbw-form-error-display [control]="sample"></tbw-form-error-display>
    <div class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</div>
-  </form>
+  </div>
 </div>

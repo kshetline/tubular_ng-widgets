@@ -109,12 +109,18 @@ function getBackgroundLevel(elem: HTMLElement): number {
   if (color === 'transparent')
     return elem.parentElement ? getBackgroundLevel(elem.parentElement) : 255;
 
-  const channels = (/(\d+)\b.*?\b(\d+).*?\b(\d+)(?:.*?\b(\d+))?/.exec(color) ?? [0, 0, 0, 0, 0]).map(n => toNumber(n, 255));
+  const [r, g, b, a] = (/(\d+)\b.*?\b(\d+).*?\b(\d+)(?:.*?\b(\d+))?/.exec(color) ?? [0, 0, 0, 0, 0])
+    .map(n => toNumber(n, 255)).slice(1);
 
-  if (channels[4] != null && channels[4] === 0)
+  if (a === 0)
     return elem.parentElement ? getBackgroundLevel(elem.parentElement) : 255;
 
-  return channels[1] * 0.21 + channels[2] * 0.72 + channels[3] * 0.07;
+  let level = r * 0.21 + g * 0.72 + b * 0.07;
+
+  if (a != null && a !== 255 && elem.parentElement)
+    level = (a * level + (255 - a) * getBackgroundLevel(elem.parentElement)) / 255;
+
+  return level;
 }
 
 const DISABLED_ARROW_COLOR = 'tbw-disabled-arrow-color';
@@ -185,6 +191,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected lastValue: T = null;
   protected touched = noop;
   protected valid = true;
+  protected _validateAll = false;
   protected _value: T = null;
 
   @Output() private valueChange = new EventEmitter<T>();
@@ -423,6 +430,19 @@ export abstract class DigitSequenceEditorDirective<T> implements
   @Input() set viewOnly(value: boolean) {
     this._viewOnly = value;
     this.adjustState();
+  }
+
+  get validateAll(): boolean | string { return this._validateAll; }
+  @Input() set validateAll(value: boolean | string) {
+    if (isString(value))
+      value = toBoolean(value, false, true);
+
+    if (this._validateAll !== value) {
+      this._validateAll = value;
+
+      if (value && !this.valid)
+        this.reportValueChange();
+    }
   }
 
   get hasHiddenInput(): boolean { return !!this.hiddenInput; }

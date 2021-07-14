@@ -108,10 +108,12 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
 
   private setIntAngle(newValue: number, doCallback = false): void {
     if (this.intAngle !== newValue) {
+      const wasOutOfRange = this.outOfRange;
+
       this.intAngle = newValue;
       this.updateDigits();
 
-      if (doCallback)
+      if (doCallback || (this.validateAll && !wasOutOfRange && this.outOfRange))
         this.reportValueChange();
     }
   }
@@ -367,9 +369,6 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       else
         this.items[this.compassIndex][field] = this.compassPoints[intAngle < 0 ? 0 : 1];
     }
-
-    if (this.outOfRange)
-      this.reportValueChange();
   }
 
   private getIntAngleFromDigits(): number {

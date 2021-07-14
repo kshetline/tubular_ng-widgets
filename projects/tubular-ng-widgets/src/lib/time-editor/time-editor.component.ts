@@ -432,9 +432,11 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       else
         this.dateTime.utcMillis = newValue;
 
+      const wasOutOfRange = this.outOfRange;
+
       this.updateDigits();
 
-      if (doCallback)
+      if (doCallback || (this.validateAll && !wasOutOfRange && this.outOfRange))
         this.reportValueChange();
     }
   }

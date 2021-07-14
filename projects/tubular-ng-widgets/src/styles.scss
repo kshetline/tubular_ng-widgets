@@ -1,6 +1,12 @@
 .tbw-disabled-arrow-color { color: #060; stroke: #060; }
 .tbw-disabled-background { background-color: #CCC; fill: #CCC; }
-.tbw-disabled-text { color: #999; stroke: #999; }
+.tbw-disabled-text {
+  color: #999; stroke: #999;
+
+  &.tbw-dse-bad-value {
+    opacity: 0.6 !important;
+  }
+}
 .tbw-error-background { background-color: #F67; fill: #F67; }
 .tbw-indicator-text { color: blue; stroke: blue; }
 .tbw-normal-background { background-color: white; fill: white; }
@@ -35,11 +41,12 @@
 .tbw-dse-divider {
   align-self: stretch;
   background-color: #A6A6A6;
-  margin: 0 max(1px, 0.0836em);
+  margin: 0 max(2px, 0.12em);
   overflow: hidden;
   position: relative;
   white-space: nowrap;
-  width: max(1px, 0.0836em);
+  width: max(1px, 0.07em);
+  transform: rotate(-0.0000000001deg); // Silly trick to convince Chrome to do subpixel rendering.
 }
 
 .tbw-dse-digit {

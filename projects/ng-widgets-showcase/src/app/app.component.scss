@@ -22,7 +22,10 @@
     flex-direction: column;
 
     tbw-form-error-display {
+      overflow: visible;
+      max-width: 4em;
       min-height: 15px;
+      white-space: nowrap;
     }
   }
 

@@ -49,7 +49,7 @@
         class="tbw-dse-sizer"
     >{{item.sizer}}</span>
     <ng-template #dividerOrSpinner>
-      <div *ngIf="item.divider; else spinner" class="tbw-dse-divider">.</div>
+      <div *ngIf="item.divider; else spinner" class="tbw-dse-divider">&nbsp;</div>
       <ng-template #spinner>
         <svg width="0.574em" height="1em" viewBox="0 0 353 614.6">
           <g>

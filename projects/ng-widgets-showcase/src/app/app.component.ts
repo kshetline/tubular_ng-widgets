@@ -42,13 +42,13 @@ export class AppComponent {
   numSystemGood = true;
   showSeconds = false;
   time = new DateTime().taiMillis;
-  timeDisabled = true;
+  timeDisabled = false;
   timezoneGood = true;
   viewOnly = true;
   yearStyle = '0';
 
   constructor() {
-    setTimeout(() => this.minMaxAngle = 4, 2000);
+    setTimeout(() => this.minMaxAngle = 4, 3000);
   }
 
   get customLocale(): string { return this._customLocale; }
