@@ -57,9 +57,12 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     super(injector);
   }
 
-  protected validateImpl(_value: number, _control?: AbstractControl): { [key: string]: any } {
+  protected validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
     if (this.outOfRange) {
-      // TODO
+      if (this.value < this.minAngle)
+        return { min: { min: this.min } };
+      else if (this.value > this.maxAngle)
+        return { max: { max: this.max } };
     }
 
     return null;
@@ -111,11 +114,6 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       if (doCallback)
         this.reportValueChange();
     }
-  }
-
-  setDisabledState?(isDisabled: boolean): void {
-    super.setDisabledState(isDisabled);
-    this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'view-only' : 'normal'));
   }
 
   get min(): null | number | string { return this._min; }
@@ -311,9 +309,9 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
           this.setIntAngle(intAngle);
           this.updateDigits();
         });
-      }
 
-      return;
+        return;
+      }
     }
     else if (delta === 0)
       this.outOfRange = false;
@@ -369,6 +367,9 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       else
         this.items[this.compassIndex][field] = this.compassPoints[intAngle < 0 ? 0 : 1];
     }
+
+    if (this.outOfRange)
+      this.reportValueChange();
   }
 
   private getIntAngleFromDigits(): number {

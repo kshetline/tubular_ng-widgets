@@ -338,6 +338,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   setDisabledState?(isDisabled: boolean): void {
     this.disabled = isDisabled;
+    this.displayState = (this.darkMode ? 'dark-' : '') +
+      (isDisabled ? 'disabled' : (this.viewOnly ? 'view-only' : 'normal'));
   }
 
   // ControlValueAccessor support
@@ -397,13 +399,13 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   // Validator interface
 
-  validate(control?: AbstractControl): { [key: string]: any } {
+  validate(control?: AbstractControl): Record<string, any> {
     const validation = this.validateImpl(this._value, control);
     this.valid = !validation;
     return validation;
   }
 
-  protected validateImpl(_value: T, _control?: AbstractControl): { [key: string]: any } {
+  protected validateImpl(_value: T, _control?: AbstractControl): Record<string, any> {
     return null;
   }
 

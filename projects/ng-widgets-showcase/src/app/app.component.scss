@@ -12,9 +12,22 @@
   grid-template-columns: auto auto;
   padding-bottom: 2em;
 
-  span {
+  .description {
     font-size: 18px;
     max-width: 280px;
+  }
+
+  .angle-min-max {
+    display: inline-flex;
+    flex-direction: column;
+
+    tbw-form-error-display {
+      min-height: 15px;
+    }
+  }
+
+  input[type='checkbox'] {
+    margin-left: 2em;
   }
 
   tbw-time-editor {

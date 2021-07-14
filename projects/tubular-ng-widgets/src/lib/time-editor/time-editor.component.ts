@@ -149,7 +149,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     this.setValue(newValue, true);
   }
 
-  protected validateImpl(_value: number, _control?: AbstractControl): { [key: string]: any } {
+  protected validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
     if (this.outOfRange) {
       const year = this.dateTime.wallTime.year;
 
@@ -437,11 +437,6 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       if (doCallback)
         this.reportValueChange();
     }
-  }
-
-  setDisabledState?(isDisabled: boolean): void {
-    super.setDisabledState(isDisabled);
-    this.displayState = (isDisabled ? 'disabled' : (this.viewOnly ? 'view-only' : 'normal'));
   }
 
   get wallTime(): DateAndTime { return this.dateTime.wallTime; }
