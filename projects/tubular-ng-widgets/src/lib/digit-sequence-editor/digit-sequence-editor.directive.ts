@@ -1,15 +1,16 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
-  AfterViewInit, Directive, ElementRef, EventEmitter, Injector, Input, OnDestroy, OnInit, Output, ViewChild
+  AfterViewInit, Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild
 } from '@angular/core';
 import { abs, floor, max, min, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, isAndroid, isChrome, isChromeOS, isEdge, isIOS, isNumber, isString, noop, processMillis,
-  toBoolean, toNumber
+  eventToKey, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isIOS, isNumber, isString, noop,
+  processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
 import { AbstractControl, ControlValueAccessor, Validator } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 export interface SequenceItemInfo {
   alt_swipeAbove?: string;
@@ -36,6 +37,12 @@ export interface SequenceItemInfo {
   swipeBelow?: string;
   value?: string | number;
   width?: string;
+}
+
+export interface ButtonInfo {
+  html?: string | SafeHtml;
+  key: string;
+  label?: string;
 }
 
 let _hasIntl = false;
@@ -178,6 +185,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   addFocusOutline = addFocusOutline;
   disableContentEditable = disableContentEditable;
+  htmlEscape = htmlEscape;
   SPIN_DOWN = SPIN_DOWN;
   SPIN_UP = SPIN_UP;
 
@@ -198,6 +206,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   // DigitSequenceEditorDirective specifics
 
+  private static headerStartX = 0;
+  private static headerStartY = 0;
   private static instances = new Set<DigitSequenceEditorDirective<any>>();
   private static lastKeyTimestamp = 0;
   private static lastKeyKey = '';
@@ -238,12 +248,19 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected wrapper: HTMLElement;
 
   protected static addFocusOutline = isEdge() || isIOS();
+  protected static dragee: DigitSequenceEditorDirective<any>;
 
   baselineShift = '0';
+  buttons: ButtonInfo[] = [];
   digitHeight = 17;
   displayItems: SequenceItemInfo[] = [];
   displayState = 'normal';
+  @Input() floating = false;
   hasFocus = false;
+  headerDx = 0;
+  headerDy = 0;
+  headerX = 0;
+  headerY = 0;
   items: SequenceItemInfo[] = [];
   lineHeight: string;
   rtl = false;
@@ -254,7 +271,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   @ViewChild('emSizer', { static: true }) private emSizerRef: ElementRef;
   @ViewChild('wrapper', { static: true }) private wrapperRef: ElementRef;
 
-  protected constructor(protected injector: Injector) {
+  protected constructor(protected sanitizer: DomSanitizer) {
     This.instances.add(this);
 
     if (!This.mutationObserver) {
@@ -277,6 +294,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
       This.mutationObserver.observe(document.body,
         { subtree: true, attributeFilter: ['class'], attributeOldValue: true });
+    }
+
+    if (This.instances.size === 1) {
+      document.addEventListener('mousemove', This.headerDrag);
+      document.addEventListener('mouseup', This.headerDragEnd);
     }
   }
 
@@ -301,6 +323,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     });
 
     this.createDigits();
+    this.createButtons();
     this.createDisplayOrder();
     this.createHiddenInput();
   }
@@ -326,6 +349,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (This.mutationObserver && This.instances.size === 0) {
       This.mutationObserver.disconnect();
       This.mutationObserver = undefined;
+    }
+
+    if (This.instances.size === 0) {
+      document.removeEventListener('mousemove', This.headerDrag);
+      document.removeEventListener('mouseup', This.headerDragEnd);
     }
   }
 
@@ -449,6 +477,35 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   protected abstract createDigits(): void;
 
+  protected createButtons(): void {
+    this.buttons = [];
+
+    for (let i = 0; i <= 9; ++i)
+      this.buttons.push({ key: i.toString(), label: i.toString() });
+
+    this.buttons.push({ key: 'Copy', html: this.sanitizer.bypassSecurityTrustHtml(
+/* eslint-disable max-len */
+`<svg viewBox="0 0 512 512" width="1em" height="1em">
+  <g>
+    <polygon points="304,96 288,96 288,176 368,176 368,160 304,160  "/>
+    <path d="M325.3,64H160v48h-48v336h240v-48h48V139L325.3,64z M336,432H128V128h32v272h176V432z M384,384H176V80h142.7l65.3,65.6V384   z"/>
+  </g>
+</svg>`)});
+    this.buttons.push({ key: 'Paste', html: this.sanitizer.bypassSecurityTrustHtml(
+`<svg viewBox="0 0 512 512" width="1em" height="1em">
+  <g>
+    <g>
+      <path d="M160,160h192c-1.7-20-9.7-35.2-27.9-40.1c-0.4-0.1-0.9-0.3-1.3-0.4c-12-3.4-20.8-7.5-20.8-20.7V78.2    c0-25.5-20.5-46.3-46-46.3c-25.5,0-46,20.7-46,46.3v20.6c0,13.1-8.8,17.2-20.8,20.6c-0.4,0.1-0.9,0.4-1.4,0.5    C169.6,124.8,161.9,140,160,160z M256,64.4c7.6,0,13.8,6.2,13.8,13.8c0,7.7-6.2,13.8-13.8,13.8c-7.6,0-13.8-6.2-13.8-13.8    C242.2,70.6,248.4,64.4,256,64.4z"/>
+      <path d="M404.6,63H331v14.5c0,10.6,8.7,18.5,19,18.5h37.2c6.7,0,12.1,5.7,12.4,12.5l0.1,327.2c-0.3,6.4-5.3,11.6-11.5,12.1    l-264.4,0.1c-6.2-0.5-11.1-5.7-11.5-12.1l-0.1-327.3c0.3-6.8,5.9-12.5,12.5-12.5H162c10.3,0,19-7.9,19-18.5V63h-73.6    C92.3,63,80,76.1,80,91.6V452c0,15.5,12.3,28,27.4,28H256h148.6c15.1,0,27.4-12.5,27.4-28V91.6C432,76.1,419.7,63,404.6,63z"/>
+    </g>
+    <rect height="16" width="112" x="144" y="192"/><rect height="16" width="160" x="144" y="288"/>
+    <rect height="16" width="129" x="144" y="384"/><rect height="16" width="176" x="144" y="336"/>
+    <rect height="16" width="208" x="144" y="240"/>
+  </g>
+</svg>`)});
+/* eslint-enable max-len */
+  }
+
   protected getDigits(index: number, count: number, defaultValue = 0): number {
     if (index < 0)
       return defaultValue;
@@ -566,7 +623,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
-    if (!this._disabled && this.showFocus && !this.selectionHidden &&
+    if (!this._disabled && (this.showFocus || this.floating) && !this.selectionHidden &&
         ((item && index === this.selection) || (!item && this.activeSpinner === index)))
       return SELECTED_BACKGROUND;
     else if (!this._disabled && !this.viewOnly && (index === SPIN_UP || index === SPIN_DOWN))
@@ -584,7 +641,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return DISABLED_ARROW_COLOR;
     else if (item && item.indicator)
       return INDICATOR_TEXT;
-    else if (index === this.selection && this.showFocus && !this.selectionHidden)
+    else if (index === this.selection && (this.showFocus || this.floating) && !this.selectionHidden)
       return SELECTED_TEXT;
     else
       return NORMAL_TEXT;
@@ -662,6 +719,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
+  onButtonFocus(): void {
+    this.wrapper.focus();
+  }
+
   onMouseDown(index: number, evt?: MouseEvent | TouchEvent): void {
     if (this._disabled || this.viewOnly || ((evt as any)?.button ?? 0) !== 0)
       return;
@@ -696,6 +757,32 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   onMouseLeave(): void {
     this.stopClickTimer();
+  }
+
+  headerDragStart(evt: MouseEvent): void {
+    This.dragee = this;
+    this.headerDx = this.headerDy = 0;
+    This.headerStartX = evt.pageX;
+    This.headerStartY = evt.pageY;
+    evt.preventDefault();
+  }
+
+  static headerDrag(evt: MouseEvent): void {
+    if (This.dragee) {
+      This.dragee.headerDx = evt.pageX - This.headerStartX;
+      This.dragee.headerDy = evt.pageY - This.headerStartY;
+      evt.preventDefault();
+    }
+  }
+
+  static headerDragEnd(evt: MouseEvent): void {
+    if (This.dragee) {
+      This.dragee.headerX += This.dragee.headerDx;
+      This.dragee.headerY += This.dragee.headerDy;
+      This.dragee.headerDx = This.dragee.headerDy = 0;
+      This.dragee = undefined;
+      evt.preventDefault();
+    }
   }
 
   onTouchStart(index: number, evt: TouchEvent): void {
@@ -1034,8 +1121,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
-  protected onKey(key: string): void {
-    if (this._disabled || this.viewOnly || !this.hasFocus || !this.items[this.selection]?.editable)
+  onKey(key: string): void {
+    if (this._disabled || this.viewOnly || (!this.hasFocus && !this.floating) || !this.items[this.selection]?.editable)
       return;
 
     if (key === '-' || key.toLowerCase() === this.letterDecrement)
@@ -1062,6 +1149,14 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
       case 'ArrowRight':
         this.cursorRight();
+        break;
+
+      case 'Copy': // Pseudo key
+        this.doCopy();
+        break;
+
+      case 'Paste': // Pseudo key
+        this.doPaste();
         break;
 
       case ' ':

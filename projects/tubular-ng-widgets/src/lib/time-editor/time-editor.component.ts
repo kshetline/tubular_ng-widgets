@@ -1,5 +1,6 @@
-import { ChangeDetectorRef, Component, forwardRef, Injector, Input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, forwardRef, Input, OnInit } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import ttime, {
   DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone, utToTaiMillis
 } from '@tubular/time';
@@ -139,8 +140,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   localTimeMax: string;
   timeStep = '60';
 
-  constructor(injector: Injector, private cd: ChangeDetectorRef) {
-    super(injector);
+  constructor(sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {
+    super(sanitizer);
     this.useAlternateTouchHandling = false;
   }
 
@@ -1258,7 +1259,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.updateDigits(dateTime, sign);
   }
 
-  protected onKey(key: string): void {
+  onKey(key: string): void {
     const keyLc = key.toLocaleLowerCase(this._options.locale);
     const editable = !this.disabled && !this.viewOnly;
 
@@ -1328,7 +1329,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       i[sel].value = newValue;
 
       const wallTime = this.getWallTimeFromDigits();
-      let extraSec = 0;
+      const wasLeap = (this._tai && wallTime.sec >= 60);
+      let extraSec = (wasLeap ? 1 : 0);
 
       if (sel === this.secondIndex && newValue === 6 && this._tai) {
         const testTime = clone(wallTime);
@@ -1395,6 +1397,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       }
 
       this.dateTime.wallTime = wallTime;
+
+      if (wasLeap && this.dateTime.wallTime.sec === 0 && sel !== this.secondIndex && sel !== this.secondIndex + 1)
+        this.dateTime.subtract(DateTimeField.SECOND_TAI, 1);
 
       if (this.minLimit.compare(this.dateTime) > 0) {
         this.dateTime.wallTime = this.minLimit.getWallTime(this.dateTime);

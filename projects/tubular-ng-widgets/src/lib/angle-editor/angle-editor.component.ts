@@ -1,5 +1,6 @@
-import { Component, forwardRef, Injector, Input, OnInit } from '@angular/core';
+import { Component, forwardRef, Input, OnInit } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import { clone, convertDigitsToAscii, isArray, isEqual, last, repeat, toNumber } from '@tubular/util';
 import {
   BACKGROUND_ANIMATIONS, defaultLocale, DigitSequenceEditorDirective, hasIntl, SequenceItemInfo
@@ -53,8 +54,8 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
   private signIndex = -1;
 
   // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-  constructor(injector: Injector) { // But this isn't useless! It changes access from protected to public.
-    super(injector);
+  constructor(sanitizer: DomSanitizer) { // But this isn't useless! It changes access from protected to public.
+    super(sanitizer);
   }
 
   protected validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
@@ -437,7 +438,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     this.flipSign = false;
   }
 
-  protected onKey(key: string): void {
+  onKey(key: string): void {
     const keyLc = key.toLocaleLowerCase(this._options.locale);
     const editable = !this.disabled && !this.viewOnly;
 
