@@ -172,6 +172,14 @@ const touchListener = (): void => {
 
 document.addEventListener('touchstart', touchListener);
 
+export function getThePoint(evt: MouseEvent | TouchEvent): Point {
+  if ((evt as any).pageX != null)
+    return { x: (evt as any).pageX, y: (evt as any).pageY };
+  else {
+    return getPageXYForTouchEvent(evt as any);
+  }
+}
+
 export function isNilOrBlank(v: any): boolean {
   return v == null || v === '';
 }
@@ -298,7 +306,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     if (This.instances.size === 1) {
       document.addEventListener('mousemove', This.headerDrag);
+      document.addEventListener('touchmove', This.headerDrag);
       document.addEventListener('mouseup', This.headerDragEnd);
+      document.addEventListener('touchend', This.headerDragEnd);
+      document.addEventListener('touchcancel', This.headerDragEnd);
     }
   }
 
@@ -353,7 +364,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     if (This.instances.size === 0) {
       document.removeEventListener('mousemove', This.headerDrag);
+      document.removeEventListener('touchmove', This.headerDrag);
       document.removeEventListener('mouseup', This.headerDragEnd);
+      document.removeEventListener('touchend', This.headerDragEnd);
+      document.removeEventListener('touchcancel', This.headerDragEnd);
     }
   }
 
@@ -759,23 +773,27 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.stopClickTimer();
   }
 
-  headerDragStart(evt: MouseEvent): void {
+  headerDragStart(evt: MouseEvent | TouchEvent): void {
+    const pt = getThePoint(evt);
+
     This.dragee = this;
     this.headerDx = this.headerDy = 0;
-    This.headerStartX = evt.pageX;
-    This.headerStartY = evt.pageY;
+    This.headerStartX = pt.x;
+    This.headerStartY = pt.y;
     evt.preventDefault();
   }
 
-  static headerDrag(evt: MouseEvent): void {
+  static headerDrag(evt: MouseEvent | TouchEvent): void {
     if (This.dragee) {
-      This.dragee.headerDx = evt.pageX - This.headerStartX;
-      This.dragee.headerDy = evt.pageY - This.headerStartY;
+      const pt = getThePoint(evt);
+
+      This.dragee.headerDx = pt.x - This.headerStartX;
+      This.dragee.headerDy = pt.y - This.headerStartY;
       evt.preventDefault();
     }
   }
 
-  static headerDragEnd(evt: MouseEvent): void {
+  static headerDragEnd(evt: MouseEvent | TouchEvent): void {
     if (This.dragee) {
       This.dragee.headerX += This.dragee.headerDx;
       This.dragee.headerY += This.dragee.headerDy;
