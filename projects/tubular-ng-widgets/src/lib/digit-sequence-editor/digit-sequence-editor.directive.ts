@@ -130,6 +130,7 @@ function getBackgroundLevel(elem: HTMLElement): number {
   return level;
 }
 
+const CONFIRM_BACKGROUND   = 'tbw-confirm-background';
 const DISABLED_ARROW_COLOR = 'tbw-disabled-arrow-color';
 const DISABLED_BACKGROUND  = 'tbw-disabled-background';
 const DISABLED_TEXT        = 'tbw-disabled-text';
@@ -147,22 +148,28 @@ const WARNING_BACKGROUND   = 'tbw-warning-background';
 export const BACKGROUND_ANIMATIONS = trigger('displayState', [
   state('error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND) })),
   state('normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND) })),
+  state('confirm',   style({ backgroundColor: getBackgroundColor(CONFIRM_BACKGROUND) })),
   state('warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND) })),
   state('view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND) })),
   state('disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND) })),
   state('dark-error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, true) })),
   state('dark-normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, true) })),
+  state('dark-confirm',   style({ backgroundColor: getBackgroundColor(CONFIRM_BACKGROUND, true) })),
   state('dark-warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, true) })),
   state('dark-view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, true) })),
   state('dark-disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, true) })),
-  transition('normal => error',  animate(FLASH_DURATION)),
-  transition('error => normal',  animate(FLASH_DURATION)),
-  transition('warning => error', animate(FLASH_DURATION)),
-  transition('error => warning', animate(FLASH_DURATION)),
-  transition('dark-normal => dark-error',  animate(FLASH_DURATION)),
-  transition('dark-error => dark-normal',  animate(FLASH_DURATION)),
-  transition('dark-warning => dark-error', animate(FLASH_DURATION)),
-  transition('dark-error => dark-warning', animate(FLASH_DURATION))
+  transition('normal => error',   animate(FLASH_DURATION)),
+  transition('error => normal',   animate(FLASH_DURATION)),
+  transition('normal => confirm', animate(FLASH_DURATION)),
+  transition('confirm => normal', animate(FLASH_DURATION)),
+  transition('warning => error',  animate(FLASH_DURATION)),
+  transition('error => warning',  animate(FLASH_DURATION)),
+  transition('dark-normal => dark-error',   animate(FLASH_DURATION)),
+  transition('dark-error => dark-normal',   animate(FLASH_DURATION)),
+  transition('dark-normal => dark-confirm', animate(FLASH_DURATION)),
+  transition('dark-confirm => dark-normal', animate(FLASH_DURATION)),
+  transition('dark-warning => dark-error',  animate(FLASH_DURATION)),
+  transition('dark-error => dark-warning',  animate(FLASH_DURATION))
 ]);
 
 const touchListener = (): void => {
@@ -227,6 +234,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   private activeSpinner = NO_SELECTION;
   private clickTimer: Subscription;
+  private confirmTimer: Subscription;
   private darkMode = false;
   private errorTimer: Subscription;
   private firstTouchPoint: Point;
@@ -250,6 +258,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected lastTabTime = 0;
   protected letterDecrement = 'z';
   protected letterIncrement = 'a';
+  protected pasteInput: HTMLInputElement;
   protected selectionHidden = false;
   protected showFocus = false;
   protected swipeIndex = -1;
@@ -257,6 +266,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected wrapper: HTMLElement;
 
   protected static addFocusOutline = isEdge() || isIOS();
+  protected static alternateClipboard = isAndroid() || isChromeOS() || isIOS();
   protected static dragee: DigitSequenceEditorDirective<any>;
 
   baselineShift = '0';
@@ -273,6 +283,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   lineHeight: string;
   rtl = false;
   selection = 0;
+  showPasteInput = false;
   smoothedDeltaY = 0;
   useAlternateTouchHandling = false;
 
@@ -324,8 +335,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
       const text = this.getClipboardText();
 
-      if (text)
+      if (text) {
         evt.clipboardData.setData('text/plain', text);
+        this.confirmFlash();
+      }
     });
 
     this.wrapper.addEventListener('paste', evt => {
@@ -705,6 +718,17 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   returnFalse(): boolean {
     return false;
+  }
+
+  protected confirmFlash(): void {
+    if (this.confirmTimer)
+      return;
+
+    this.displayState = (this.darkMode ? 'dark-' : '') + 'confirm';
+    this.confirmTimer = timer(FLASH_DURATION).subscribe(() => {
+      this.confirmTimer = undefined;
+      this.displayState = (this.darkMode ? 'dark-' : '') + 'normal';
+    });
   }
 
   protected warningFlash(longer = false): void {
@@ -1101,8 +1125,36 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private doPaste(text?: string): void {
     if (text)
       this.applyPastedText(text);
+    else if (This.alternateClipboard) {
+      this.showPasteInput = !this.showPasteInput;
+
+      if (this.showPasteInput) {
+        setTimeout(() => {
+          this.pasteInput = this.wrapper.parentElement.querySelector('input[name="paste-input"]');
+
+          if (this.pasteInput) {
+            this.pasteInput.value = '';
+            this.pasteInput.focus();
+          }
+        });
+      }
+    }
     else
       navigator.clipboard.readText().then(txt => this.applyPastedText(txt));
+  }
+
+  onPasteInput(): void {
+    this.pasteInput = this.wrapper.parentElement.querySelector('input[name="paste-input"]');
+
+    if (this.pasteInput?.value)
+      this.applyPastedText(this.pasteInput.value);
+
+    setTimeout(() => {
+      this.showPasteInput = false;
+
+      if (this.pasteInput)
+        this.pasteInput.value = '';
+    });
   }
 
   protected applyPastedText(_text: string): void {
@@ -1112,8 +1164,22 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private doCopy(): void {
     const text = this.getClipboardText();
 
-    if (text)
-      navigator.clipboard.writeText(text).finally(noop);
+    if (text) {
+      if (This.alternateClipboard) {
+        const elem = document.createElement('input');
+
+        elem.setAttribute('style', 'position: fixed; opacity: 0');
+        document.body.appendChild(elem);
+        elem.value = text;
+        elem.setSelectionRange(0, text.length);
+        document.execCommand('copy');
+        setTimeout(() => document.body.removeChild(elem));
+      }
+      else
+        navigator.clipboard.writeText(text).finally(noop);
+
+      this.confirmFlash();
+    }
   }
 
   protected getClipboardText(): string {

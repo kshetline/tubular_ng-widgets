@@ -172,8 +172,10 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   protected applyPastedText(text: string): void {
     const parsed = this.parseText(text);
 
-    if (parsed == null)
+    if (parsed == null) {
       this.errorFlash();
+      return;
+    }
     else if (isNumber(parsed)) {
       this.dateTime.taiMillis = parsed;
       this.outOfRange = false;
@@ -186,6 +188,11 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.reportValueChange();
       this.updateDigits();
     }
+
+    if (this.outOfRange)
+      this.errorFlash();
+    else
+      this.confirmFlash();
   }
 
   protected getClipboardText(): string {

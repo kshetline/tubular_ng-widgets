@@ -1,12 +1,12 @@
 body {
   margin: 0;
-  height: 100vh;
+  height: max(100vh, 100%);
   padding: 0;
 
   div.content {
     box-sizing: border-box;
     padding: 1em;
-    height: 100vh;
+    height: max(100vh, 100%);
   }
 }
 

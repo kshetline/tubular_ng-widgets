@@ -74,8 +74,10 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
 
     if (newValue == null || isNaN(newValue) || newValue < this.minAngle || newValue > this.maxAngle)
       this.errorFlash();
-    else
+    else {
       this.value = newValue;
+      this.confirmFlash();
+    }
   }
 
   protected getClipboardText(): string {

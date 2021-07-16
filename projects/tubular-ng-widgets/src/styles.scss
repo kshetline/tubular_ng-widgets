@@ -8,6 +8,7 @@
   }
 }
 .tbw-error-background { background-color: #F67; fill: #F67; }
+.tbw-confirm-background { background-color: #6C6; fill: #6C6; }
 .tbw-indicator-text { color: blue; stroke: blue; }
 .tbw-normal-background { background-color: white; fill: white; }
 .tbw-normal-text { color: black; stroke: black; }
@@ -41,6 +42,7 @@
   margin: 2px 2px 0 2px;
   height: 0.6em;
   overflow: hidden;
+  user-select: none;
 }
 
 .tbw-dse-footer {
@@ -52,6 +54,7 @@
   justify-content: center;
   margin: 0 2px 2px 2px;
   overflow: hidden;
+  position: relative;
 
   .tbw-dse-button {
     border: #A6A6A6 solid max(1px, 0.0418em);
@@ -66,6 +69,26 @@
     position: relative;
     text-align: center;
     user-select: none;
+  }
+
+  input, .tbw-dse-paste-hint {
+    display: none;
+    left: calc(50% - 5em);
+    position: absolute;
+    top: 0.3em;
+    width: 10em;
+  }
+
+  input {
+    background-color: transparent;
+  }
+
+  .tbw-dse-paste-hint {
+    background-color: inherit;
+    color: #888;
+    font-size: 0.8em;
+    font-style: italic;
+    text-align: center;
   }
 }
 
@@ -198,6 +221,7 @@
   .tbw-disabled-background { background-color: #444; fill: #444; }
   .tbw-disabled-text { color: #777; stroke: #777; }
   .tbw-error-background { background-color: #C36; fill: #C36; }
+  .tbw-confirm-background { background-color: #292; fill: #292; }
   .tbw-indicator-text { color: #56F; stroke: #56F; }
   .tbw-normal-background { background-color: #333; fill: #333; }
   .tbw-normal-text { color: #EEE; stroke: #EEE; }
