@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { abs, floor, max, min, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isIOS, isNumber, isString, noop,
+  eventToKey, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isIOS, isNumber, isSamsung, isString, noop,
   processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
@@ -92,7 +92,7 @@ const SPIN_UP      = -2;
 const SPIN_DOWN    = -3;
 
 const addFocusOutline = isEdge() || isIOS();
-const alternateClipboard = isAndroid() || isChromeOS() || isIOS();
+const alternateClipboard = navigator.clipboard == null || isAndroid() || isChromeOS() || isIOS() || isSamsung();
 const checkForRepeatedKeyTimestamps = isIOS();
 const disableContentEditable = isEdge();
 const useHiddenInput = isAndroid() || isChromeOS();
@@ -1148,8 +1148,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
       else
         This.pastable = undefined;
     }
-    else
+    else if (navigator.clipboard)
       navigator.clipboard.readText().then(txt => this.applyPastedText(txt));
+    else
+      this.errorFlash();
   }
 
   onPasteInput(): void {
@@ -1189,8 +1191,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
         document.execCommand('copy');
         setTimeout(() => document.body.removeChild(elem));
       }
-      else
+      else if (navigator.clipboard)
         navigator.clipboard.writeText(text).finally(noop);
+      else
+        this.errorFlash();
 
       this.confirmFlash();
     }
