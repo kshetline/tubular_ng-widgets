@@ -92,7 +92,10 @@ const SPIN_UP      = -2;
 const SPIN_DOWN    = -3;
 
 const addFocusOutline = isEdge() || isIOS();
+const alternateClipboard = isAndroid() || isChromeOS() || isIOS();
+const checkForRepeatedKeyTimestamps = isIOS();
 const disableContentEditable = isEdge();
+const useHiddenInput = isAndroid() || isChromeOS();
 
 function getBackgroundColor(className: string, darkMode = false): string {
   const outer = document.createElement('div');
@@ -221,8 +224,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private static lastKeyKey = '';
   private static mutationObserver: MutationObserver;
   private static pastable: DigitSequenceEditorDirective<any>;
-  private static useHiddenInput = isAndroid() || isChromeOS();
-  private static checkForRepeatedKeyTimestamps = isIOS();
 
   static touchHasOccurred = false;
 
@@ -259,8 +260,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected _tabindex = '0';
   protected wrapper: HTMLElement;
 
-  protected static addFocusOutline = isEdge() || isIOS();
-  protected static alternateClipboard = isAndroid() || isChromeOS() || isIOS();
   protected static dragee: DigitSequenceEditorDirective<any>;
 
   baselineShift = '0';
@@ -313,7 +312,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       document.addEventListener('mousedown', This.mouseDownOrTouch);
       document.addEventListener('touchstart', This.mouseDownOrTouch);
       document.addEventListener('mousemove', This.headerDrag);
-      document.addEventListener('touchmove', This.headerDrag);
+      document.addEventListener('touchmove', This.headerDrag, { passive: false });
       document.addEventListener('mouseup', This.headerDragEnd);
       document.addEventListener('touchend', This.headerDragEnd);
       document.addEventListener('touchcancel', This.headerDragEnd);
@@ -606,16 +605,17 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   protected createHiddenInput(): void {
-    if (!DigitSequenceEditorDirective.useHiddenInput)
+    if (!useHiddenInput)
       return;
 
     this.hiddenInput = document.createElement('input');
     this.hiddenInput.name = 'hidden';
-    this.hiddenInput.type = 'password';
-    this.hiddenInput.autocomplete = 'off';
+    this.hiddenInput.type = 'text';
+    this.hiddenInput.autocomplete = 'new-password';
     this.hiddenInput.setAttribute('autocapitalize', 'off');
     this.hiddenInput.setAttribute('autocomplete', 'off');
     this.hiddenInput.setAttribute('autocorrect', 'off');
+    this.hiddenInput.setAttribute('spellcheck', 'false');
     this.hiddenInput.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);
     this.hiddenInput.style.position = 'absolute';
     this.hiddenInput.style.opacity = '0';
@@ -1056,7 +1056,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     if (this.hiddenInput && !this.disabled)
       this.wrapper.style.outline = getCssValue(this.hiddenInput, 'outline');
-    else if (DigitSequenceEditorDirective.addFocusOutline)
+    else if (addFocusOutline)
       this.wrapper.style.outline = (newFocus && !this.disabled ? 'rgb(59, 153, 252) solid 1px' : 'black none 0px');
   }
 
@@ -1076,9 +1076,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
     // On the other hand, one Android external keyboard I've tested with sends the same timestamp multiple times
     // for legitimately separate keystrokes, so repeated timestamps have to be expected and allowed there.
     //
-    if (DigitSequenceEditorDirective.checkForRepeatedKeyTimestamps &&
-        (abs(evt.timeStamp - DigitSequenceEditorDirective.lastKeyTimestamp) <= FALSE_REPEAT_THRESHOLD &&
-         key === DigitSequenceEditorDirective.lastKeyKey)) {
+    if (checkForRepeatedKeyTimestamps &&
+        (abs(evt.timeStamp - This.lastKeyTimestamp) <= FALSE_REPEAT_THRESHOLD && key === This.lastKeyKey)) {
       evt.preventDefault();
 
       return false;
@@ -1090,7 +1089,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     // noinspection JSDeprecatedSymbols (for `keyCode`)
     if (this.hiddenInput && key === 'Unidentified' && evt.keyCode === 229) {
       this.getCharFromInputEvent = true;
-      DigitSequenceEditorDirective.lastKeyTimestamp = evt.timeStamp;
+      This.lastKeyTimestamp = evt.timeStamp;
 
       return true;
     }
@@ -1120,8 +1119,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
 
     evt.preventDefault();
-    DigitSequenceEditorDirective.lastKeyTimestamp = evt.timeStamp;
-    DigitSequenceEditorDirective.lastKeyKey = key;
+    This.lastKeyTimestamp = evt.timeStamp;
+    This.lastKeyKey = key;
 
     if (this.hiddenInput && (key === 'Backspace' || key === 'Delete')) {
       evt.stopPropagation();
@@ -1134,7 +1133,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private doPaste(text?: string): void {
     if (text)
       this.applyPastedText(text);
-    else if (This.alternateClipboard) {
+    else if (alternateClipboard) {
       this.showPasteInput = !this.showPasteInput;
 
       if (this.showPasteInput) {
@@ -1180,13 +1179,13 @@ export abstract class DigitSequenceEditorDirective<T> implements
     const text = this.getClipboardText();
 
     if (text) {
-      if (This.alternateClipboard) {
+      if (alternateClipboard) {
         const elem = document.createElement('input');
 
         elem.setAttribute('style', 'position: fixed; opacity: 0');
         document.body.appendChild(elem);
         elem.value = text;
-        elem.setSelectionRange(0, text.length);
+        elem.select();
         document.execCommand('copy');
         setTimeout(() => document.body.removeChild(elem));
       }
