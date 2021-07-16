@@ -88,6 +88,9 @@
         (focus)="onButtonFocus()"
         [innerHTML]="btn.html || htmlEscape(btn.label)"></span>
     <span class="tbw-dse-paste-hint" [style.display]="showPasteInput ? 'inline' : 'none'">paste here</span>
-    <input name='paste-input' type="text" (input)="onPasteInput()" [style.display]="showPasteInput ? 'inline' : 'none'">
+    <input name='paste-input'
+        type="text"
+        (input)="onPasteInput()"
+        [style.display]="showPasteInput ? 'inline' : 'none'">
   </div>
 </div>

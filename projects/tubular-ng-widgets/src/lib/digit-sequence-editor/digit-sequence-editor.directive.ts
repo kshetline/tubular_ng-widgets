@@ -1129,14 +1129,12 @@ export abstract class DigitSequenceEditorDirective<T> implements
       this.showPasteInput = !this.showPasteInput;
 
       if (this.showPasteInput) {
-        setTimeout(() => {
-          this.pasteInput = this.wrapper.parentElement.querySelector('input[name="paste-input"]');
+        this.pasteInput = this.wrapper.parentElement.querySelector('input[name="paste-input"]');
 
-          if (this.pasteInput) {
-            this.pasteInput.value = '';
-            this.pasteInput.focus();
-          }
-        });
+        if (this.pasteInput) {
+          this.pasteInput.value = '';
+          this.pasteInput.focus();
+        }
       }
     }
     else
