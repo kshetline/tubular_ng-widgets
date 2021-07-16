@@ -172,13 +172,6 @@ export const BACKGROUND_ANIMATIONS = trigger('displayState', [
   transition('dark-error => dark-warning',  animate(FLASH_DURATION))
 ]);
 
-const touchListener = (): void => {
-  DigitSequenceEditorDirective.touchHasOccurred = true;
-  document.removeEventListener('touchstart', touchListener);
-};
-
-document.addEventListener('touchstart', touchListener);
-
 export function getThePoint(evt: MouseEvent | TouchEvent): Point {
   if ((evt as any).pageX != null)
     return { x: (evt as any).pageX, y: (evt as any).pageY };
@@ -227,6 +220,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private static lastKeyTimestamp = 0;
   private static lastKeyKey = '';
   private static mutationObserver: MutationObserver;
+  private static pastable: DigitSequenceEditorDirective<any>;
   private static useHiddenInput = isAndroid() || isChromeOS();
   private static checkForRepeatedKeyTimestamps = isIOS();
 
@@ -316,6 +310,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
 
     if (This.instances.size === 1) {
+      document.addEventListener('mousedown', This.mouseDownOrTouch);
+      document.addEventListener('touchstart', This.mouseDownOrTouch);
       document.addEventListener('mousemove', This.headerDrag);
       document.addEventListener('touchmove', This.headerDrag);
       document.addEventListener('mouseup', This.headerDragEnd);
@@ -376,6 +372,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
 
     if (This.instances.size === 0) {
+      document.removeEventListener('mousedown', This.mouseDownOrTouch);
+      document.removeEventListener('touchstart', This.mouseDownOrTouch);
       document.removeEventListener('mousemove', This.headerDrag);
       document.removeEventListener('touchmove', This.headerDrag);
       document.removeEventListener('mouseup', This.headerDragEnd);
@@ -663,7 +661,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
-    if (!this._disabled && (this.showFocus || this.floating) && !this.selectionHidden &&
+    if (!this._disabled && this.showFocus && !this.selectionHidden &&
         ((item && index === this.selection) || (!item && this.activeSpinner === index)))
       return SELECTED_BACKGROUND;
     else if (!this._disabled && !this.viewOnly && (index === SPIN_UP || index === SPIN_DOWN))
@@ -681,7 +679,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return DISABLED_ARROW_COLOR;
     else if (item && item.indicator)
       return INDICATOR_TEXT;
-    else if (index === this.selection && (this.showFocus || this.floating) && !this.selectionHidden)
+    else if (index === this.selection && this.showFocus && !this.selectionHidden)
       return SELECTED_TEXT;
     else
       return NORMAL_TEXT;
@@ -817,7 +815,18 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.headerDx = this.headerDy = 0;
     This.headerStartX = pt.x;
     This.headerStartY = pt.y;
+    this.wrapper.focus();
     evt.preventDefault();
+  }
+
+  static mouseDownOrTouch(evt: MouseEvent | TouchEvent): void {
+    if (evt.type === 'touchstart')
+      This.touchHasOccurred = true;
+
+    if (This.pastable?.showPasteInput && evt.target !== This.pastable.pasteInput) {
+      This.pastable.showPasteInput = false;
+      This.pastable = undefined;
+    }
   }
 
   static headerDrag(evt: MouseEvent | TouchEvent): void {
@@ -1129,6 +1138,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       this.showPasteInput = !this.showPasteInput;
 
       if (this.showPasteInput) {
+        This.pastable = this;
         this.pasteInput = this.wrapper.parentElement.querySelector('input[name="paste-input"]');
 
         if (this.pasteInput) {
@@ -1136,6 +1146,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
           this.pasteInput.focus();
         }
       }
+      else
+        This.pastable = undefined;
     }
     else
       navigator.clipboard.readText().then(txt => this.applyPastedText(txt));
@@ -1147,8 +1159,13 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this.pasteInput?.value)
       this.applyPastedText(this.pasteInput.value);
 
+    this.onPasteBlur();
+  }
+
+  onPasteBlur(): void {
     setTimeout(() => {
       this.showPasteInput = false;
+      This.pastable = undefined;
 
       if (this.pasteInput)
         this.pasteInput.value = '';

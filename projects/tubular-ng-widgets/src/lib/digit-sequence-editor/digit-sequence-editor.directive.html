@@ -78,6 +78,7 @@
         </ng-template>
       </ng-template>
     </div>
+    <div class="tbw-dse-focus-indicator" [class.tbw-dse-show-focus]="floating && hasFocus">&nbsp;</div>
     <div #emSizer class="tbw-dse-em-sizer">&nbsp;</div>
   </div>
   <div *ngIf="floating" class="tbw-dse-footer">
@@ -91,6 +92,7 @@
     <input name='paste-input'
         type="text"
         (input)="onPasteInput()"
+        (blur)="onPasteBlur()"
         [style.display]="showPasteInput ? 'inline' : 'none'">
   </div>
 </div>

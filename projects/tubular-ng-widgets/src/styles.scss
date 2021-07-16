@@ -81,6 +81,7 @@
   input {
     background-color: transparent;
     left: calc(50% - 6em);
+    outline: 3px solid #007AFF;
     top: 0.25em;
     width: 12em;
   }
@@ -125,6 +126,22 @@
       outline: none !important;
       -webkit-tap-highlight-color: transparent !important;
     }
+  }
+}
+
+.tbw-dse-focus-indicator {
+  bottom: 0;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  background-color: transparent;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+
+  &.tbw-dse-show-focus {
+    border: 1px solid #007AFF;
   }
 }
 
