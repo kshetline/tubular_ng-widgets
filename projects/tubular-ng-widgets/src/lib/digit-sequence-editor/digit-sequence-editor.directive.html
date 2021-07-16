@@ -14,7 +14,7 @@
       [class.tbw-dse-dse-rtl]="rtl"
       [class.tbw-dse-floating]="floating"
       [tabindex]="disabled || hasHiddenInput ? -1 : tabindex"
-      [attr.contenteditable]="!disabled && !disableContentEditable"
+      [attr.contenteditable]="!disabled && !disableContentEditable && !floating"
       autocomplete="off" autocapitalize="off" autocorrect="off"
       (keydown)="onKeyDown($event)" (keyup)="onKeyUp()" (keypress)="onKeyPress($event)"
       (focus)="onFocus(true, $event)" (blur)="onFocus(false, $event)"
@@ -81,10 +81,11 @@
     <div #emSizer class="tbw-dse-em-sizer">&nbsp;</div>
   </div>
   <div *ngIf="floating" class="tbw-dse-footer">
-    <button *ngFor="let btn of buttons"
+    <span *ngFor="let btn of buttons"
+        class="tbw-dse-button"
         tabindex="-1"
         (click)="onKey(btn.key)"
         (focus)="onButtonFocus()"
-        [innerHTML]="btn.html || htmlEscape(btn.label)"></button>
+        [innerHTML]="btn.html || htmlEscape(btn.label)"></span>
   </div>
 </div>

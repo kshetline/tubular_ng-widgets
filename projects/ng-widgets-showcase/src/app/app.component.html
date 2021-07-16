@@ -33,7 +33,7 @@
 
     <tbw-time-editor tai
         [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
-        [floating]="true"
+        floating
         timezone="UTC"
         [(ngModel)]="time"></tbw-time-editor>
     <span class="description">UTC, in signed ISO-8601 date/time format</span>

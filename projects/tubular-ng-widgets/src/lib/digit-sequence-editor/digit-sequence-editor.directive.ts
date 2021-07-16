@@ -245,6 +245,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private warningTimer: Subscription;
 
   protected emSizer: HTMLElement;
+  protected _floating = false;
   protected hiddenInput: HTMLInputElement;
   protected lastTabTime = 0;
   protected letterDecrement = 'z';
@@ -263,7 +264,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
   digitHeight = 17;
   displayItems: SequenceItemInfo[] = [];
   displayState = 'normal';
-  @Input() floating = false;
   hasFocus = false;
   headerDx = 0;
   headerDy = 0;
@@ -387,8 +387,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   setDisabledState?(isDisabled: boolean): void {
     this.disabled = isDisabled;
-    this.displayState = (this.darkMode ? 'dark-' : '') +
-      (isDisabled ? 'disabled' : (this.viewOnly ? 'view-only' : 'normal'));
+    this.adjustState();
   }
 
   // ControlValueAccessor support
@@ -460,6 +459,17 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   // DigitSequenceEditorDirective specifics
 
+  get floating(): boolean | string { return this._floating; }
+  @Input() set floating(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
+
+    if (this._floating !== newValue) {
+      this._floating = newValue;
+      this.adjustState();
+    }
+  }
+
   get tabindex(): string { return this._tabindex; }
   @Input() set tabindex(newValue: string) {
     if (this._tabindex !== newValue) {
@@ -468,21 +478,24 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
-  get viewOnly(): boolean { return this._viewOnly; }
-  @Input() set viewOnly(value: boolean) {
-    this._viewOnly = value;
+  get viewOnly(): boolean | string { return this._viewOnly; }
+  @Input() set viewOnly(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
+
+    this._viewOnly = newValue;
     this.adjustState();
   }
 
   get validateAll(): boolean | string { return this._validateAll; }
-  @Input() set validateAll(value: boolean | string) {
-    if (isString(value))
-      value = toBoolean(value, false, true);
+  @Input() set validateAll(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
 
-    if (this._validateAll !== value) {
-      this._validateAll = value;
+    if (this._validateAll !== newValue) {
+      this._validateAll = newValue;
 
-      if (value && !this.valid)
+      if (newValue && !this.valid)
         this.reportValueChange();
     }
   }
@@ -499,15 +512,15 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     this.buttons.push({ key: 'Copy', html: this.sanitizer.bypassSecurityTrustHtml(
 /* eslint-disable max-len */
-`<svg viewBox="0 0 512 512" width="1em" height="1em">
-  <g>
+`<svg viewBox="0 0 512 512" width="1em" height="1em" style="position: relative; left: 0.05em; top: 0.15em;">
+  <g fill="currentColor">
     <polygon points="304,96 288,96 288,176 368,176 368,160 304,160  "/>
     <path d="M325.3,64H160v48h-48v336h240v-48h48V139L325.3,64z M336,432H128V128h32v272h176V432z M384,384H176V80h142.7l65.3,65.6V384   z"/>
   </g>
 </svg>`)});
     this.buttons.push({ key: 'Paste', html: this.sanitizer.bypassSecurityTrustHtml(
-`<svg viewBox="0 0 512 512" width="1em" height="1em">
-  <g>
+`<svg viewBox="0 0 512 512" width="1em" height="1em" style="position: relative; left: 0.02em; top: 0.07em;">
+  <g fill="currentColor">
     <g>
       <path d="M160,160h192c-1.7-20-9.7-35.2-27.9-40.1c-0.4-0.1-0.9-0.3-1.3-0.4c-12-3.4-20.8-7.5-20.8-20.7V78.2    c0-25.5-20.5-46.3-46-46.3c-25.5,0-46,20.7-46,46.3v20.6c0,13.1-8.8,17.2-20.8,20.6c-0.4,0.1-0.9,0.4-1.4,0.5    C169.6,124.8,161.9,140,160,160z M256,64.4c7.6,0,13.8,6.2,13.8,13.8c0,7.7-6.2,13.8-13.8,13.8c-7.6,0-13.8-6.2-13.8-13.8    C242.2,70.6,248.4,64.4,256,64.4z"/>
       <path d="M404.6,63H331v14.5c0,10.6,8.7,18.5,19,18.5h37.2c6.7,0,12.1,5.7,12.4,12.5l0.1,327.2c-0.3,6.4-5.3,11.6-11.5,12.1    l-264.4,0.1c-6.2-0.5-11.1-5.7-11.5-12.1l-0.1-327.3c0.3-6.8,5.9-12.5,12.5-12.5H162c10.3,0,19-7.9,19-18.5V63h-73.6    C92.3,63,80,76.1,80,91.6V452c0,15.5,12.3,28,27.4,28H256h148.6c15.1,0,27.4-12.5,27.4-28V91.6C432,76.1,419.7,63,404.6,63z"/>
@@ -1292,8 +1305,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.displayState = (this.darkMode ? 'dark-' : '') +
       (this._viewOnly ? 'view-only' : (this._disabled ? 'disabled' : 'normal'));
 
-    if (this.hiddenInput)
+    if (this.hiddenInput) {
       this.hiddenInput.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);
+      this.hiddenInput.disabled = !this._floating || !this._disabled || this._viewOnly;
+    }
   }
 
   private updateDeltaYSmoothing(): void {
