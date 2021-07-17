@@ -243,6 +243,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private initialTouchTime = 0;
   private keyTimer: Subscription;
   private lastDelta = 1;
+  private _position: Point = { x: 0, y: 0 };
   private touchDeltaY = 0;
   private touchDeltaYs: number[] = [];
   private touchDeltaTimes: number[] = [];
@@ -257,6 +258,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected letterIncrement = 'a';
   protected pasteInput: HTMLInputElement;
   protected selectionHidden = false;
+  protected _showCloser = false;
   protected showFocus = false;
   protected swipeIndex = -1;
   protected _tabindex = '0';
@@ -266,6 +268,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   baselineShift = '0';
   buttons: ButtonInfo[] = [];
+  // eslint-disable-next-line @angular-eslint/no-output-native
+  @Output() close = new EventEmitter<void>();
   digitHeight = 17;
   displayItems: SequenceItemInfo[] = [];
   displayState = 'normal';
@@ -319,6 +323,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       document.addEventListener('mouseup', This.headerDragEnd);
       document.addEventListener('touchend', This.headerDragEnd);
       document.addEventListener('touchcancel', This.headerDragEnd);
+      window.addEventListener('resize', This.assureAllFullyOnScreen);
     }
   }
 
@@ -381,6 +386,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       document.removeEventListener('mouseup', This.headerDragEnd);
       document.removeEventListener('touchend', This.headerDragEnd);
       document.removeEventListener('touchcancel', This.headerDragEnd);
+      window.removeEventListener('resize', This.assureAllFullyOnScreen);
     }
   }
 
@@ -515,16 +521,30 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   @Output() positionChange = new EventEmitter<Point>();
 
-  get position(): Point { return { x: this.headerX, y: this.headerY }; };
+  get position(): Point { return this._position; };
   @Input() set position(newValue: Point) {
-    if (!isEqual(this.position, newValue)) {
+    if (!isEqual(this._position, newValue)) {
       this.headerX = newValue?.x ?? 0;
       this.headerY = newValue?.y ?? 0;
-      this.positionChange.emit(this.position);
+      this._position = { x: this.headerX, y: this.headerY };
+      this.positionChange.emit(this._position);
+      setTimeout(() => this.assureFullyOnScreen());
     }
   }
 
   get hasHiddenInput(): boolean { return !!this.hiddenInput; }
+
+  get showCloser(): boolean | string { return this._showCloser; }
+  @Input() set showCloser(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
+
+    this._showCloser = newValue;
+  }
+
+  doCloseAction(): void {
+    this.close.emit();
+  }
 
   protected abstract createDigits(): void;
 
@@ -862,6 +882,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
       This.dragee.headerDx = pt.x - This.headerStartX;
       This.dragee.headerDy = pt.y - This.headerStartY;
+      This.dragee.assureFullyOnScreen();
       evt.preventDefault();
     }
   }
@@ -871,10 +892,43 @@ export abstract class DigitSequenceEditorDirective<T> implements
       This.dragee.headerX += This.dragee.headerDx;
       This.dragee.headerY += This.dragee.headerDy;
       This.dragee.headerDx = This.dragee.headerDy = 0;
+      This.dragee.assureFullyOnScreen();
       This.dragee.positionChange.emit(This.dragee.position);
       This.dragee = undefined;
       evt.preventDefault();
     }
+  }
+
+  static assureAllFullyOnScreen(): void {
+    This.instances?.forEach(dse => dse.assureFullyOnScreen());
+  }
+
+  protected assureFullyOnScreen(): void {
+    if (!this.floating)
+      return;
+
+    const r = this.wrapper.parentElement?.getBoundingClientRect();
+
+    if (!r)
+      return;
+
+    const x = this.headerX + this.headerDx;
+    const y = this.headerY + this.headerDy;
+    let dx;
+    let dy;
+
+    if (x < 0)
+      this.headerX -= x;
+    // outerWidth can be less than innerWidth!? Apparently! (Same for height too.)
+    else if ((dx = x + r.width - min(window.innerWidth, window.outerWidth)) > 0)
+      this.headerX -= dx;
+
+    if (y < 0)
+      this.headerY -= y;
+    else if ((dy = y + r.height - min(window.innerHeight, window.outerHeight)) > 0)
+      this.headerY -= dy;
+
+    this.position = { x: this.headerX, y: this.headerY };
   }
 
   onTouchStart(index: number, evt: TouchEvent): void {

@@ -27,7 +27,7 @@
         <button (click)="setCurrentTime()">Set now</button>
         <button (click)="time = 1636264837000">Sample time</button>
         <button (click)="time = 1483228836000">Sample leap second</button>
-        <label><input *ngIf="mobile" id="native" type="checkbox" [ngModel]="native"
+        <label *ngIf="mobile"><input id="native" type="checkbox" [ngModel]="native"
             (change)="native = settingsUpdated() && $any($event.target).checked"/>Mobile native date/time</label><br>
     </div>
     <span>&nbsp;</span>
@@ -41,6 +41,8 @@
           [(ngModel)]="time"></tbw-time-editor>
       <tbw-time-editor *ngIf="float" tai
           floating
+          showCloser
+          (close)="setFloat(false)"
           [(position)]="floatPosition"
           [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
           timezone="UTC"

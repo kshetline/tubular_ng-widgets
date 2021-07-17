@@ -6,8 +6,10 @@
   <div *ngIf="floating"
       class="tbw-dse-header"
       (mousedown)="headerDragStart($event)"
-      (touchstart)="headerDragStart($event)"
-  >&nbsp;</div>
+      (touchstart)="headerDragStart($event)">&nbsp;
+    <span *ngIf="showCloser" class="tbw-dse-closer"
+        (click)="doCloseAction()" (touchstart)="doCloseAction()"><span>×</span></span>
+  </div>
   <div #wrapper class="tbw-dse-wrapper"
       [class.tbw-dse-no-focus]="disabled"
       [class.tbw-dse-explicit-focus-outline]="addFocusOutline && hasFocus && !floating"

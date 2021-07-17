@@ -140,7 +140,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   localTimeMax: string;
   timeStep = '60';
 
-  constructor(sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {
+  constructor(sanitizer: DomSanitizer, private cdr: ChangeDetectorRef) {
     super(sanitizer);
     this.useAlternateTouchHandling = false;
   }
@@ -403,7 +403,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.localTime.max = this.localTimeMax;
       this.localTime.setAttribute('step', this.timeStep);
       this.localTime.value = this.localTimeValue;
-      this.cd.detectChanges();
+      this.cdr.detectChanges();
     }
 
     this.localTime.focus();
@@ -569,7 +569,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       else
         this.min = this.originalMinYear.toString();
 
-      this.cd.detectChanges();
+      this.cdr.detectChanges();
     }
   }
 
