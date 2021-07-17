@@ -2,7 +2,8 @@
      xmlns="http://www.w3.org/1999/html">
   <div class="top-grid">
     <div>
-      <label><input type="checkbox" [(ngModel)]="darkMode">Dark mode&nbsp;&nbsp;&nbsp;&nbsp;</label>
+      <label [style.margin-right]="'1em'"><input type="checkbox"
+          [(ngModel)]="darkMode" (change)="settingsUpdated()">Dark mode</label>
       <tbw-angle-editor></tbw-angle-editor>
       <tbw-angle-editor [options]="{ angleStyle: DD_MM, compass: true }"></tbw-angle-editor>
       <tbw-angle-editor [(ngModel)]="angle" [options]="{ compass: true, copyDecimal: true }"></tbw-angle-editor>
@@ -27,15 +28,26 @@
         <button (click)="time = 1636264837000">Sample time</button>
         <button (click)="time = 1483228836000">Sample leap second</button>
         <label *ngIf="mobile" for="native">Mobile native date/time</label>
-        <input *ngIf="mobile" id="native" type="checkbox" (change)="native = $any($event.target).checked"/><br>
+        <input *ngIf="mobile" id="native" type="checkbox" [ngModel]="native"
+               (change)="native = settingsUpdated() && $any($event.target).checked"/><br>
     </div>
     <span>&nbsp;</span>
 
-    <tbw-time-editor tai
-        [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
-        floating
-        timezone="UTC"
-        [(ngModel)]="time"></tbw-time-editor>
+    <span>
+      <tbw-time-editor tai
+          id="utc-editor"
+          [disabled]="float"
+          [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
+          timezone="UTC"
+          [(ngModel)]="time"></tbw-time-editor>
+      <tbw-time-editor *ngIf="float" tai
+          floating
+          [(position)]="floatPosition"
+          [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
+          timezone="UTC"
+          [(ngModel)]="time"></tbw-time-editor>
+      <label><input type="checkbox" [ngModel]="float" (change)="setFloat($any($event.target).checked)"/>Float</label>
+    </span>
     <span class="description">UTC, in signed ISO-8601 date/time format</span>
 
     <span>
@@ -43,7 +55,7 @@
           [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
           [viewOnly]="viewOnly"
           [(ngModel)]="time"></tbw-time-editor>
-      <label><input type="checkbox" [(ngModel)]="viewOnly">View only</label>
+      <label><input type="checkbox" [(ngModel)]="viewOnly" (change)="settingsUpdated()">View only</label>
     </span>
     <span class="description">Local with AD/BC</span>
 
@@ -52,7 +64,7 @@
           [options]="{ twoDigitYear: true, yearStyle: POSITIVE_ONLY }"
           [disabled]="timeDisabled"
           [(ngModel)]="time"></tbw-time-editor>
-      <label><input type="checkbox" [(ngModel)]="timeDisabled">Disabled</label>
+      <label><input type="checkbox" [(ngModel)]="timeDisabled" (change)="settingsUpdated()">Disabled</label>
     </span>
     <span class="description">Local with two-digit year</span>
 
@@ -113,27 +125,28 @@
     <label>Numbering: <input type="text" autocorrect="off" [(ngModel)]="numSystem" [style.background-color]="numSystemGood ? 'inherit' : '#FBC'"></label>
     <div class="wrap">&nbsp;</div>
 
-    <select class="line-start" [(ngModel)]="customStyle">
+    <select class="line-start" [(ngModel)]="customStyle" (change)="settingsUpdated()">
       <option value="0">Date and time</option>
       <option value="1">Date only</option>
       <option value="2">Time only</option>
     </select>
-    <select *ngIf="customStyle !== '2'" [(ngModel)]="yearStyle">
+    <select *ngIf="customStyle !== '2'" [(ngModel)]="yearStyle" (change)="settingsUpdated()">
       <option value="0">Positive-only years</option>
       <option value="1">AD/BC years</option>
       <option value="2">Signed years</option>
     </select>
-    <select *ngIf="customStyle !== '2'" [(ngModel)]="customYear">
+    <select *ngIf="customStyle !== '2'" [(ngModel)]="customYear" (change)="settingsUpdated()">
       <option value="">Year length per locale</option>
       <option value="false">4/variable-digit year</option>
       <option value="true">2-digit year</option>
     </select>
-    <select *ngIf="customStyle !== '1'" [(ngModel)]="customCycle">
+    <select *ngIf="customStyle !== '1'" [(ngModel)]="customCycle" (change)="settingsUpdated()">
       <option value="0">12/24 hours, per locale</option>
       <option value="1">24-hour time</option>
       <option value="2">AM/PM time</option>
     </select>
-    <label *ngIf="customStyle !== '1'"><input type="checkbox" [(ngModel)]="showSeconds">Show seconds</label>
+    <label *ngIf="customStyle !== '1'"><input type="checkbox" [(ngModel)]="showSeconds"
+        (change)="settingsUpdated()">Show seconds</label>
     <div class="wrap">&nbsp;</div>
 
     <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="minGood ? 'inherit' : '#FBC'"></label>

@@ -4,8 +4,8 @@ import {
 } from '@angular/core';
 import { abs, floor, max, min, Point, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isIOS, isNumber, isSamsung, isString, noop,
-  processMillis, toBoolean, toNumber
+  eventToKey, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isEqual, isIOS, isNumber, isSamsung,
+  isString, noop, processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getPageXYForTouchEvent } from '../util/touch-events';
@@ -82,6 +82,7 @@ const FLASH_DURATION = 250;
 const LONG_WARNING_DURATION = 2000;
 
 const DIGIT_SWIPE_THRESHOLD = 6;
+const LOSE_FOCUS_DELAY = 200;
 const MAX_DIGIT_SWIPE = 0.9;
 const MIN_DIGIT_SWIPE = 0.33;
 const MIN_SWIPE_TIME = 200;
@@ -204,6 +205,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   private afterViewInit = false;
   private _disabled = false;
+  private lostFocusTime = 0;
   private pendingValueChange = false;
 
   protected changed = noop;
@@ -223,7 +225,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private static lastKeyTimestamp = 0;
   private static lastKeyKey = '';
   private static mutationObserver: MutationObserver;
-  private static pastable: DigitSequenceEditorDirective<any>;
+  private static pasteable: DigitSequenceEditorDirective<any>;
 
   static touchHasOccurred = false;
 
@@ -267,6 +269,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   digitHeight = 17;
   displayItems: SequenceItemInfo[] = [];
   displayState = 'normal';
+  @Input() floatZ = 1;
   hasFocus = false;
   headerDx = 0;
   headerDy = 0;
@@ -510,6 +513,17 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
+  @Output() positionChange = new EventEmitter<Point>();
+
+  get position(): Point { return { x: this.headerX, y: this.headerY }; };
+  @Input() set position(newValue: Point) {
+    if (!isEqual(this.position, newValue)) {
+      this.headerX = newValue?.x ?? 0;
+      this.headerY = newValue?.y ?? 0;
+      this.positionChange.emit(this.position);
+    }
+  }
+
   get hasHiddenInput(): boolean { return !!this.hiddenInput; }
 
   protected abstract createDigits(): void;
@@ -661,7 +675,9 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
-    if (!this._disabled && this.showFocus && !this.selectionHidden &&
+    const showFocus = (this.showFocus || processMillis() < this.lostFocusTime + LOSE_FOCUS_DELAY);
+
+    if (!this._disabled && showFocus && !this.selectionHidden &&
         ((item && index === this.selection) || (!item && this.activeSpinner === index)))
       return SELECTED_BACKGROUND;
     else if (!this._disabled && !this.viewOnly && (index === SPIN_UP || index === SPIN_DOWN))
@@ -671,6 +687,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   getColorForItem(item?: SequenceItemInfo, index = item?.index): string {
+    const showFocus = (this.showFocus || processMillis() < this.lostFocusTime + LOSE_FOCUS_DELAY);
+
     if (this._disabled)
       return DISABLED_TEXT;
     else if (item && this._viewOnly)
@@ -679,7 +697,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return DISABLED_ARROW_COLOR;
     else if (item && item.indicator)
       return INDICATOR_TEXT;
-    else if (index === this.selection && this.showFocus && !this.selectionHidden)
+    else if (index === this.selection && showFocus && !this.selectionHidden)
       return SELECTED_TEXT;
     else
       return NORMAL_TEXT;
@@ -769,6 +787,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   onButtonFocus(): void {
+    this.lostFocusTime = processMillis();
     this.wrapper.focus();
   }
 
@@ -823,9 +842,9 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (evt.type === 'touchstart')
       This.touchHasOccurred = true;
 
-    if (This.pastable?.showPasteInput && evt.target !== This.pastable.pasteInput) {
-      This.pastable.showPasteInput = false;
-      This.pastable = undefined;
+    if (This.pasteable?.showPasteInput && evt.target !== This.pasteable.pasteInput) {
+      This.pasteable.showPasteInput = false;
+      This.pasteable = undefined;
     }
   }
 
@@ -844,6 +863,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       This.dragee.headerX += This.dragee.headerDx;
       This.dragee.headerY += This.dragee.headerDy;
       This.dragee.headerDx = This.dragee.headerDy = 0;
+      This.dragee.positionChange.emit(This.dragee.position);
       This.dragee = undefined;
       evt.preventDefault();
     }
@@ -1137,7 +1157,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       this.showPasteInput = !this.showPasteInput;
 
       if (this.showPasteInput) {
-        This.pastable = this;
+        This.pasteable = this;
         this.pasteInput = this.wrapper.parentElement.querySelector('input[name="paste-input"]');
 
         if (this.pasteInput) {
@@ -1146,7 +1166,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
         }
       }
       else
-        This.pastable = undefined;
+        This.pasteable = undefined;
     }
     else if (navigator.clipboard)
       navigator.clipboard.readText().then(txt => this.applyPastedText(txt));
@@ -1166,7 +1186,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   onPasteBlur(): void {
     setTimeout(() => {
       this.showPasteInput = false;
-      This.pastable = undefined;
+      This.pasteable = undefined;
 
       if (this.pasteInput)
         this.pasteInput.value = '';

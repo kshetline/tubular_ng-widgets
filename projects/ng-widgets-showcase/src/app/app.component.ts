@@ -5,8 +5,23 @@ import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle }
   from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
 import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
 import { AngleStyle } from '../../../tubular-ng-widgets/src/lib/angle-editor/angle-editor.component';
+import { Point } from '@tubular/math';
 
 const intl_DisplayNames = (Intl as any).DisplayNames;
+const mobile = isAndroid() || isIOS();
+const defaultSettings = {
+  customCycle: '0',
+  customStyle:'0',
+  customYear: 'false',
+  darkMode: true,
+  float: false,
+  floatPosition: null as Point,
+  native: false,
+  showSeconds: false,
+  timeDisabled: false,
+  viewOnly: true,
+  yearStyle: '0'
+};
 
 @Component({
   selector: 'app-root',
@@ -18,6 +33,7 @@ export class AppComponent {
   AM_PM = HourStyle.AM_PM;
   DD = AngleStyle.DD;
   DD_MM = AngleStyle.DD_MM;
+  mobile = mobile;
   POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
   SIGNED = YearStyle.SIGNED;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;
@@ -27,17 +43,19 @@ export class AppComponent {
   private _max = '';
   private _min = '';
   private _numSystem = '';
+  private updateTimer: any;
 
   angle = 0;
   customCycle = '0';
   customStyle = '0';
   customYear = 'false';
   darkMode = true;
+  float = false;
+  floatPosition: Point = null;
   localeGood = true;
   maxGood = true;
   minGood = true;
   minMaxAngle = 5;
-  mobile = isAndroid() || isIOS();
   native = false;
   numSystemGood = true;
   showSeconds = false;
@@ -48,7 +66,63 @@ export class AppComponent {
   yearStyle = '0';
 
   constructor() {
+    let settings: any;
+
+    try {
+      settings = JSON.parse(localStorage.getItem('tbw-settings') ?? 'null');
+    }
+    catch {}
+
+    settings = settings ?? defaultSettings;
+    this.updateTimer = null;
+    Object.keys(defaultSettings).forEach(key => (this as any)[key] = settings[key]);
+    this.updateTimer = undefined;
+    window.addEventListener('beforeunload', () => {
+      if (this.updateTimer)
+        clearTimeout(this.updateTimer);
+
+      this.saveSettings();
+    });
+
     setTimeout(() => this.minMaxAngle = 4, 3000);
+  }
+
+  private saveSettings(): void {
+    const settings: any = {};
+
+    Object.keys(defaultSettings).forEach(key => settings[key] = (this as any)[key]);
+    localStorage.setItem('tbw-settings', JSON.stringify(settings));
+  }
+
+  settingsUpdated(): boolean {
+    if (this.updateTimer === undefined) {
+      this.updateTimer = setTimeout(() => {
+        this.saveSettings();
+        this.updateTimer = undefined;
+      }, 1000);
+    }
+
+    return true;
+  }
+
+  setFloat(state: boolean): void {
+    this.float = state;
+
+    if (state && !this.floatPosition) {
+      const utcEditor = document.querySelector('#utc-editor');
+
+      if (utcEditor) {
+        const r = utcEditor.getBoundingClientRect();
+
+        this.floatPosition = { x: r.x, y: r.y };
+      }
+      else
+        this.floatPosition = { x: 0, y: 0 };
+    }
+    else if (!state)
+      this.floatPosition = null;
+
+    this.settingsUpdated();
   }
 
   get customLocale(): string { return this._customLocale; }
@@ -64,6 +138,7 @@ export class AppComponent {
 
       this.localeGood = true;
       this._customLocale = newValue;
+      this.settingsUpdated();
     }
   }
 
@@ -73,6 +148,7 @@ export class AppComponent {
       if (Timezone.has(newValue) && new DateTime(null, newValue).valid) {
         this._customTimezone = newValue;
         this.timezoneGood = true;
+        this.settingsUpdated();
       }
       else
         this.timezoneGood = false;
@@ -92,6 +168,7 @@ export class AppComponent {
 
       this._max = newValue;
       this.maxGood = true;
+      this.settingsUpdated();
     }
   }
 
@@ -108,6 +185,7 @@ export class AppComponent {
 
       this._min = newValue;
       this.minGood = true;
+      this.settingsUpdated();
     }
   }
 
@@ -118,6 +196,7 @@ export class AppComponent {
         if (!newValue || new Intl.NumberFormat('en-u-nu-' + newValue).resolvedOptions().numberingSystem === newValue) {
           this.numSystemGood = true;
           this._numSystem = newValue;
+          this.settingsUpdated();
           return;
         }
       }

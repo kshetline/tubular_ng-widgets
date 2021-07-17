@@ -1,7 +1,8 @@
 <div class="tbw-dse-palette"
     [class.tbw-dse-floating]="floating"
     [style.left]="(this.headerX + this.headerDx) + 'px'"
-    [style.top]="(this.headerY + this.headerDy) + 'px'">
+    [style.top]="(this.headerY + this.headerDy) + 'px'"
+    [style.z-index]="floating ? floatZ : 'auto'">
   <div *ngIf="floating"
       class="tbw-dse-header"
       (mousedown)="headerDragStart($event)"
