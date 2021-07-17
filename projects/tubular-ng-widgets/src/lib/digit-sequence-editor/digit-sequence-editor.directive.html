@@ -86,7 +86,7 @@
     <span *ngFor="let btn of buttons"
         class="tbw-dse-button"
         tabindex="-1"
-        (click)="onKey(btn.key)"
+        (click)="onButtonKey(btn.key)"
         (focus)="onButtonFocus()"
         [innerHTML]="btn.html || htmlEscape(btn.label)"></span>
     <span class="tbw-dse-paste-hint" [style.display]="showPasteInput ? 'inline' : 'none'">paste here</span>

@@ -27,9 +27,8 @@
         <button (click)="setCurrentTime()">Set now</button>
         <button (click)="time = 1636264837000">Sample time</button>
         <button (click)="time = 1483228836000">Sample leap second</button>
-        <label *ngIf="mobile" for="native">Mobile native date/time</label>
-        <input *ngIf="mobile" id="native" type="checkbox" [ngModel]="native"
-               (change)="native = settingsUpdated() && $any($event.target).checked"/><br>
+        <label><input *ngIf="mobile" id="native" type="checkbox" [ngModel]="native"
+            (change)="native = settingsUpdated() && $any($event.target).checked"/>Mobile native date/time</label><br>
     </div>
     <span>&nbsp;</span>
 

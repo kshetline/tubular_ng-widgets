@@ -44,7 +44,7 @@ export interface TimeEditorOptions {
   yearStyle?: YearStyle | string[];
 }
 
-const OCC2 = '\u200A\u2082\u200A';
+const OCC2 = '\u20092\u2009';
 const ISO_T = '\u200AT\u200A';
 const NO_BREAK_SPACE = '\u00A0';
 const platformNativeDateTime = (isIOS() || (isAndroid() && isChrome()));
@@ -831,7 +831,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
           addDigits(min(opts.millisDigits, 3), 'S'); break;
         case 'occ':
           this.occIndex = i;
-          this.items.push({ value: NO_BREAK_SPACE, format: 'r', indicator: true, sizer: OCC2, name: '2occ', deltaY: -0.2 });
+          this.items.push({ value: NO_BREAK_SPACE, format: 'r', indicator: true, sizer: OCC2, name: '2occ', deltaY: 0.2 });
           break;
         case 'off':
           this.offsetIndex = i;
@@ -1520,7 +1520,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       if ((item.editable || item.indicator) && item.format)
         format += item.format;
       else if (item.static && item.value != null)
-        format += item.value.toString().replace(/\u200A/g, '').replace(/([a-z])/gi, '[$1]').replace(/\xA0/g, ' ');
+        format += item.value.toString().replace(OCC2, '\u2082').replace(/([a-z])/gi, '[$1]').replace(/\xA0/g, ' ');
     }
 
     // Restore year/month/day order which might have been previously flipped to deal with right-to-left (RTL) markers.

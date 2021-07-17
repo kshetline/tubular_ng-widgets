@@ -8,7 +8,7 @@ import {
   isString, noop, processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
-import { getPageXYForTouchEvent } from '../util/touch-events';
+import { getClientXYForTouchEvent, getPageXYForTouchEvent } from '../util/touch-events';
 import { AbstractControl, ControlValueAccessor, Validator } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -82,7 +82,7 @@ const FLASH_DURATION = 250;
 const LONG_WARNING_DURATION = 2000;
 
 const DIGIT_SWIPE_THRESHOLD = 6;
-const LOSE_FOCUS_DELAY = 200;
+const LOSE_FOCUS_DELAY = 500;
 const MAX_DIGIT_SWIPE = 0.9;
 const MIN_DIGIT_SWIPE = 0.33;
 const MIN_SWIPE_TIME = 200;
@@ -205,7 +205,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   private afterViewInit = false;
   private _disabled = false;
-  private lostFocusTime = 0;
   private pendingValueChange = false;
 
   protected changed = noop;
@@ -235,6 +234,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private darkMode = false;
   private errorTimer: Subscription;
   private firstTouchPoint: Point;
+  private focusStretchTimer: any;
   private focusTimer: any;
   private getCharFromInputEvent = false;
   private hasHiddenInputFocus = false;
@@ -675,7 +675,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
-    const showFocus = (this.showFocus || processMillis() < this.lostFocusTime + LOSE_FOCUS_DELAY);
+    const showFocus = (this.showFocus || !!this.focusStretchTimer);
 
     if (!this._disabled && showFocus && !this.selectionHidden &&
         ((item && index === this.selection) || (!item && this.activeSpinner === index)))
@@ -687,7 +687,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   getColorForItem(item?: SequenceItemInfo, index = item?.index): string {
-    const showFocus = (this.showFocus || processMillis() < this.lostFocusTime + LOSE_FOCUS_DELAY);
+    const showFocus = (this.showFocus || !!this.focusStretchTimer);
 
     if (this._disabled)
       return DISABLED_TEXT;
@@ -786,8 +786,16 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
+  onButtonKey(key: string): void {
+    this.onButtonFocus();
+    this.onKey(key);
+  }
+
   onButtonFocus(): void {
-    this.lostFocusTime = processMillis();
+    if (this.focusStretchTimer)
+      clearTimeout(this.focusStretchTimer);
+
+    this.focusStretchTimer = setTimeout(() => this.focusStretchTimer = undefined, LOSE_FOCUS_DELAY);
     this.wrapper.focus();
   }
 
@@ -799,7 +807,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     if (this.items[index]?.spinner && evt?.target) {
       const r = (evt.target as HTMLElement).getBoundingClientRect();
-      const y = ((evt as any).pageY ?? getPageXYForTouchEvent(evt as any).y);
+      const y = ((evt as any).clientY ?? getClientXYForTouchEvent(evt as any).y);
 
       if (y < r.top + r.height / 2)
         index = SPIN_UP;
@@ -1114,7 +1122,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return true;
     }
 
-    if (/![xcv]/i.test(key) && (evt.ctrlKey || evt.metaKey) && !evt.altKey) {
+    if (/^[xcv]$/i.test(key) && (evt.ctrlKey || evt.metaKey) && !evt.altKey) {
       evt.preventDefault();
 
       if (key.toLowerCase() === 'v')
@@ -1205,13 +1213,13 @@ export abstract class DigitSequenceEditorDirective<T> implements
       if (alternateClipboard) {
         const elem = document.createElement('input');
 
-        elem.setAttribute('style', 'position: fixed; opacity: 0');
-        document.body.appendChild(elem);
+        elem.setAttribute('style', 'position: absolute; opacity: 0');
+        this.wrapper.appendChild(elem);
         elem.value = text;
         elem.select();
         document.execCommand('copy');
         setTimeout(() => {
-          document.body.removeChild(elem);
+          this.wrapper.removeChild(elem);
           this.wrapper.focus();
         });
       }

@@ -118,7 +118,7 @@
     border-bottom: 0;
     border-radius: 0;
     border-top: 0;
-    outline: none;
+    outline: none !important;
     margin-bottom: 0;
     margin-top: 0;
 
@@ -132,7 +132,7 @@
 .tbw-dse-focus-indicator {
   bottom: 0;
   box-sizing: border-box;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   background-color: transparent;
   left: 0;
   pointer-events: none;
@@ -141,7 +141,7 @@
   top: 0;
 
   &.tbw-dse-show-focus {
-    border: 1px solid #007AFF;
+    border: 2px solid #007AFF;
   }
 }
 
@@ -179,7 +179,7 @@
 }
 
 .tbw-dse-mono-font {
-  font-family: "Lucida Sans Typewriter", "Lucida Console", Menlo, "Andale Mono", "Courier New", monospace;
+  font-family: "Lucida Sans Typewriter", "Lucida Console", Menlo, "Andale Mono", monospace;
 }
 
 .tbw-dse-indicator-font {
@@ -187,7 +187,7 @@
 }
 
 .tbw-dse-mono-indicator-font {
-  font-family: "Lucida Sans Typewriter", "Lucida Console", Menlo, "Andale Mono", "Courier New", monospace;
+  font-family: "Lucida Sans Typewriter", "Lucida Console", Menlo, "Andale Mono", monospace;
   font-size: 0.8em;
 }
 
