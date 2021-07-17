@@ -1187,6 +1187,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     setTimeout(() => {
       this.showPasteInput = false;
       This.pasteable = undefined;
+      this.wrapper.focus();
 
       if (this.pasteInput)
         this.pasteInput.value = '';
@@ -1209,7 +1210,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
         elem.value = text;
         elem.select();
         document.execCommand('copy');
-        setTimeout(() => document.body.removeChild(elem));
+        setTimeout(() => {
+          document.body.removeChild(elem);
+          this.wrapper.focus();
+        });
       }
       else if (navigator.clipboard)
         navigator.clipboard.writeText(text).finally(noop);

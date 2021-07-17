@@ -41,7 +41,7 @@
   border-radius: max(4px, 0.2em) max(4px, 0.2em) 0 0;
   cursor: pointer;
   margin: 2px 2px 0 2px;
-  height: 0.6em;
+  height: 0.8em;
   overflow: hidden;
   user-select: none;
 }
@@ -52,7 +52,7 @@
   border-radius: 0 0 max(4px, 0.2em) max(4px, 0.2em);
   display: flex;
   font-size: max(14px, 0.6em);
-  justify-content: center;
+  justify-content: space-between;
   margin: 0 2px 2px 2px;
   overflow: hidden;
   position: relative;
