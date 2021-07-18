@@ -1288,12 +1288,10 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     let newValue: number | string = origValue;
 
     if (sel === this.eraIndex) {
-      const [bc, ad] = this.eraStrings;
-
-      if (i[this.eraIndex].value === bc && (key === this.eraKeys[1] || key === '1'))
-        newValue = ad;
-      else if (i[this.eraIndex].value === ad && (key === this.eraKeys[0] || key === '2'))
-        newValue = bc;
+      if (key === '1' || key === this.eraKeys[1])
+        newValue = this.eraStrings[1];
+      else if (key === '2' || key === this.eraKeys[0])
+        newValue = this.eraStrings[0];
       else {
         if ('12'.indexOf(key) < 0 && !this.eraKeys.includes(key))
           this.errorFlash();
@@ -1325,8 +1323,16 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         return;
       }
     }
-    else if (48 <= charCode && charCode < 58)
+    else if (48 <= charCode && charCode < 58) {
       newValue = charCode - 48;
+
+      if (this.amPmIndex >= 0 &&
+          ((sel === this.hourIndex && newValue > 1) ||
+           (sel === this.hourIndex + 1 && (i[sel - 1].value as number) * 10 + newValue > 12))) {
+        this.errorFlash();
+        return;
+      }
+    }
     else {
       this.errorFlash();
       return;

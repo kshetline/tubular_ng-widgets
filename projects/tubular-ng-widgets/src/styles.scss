@@ -54,17 +54,16 @@
   background-color: white;
   border: #A6A6A6 solid 1px;
   cursor: pointer;
-  font: 70% normal Arial, sans-serif;
   display: inline-block;
-  height: 0.8em;
+  height: 0.6em;
   overflow: hidden;
   position: relative;
   text-align: center;
-  width: 0.8em;
+  width: 0.6em;
 
-  span {
+  svg {
     position: relative;
-    top: -0.23em;
+    top: -0.46em;
   }
 }
 

@@ -2,7 +2,7 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import {
   AfterViewInit, Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild
 } from '@angular/core';
-import { abs, floor, max, min, Point, round, sign } from '@tubular/math';
+import { abs, floor, max, min, Point, random, round, sign } from '@tubular/math';
 import {
   eventToKey, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isEqual, isIOS, isNumber, isSamsung,
   isString, noop, processMillis, toBoolean, toNumber
@@ -208,6 +208,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private pendingValueChange = false;
 
   protected changed = noop;
+  protected _fakeUrl = false;
   protected lastValue: T = null;
   protected touched = noop;
   protected valid = true;
@@ -546,6 +547,23 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.close.emit();
   }
 
+  get fakeUrl(): boolean | string { return this._fakeUrl; }
+  @Input() set fakeUrl(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
+
+    if (this._fakeUrl !== newValue) {
+      this._fakeUrl = newValue;
+
+      if (this.hiddenInput) {
+        setTimeout(() => {
+          this.hiddenInput.remove();
+          this.createHiddenInput();
+        });
+      }
+    }
+  }
+
   protected abstract createDigits(): void;
 
   protected createButtons(): void {
@@ -643,8 +661,9 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return;
 
     this.hiddenInput = document.createElement('input');
-    this.hiddenInput.name = 'hidden';
-    this.hiddenInput.type = 'text';
+    this.hiddenInput.name = 'hidden-' + random(0, 99999999);
+    this.hiddenInput.inputMode = this._fakeUrl ? 'url' : 'decimal';
+    this.hiddenInput.pattern = this._fakeUrl ? '.*' : '[-+.0-9]*';
     this.hiddenInput.autocomplete = 'new-password';
     this.hiddenInput.setAttribute('autocapitalize', 'off');
     this.hiddenInput.setAttribute('autocomplete', 'off');
@@ -1204,11 +1223,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
     This.lastKeyTimestamp = evt.timeStamp;
     This.lastKeyKey = key;
 
-    if (this.hiddenInput && (key === 'Backspace' || key === 'Delete')) {
-      evt.stopPropagation();
-      this.blurAndRefocusHack();
-    }
-
     return false;
   }
 
@@ -1326,10 +1340,16 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this._disabled || this.viewOnly || (!this.hasFocus && !this.floating) || !this.items[this.selection]?.editable)
       return;
 
+    let advance = false;
+
     if (key === '-' || key.toLowerCase() === this.letterDecrement)
       key = 'ArrowDown';
     else if (key === '+' || key === '=' || key.toLowerCase() === this.letterIncrement)
       key = 'ArrowUp';
+    else if (key === '0' && isString(this.items[this.selection].value)) {
+      key = 'ArrowUp';
+      advance = true;
+    }
 
     switch (key) {
       case 'ArrowUp':
@@ -1361,6 +1381,9 @@ export abstract class DigitSequenceEditorDirective<T> implements
         break;
 
       case ' ':
+      case '.':
+      case '*':
+      case '#':
         this.cursorForward();
         break;
 
@@ -1368,6 +1391,9 @@ export abstract class DigitSequenceEditorDirective<T> implements
         if (key && key.length === 1)
           this.digitTyped(key.charCodeAt(0), key);
     }
+
+    if (advance)
+      this.cursorForward();
   }
 
   protected onSpin(delta: number): void {

@@ -8,7 +8,13 @@
       (mousedown)="headerDragStart($event)"
       (touchstart)="headerDragStart($event)">&nbsp;
     <span *ngIf="showCloser" class="tbw-dse-closer"
-        (click)="doCloseAction()" (touchstart)="doCloseAction()"><span>×</span></span>
+        (click)="doCloseAction()" (touchstart)="doCloseAction()">
+      <svg viewBox="6 6 12 12" fill="currentColor" stroke="currentColor" width="0.4em" height="0.4em"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </span>
   </div>
   <div #wrapper class="tbw-dse-wrapper"
       [class.tbw-dse-no-focus]="disabled"
@@ -18,6 +24,7 @@
       [class.tbw-dse-floating]="floating"
       [tabindex]="disabled || hasHiddenInput ? -1 : tabindex"
       [attr.contenteditable]="!disabled && !disableContentEditable && !floating"
+      [attr.inputmode]="fakeUrl ? 'url' : 'decimal'"
       autocomplete="off" autocapitalize="off" autocorrect="off"
       (keydown)="onKeyDown($event)" (keyup)="onKeyUp()" (keypress)="onKeyPress($event)"
       (focus)="onFocus(true, $event)" (blur)="onFocus(false, $event)"
@@ -31,7 +38,7 @@
         class="tbw-dse-digit dse-item-{{item.index}}"
         [ngClass]="(getClassForItem(item) || '') + ' ' + (getColorForItem(item) || '')"
         [class.tbw-dse-spinner]="item.spinner"
-        contenteditable=false
+        contenteditable="false"
         [style.align-items]="getAlignmentForItem(item)"
         [style.cursor]="item.editable && !disabled && !viewOnly ? 'pointer' : 'default'"
         [style.line-height]="lineHeight"
