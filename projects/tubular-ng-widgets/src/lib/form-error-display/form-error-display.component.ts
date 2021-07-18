@@ -4,6 +4,7 @@ import { AbstractControl, AbstractControlDirective } from '@angular/forms';
 
 let This: typeof FormErrorDisplayComponent;
 
+// @dynamic
 @Component({
   selector: 'tbw-form-error-display',
   templateUrl: './form-error-display.component.html',

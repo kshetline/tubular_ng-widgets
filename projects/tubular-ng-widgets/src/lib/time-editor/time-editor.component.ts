@@ -83,6 +83,7 @@ const namedOptions: Record<string, TimeEditorOptions> = {
 
 type TimeFormat = 'date' | 'time' | 'datetime-local';
 
+// @dynamic
 @Component({
   selector: 'tbw-time-editor',
   animations: [BACKGROUND_ANIMATIONS],

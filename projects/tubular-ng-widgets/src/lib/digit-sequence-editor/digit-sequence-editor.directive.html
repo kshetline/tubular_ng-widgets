@@ -40,7 +40,7 @@
         [class.tbw-dse-spinner]="item.spinner"
         contenteditable="false"
         [style.align-items]="getAlignmentForItem(item)"
-        [style.cursor]="item.editable && !disabled && !viewOnly ? 'pointer' : 'default'"
+        [style.cursor]="(item.editable || item.spinner) && !disabled && !viewOnly ? 'pointer' : 'default'"
         [style.line-height]="lineHeight"
         [style.opacity]="item.opacity?.toString() ?? '1'"
         [style.top]="item.divider || item.spinner ? undefined : baselineShift"

@@ -190,6 +190,7 @@ export function isNilOrBlank(v: any): boolean {
 
 let This: typeof DigitSequenceEditorDirective;
 
+// @dynamic
 @Directive()
 export abstract class DigitSequenceEditorDirective<T> implements
     AfterViewInit, ControlValueAccessor, OnInit, OnDestroy, Validator {
