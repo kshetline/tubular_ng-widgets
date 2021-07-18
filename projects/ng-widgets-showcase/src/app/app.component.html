@@ -121,9 +121,9 @@
   </div><br>
 
   <div class='custom-config'>
-    <label>Locale: <input type="text" autocorrect="off" [(ngModel)]="customLocale" [style.background-color]="localeGood ? 'inherit' : '#FBC'"></label>
-    <label>IANA timezone: <input type="text" autocorrect="off" [(ngModel)]="customTimezone" [style.background-color]="timezoneGood ? 'inherit' : '#FBC'"></label>
-    <label>Numbering: <input type="text" autocorrect="off" [(ngModel)]="numSystem" [style.background-color]="numSystemGood ? 'inherit' : '#FBC'"></label>
+    <label>Locale: <input type="text" autocorrect="off" [(ngModel)]="customLocale" [style.background-color]="inputBackground(localeGood)"></label>
+    <label>IANA timezone: <input type="text" autocorrect="off" [(ngModel)]="customTimezone" [style.background-color]="inputBackground(timezoneGood)"></label>
+    <label>Numbering: <input type="text" autocorrect="off" [(ngModel)]="numSystem" [style.background-color]="inputBackground(numSystemGood)"></label>
     <div class="wrap">&nbsp;</div>
 
     <select class="line-start" [(ngModel)]="customStyle" (change)="settingsUpdated()">
@@ -150,8 +150,8 @@
         (change)="settingsUpdated()">Show seconds</label>
     <div class="wrap">&nbsp;</div>
 
-    <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="minGood ? 'inherit' : '#FBC'"></label>
-    <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="maxGood ? 'inherit' : '#FBC'"></label>
+    <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="inputBackground(minGood)"></label>
+    <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="inputBackground(maxGood)"></label>
   </div>
 
   <div class='custom-time'>

@@ -277,4 +277,8 @@ export class AppComponent {
 
     return result;
   }
+
+  inputBackground(good: boolean): string {
+    return good ? 'inherit' : this.darkMode ? '#803' : '#FBC';
+  }
 }

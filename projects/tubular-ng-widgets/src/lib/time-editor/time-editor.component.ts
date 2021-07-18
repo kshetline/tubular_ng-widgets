@@ -1300,9 +1300,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       }
     }
     else if (sel === this.signIndex) {
-      if (i[this.signIndex].value === '-' && (key === ' ' || key === '+' || key === '='))
+      if (key === ' ' || key === '+' || key === '=')
         newValue = sel > 0 ? '+' : NO_BREAK_SPACE;
-      else if ((i[this.signIndex].value === NO_BREAK_SPACE || i[this.signIndex].value === '+') && key === '-')
+      else if (key === '-')
         newValue = '-';
       else {
         if (' +=-'.indexOf(key) < 0)

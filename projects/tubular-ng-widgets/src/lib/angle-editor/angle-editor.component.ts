@@ -473,9 +473,9 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       }
     }
     else if (sel === this.signIndex) {
-      if (i[this.signIndex].value === '-' && (key === ' ' || key === '+' || key === '='))
+      if (key === ' ' || key === '+' || key === '=')
         newValue = '+';
-      else if (i[this.signIndex].value === '+' && key === '-')
+      else if (key === '-')
         newValue = '-';
       else {
         if (' +=-'.indexOf(key) < 0)
