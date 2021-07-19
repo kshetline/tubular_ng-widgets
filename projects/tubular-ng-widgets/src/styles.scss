@@ -63,7 +63,7 @@
 
   svg {
     position: relative;
-    top: -0.46em;
+    top: -0.45em;
   }
 }
 
@@ -73,7 +73,7 @@
   border-radius: 0 0 max(4px, 0.2em) max(4px, 0.2em);
   display: flex;
   font-size: max(14px, 0.6em);
-  justify-content: space-between;
+  justify-content: center;
   margin: 0 2px 2px 2px;
   overflow: hidden;
   position: relative;
@@ -91,6 +91,11 @@
     position: relative;
     text-align: center;
     user-select: none;
+  }
+
+  .tbw-dse-button-spacer {
+    flex-shrink: 1;
+    width: 0.33em;
   }
 
   input, .tbw-dse-paste-hint {
@@ -123,7 +128,7 @@
 
 .tbw-dse-wrapper {
   align-items: baseline;
-  border: #A6A6A6 solid max(1px, 0.0836em);
+  border: #A6A6A6 solid max(1px, 0.0836em) !important;
   border-radius: max(4px, 0.2em);
   caret-color: transparent;
   cursor: default;
@@ -136,14 +141,17 @@
   user-select: none;
 
   &.tbw-dse-floating {
-    border-bottom: 0;
-    border-radius: 0;
-    border-top: 0;
+    border-bottom: 0 !important;
+    border-radius: 0 !important;
+    border-top: 0 !important;
+    box-shadow: none !important;
     outline: none !important;
     margin-bottom: 0;
     margin-top: 0;
 
     &:focus {
+      border-color: #A6A6A6 !important;
+      box-shadow: none !important;
       outline: none !important;
       -webkit-tap-highlight-color: transparent !important;
     }

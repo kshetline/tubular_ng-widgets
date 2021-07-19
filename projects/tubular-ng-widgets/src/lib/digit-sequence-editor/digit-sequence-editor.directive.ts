@@ -149,6 +149,8 @@ const VIEW_ONLY_TEXT       = 'tbw-view-only-text';
 const VIEW_ONLY_BACKGROUND = 'tbw-view-only-background';
 const WARNING_BACKGROUND   = 'tbw-warning-background';
 
+const DOT_DOT_TYPING_INTERVAL = 500;
+
 export const BACKGROUND_ANIMATIONS = trigger('displayState', [
   state('error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND) })),
   state('normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND) })),
@@ -256,6 +258,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected emSizer: HTMLElement;
   protected _floating = false;
   protected hiddenInput: HTMLInputElement;
+  protected lastDecimalTime = 0;
   protected lastTabTime = 0;
   protected letterDecrement = 'z';
   protected letterIncrement = 'a';
@@ -1361,6 +1364,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
       advance = true;
     }
 
+    const now = processMillis();
+
     switch (key) {
       case 'ArrowUp':
         this.increment();
@@ -1390,10 +1395,19 @@ export abstract class DigitSequenceEditorDirective<T> implements
         this.doPaste();
         break;
 
-      case ' ':
       case '.':
+      case ',':
+        if (now < this.lastDecimalTime + DOT_DOT_TYPING_INTERVAL)
+          this.cursorForward(); // Otherwise, quietly ignore.
+
+        this.lastDecimalTime = now;
+        break;
+
+      case ' ':
       case '*':
       case '#':
+      case 'Enter':
+      case 'Return':
         this.cursorForward();
         break;
 

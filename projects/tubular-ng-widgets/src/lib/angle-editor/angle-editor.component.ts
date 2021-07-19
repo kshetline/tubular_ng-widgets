@@ -34,6 +34,7 @@ export interface AngleEditorOptions {
               { provide: NG_VALIDATORS, useExisting: forwardRef(() => AngleEditorComponent), multi: true }]
 })
 export class AngleEditorComponent extends DigitSequenceEditorDirective<number> implements OnInit {
+  private angle = 0;
   private angleDivisor = 1;
   private compassKeys: string[];
   private compassPoints: string[];
@@ -88,9 +89,13 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
   get options():  AngleEditorOptions { return this._options; }
   @Input() set options(newValue: AngleEditorOptions) {
     if (!isEqual(this._options, newValue)) {
+      const saveAngle = this.angle;
+
       this._options = clone(newValue);
       this.createDigits();
       this.createDisplayOrder();
+      this.intAngle = saveAngle * this.angleDivisor;
+      this.updateDigits();
     }
   }
 
@@ -98,7 +103,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     this.setValue(newValue);
   }
 
-  get value(): number { return this.intAngle / this.angleDivisor; }
+  get value(): number { return this.angle; }
   set value(newValue: number) {
     this.setValue(newValue, true);
   }
@@ -107,7 +112,10 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     if (newValue == null)
       return;
 
-    this.setIntAngle(round(newValue * this.angleDivisor), doCallback);
+    if (this.angle !== newValue) {
+      this.angle = newValue;
+      this.setIntAngle(round(newValue * this.angleDivisor), doCallback);
+    }
   }
 
   private setIntAngle(newValue: number, doCallback = false): void {
@@ -433,8 +441,10 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       }
     }
 
-    if (updateAngle && change !== 0)
+    if (updateAngle && change !== 0) {
+      this.angle = intAngle / this.angleDivisor;
       this.setIntAngle(intAngle, true);
+    }
     else
       this.updateDigits(intAngle, updateAngle ? 0 : sign);
 
@@ -522,6 +532,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       this.updateDigits(newIntAngle);
     }
 
+    this.angle = newIntAngle / this.angleDivisor;
     this.setIntAngle(newIntAngle, true);
     this.cursorForward();
   }
