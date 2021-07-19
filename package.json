@@ -3,13 +3,13 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prepublishOnly": "npm run build",
     "start": "ng serve",
     "build": "ng build && sass ./projects/tubular-ng-widgets/src/styles.scss ./dist/tubular-ng-widgets/assets/styles.css",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "eslint 'projects/**/src/**/*.ts'"
   },
-  "private": true,
   "dependencies": {
     "@angular/animations": "~12.1.0",
     "@angular/common": "~12.1.0",

@@ -1,23 +1,25 @@
 <div [ngClass]="{'content': true, 'app-dark-mode': darkMode, 'tbw-dark-mode': darkMode}"
      xmlns="http://www.w3.org/1999/html">
-  <div class="top-grid">
-    <div>
-      <label [style.margin-right]="'1em'"><input type="checkbox"
-          [(ngModel)]="darkMode" (change)="settingsUpdated()">Dark mode</label>
-      <tbw-angle-editor></tbw-angle-editor>
-      <tbw-angle-editor [options]="{ angleStyle: DD_MM, compass: true }"></tbw-angle-editor>
-      <tbw-angle-editor [(ngModel)]="angle" [options]="{ compass: true, copyDecimal: true }"></tbw-angle-editor>
-      <tbw-angle-editor [(ngModel)]="angle" [options]="{ unsigned: true }"></tbw-angle-editor>
-      <tbw-angle-editor [options]="{ angleStyle: 0 }"></tbw-angle-editor>
-      <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 2 }"></tbw-angle-editor>
-      <div class="angle-min-max">
-        <tbw-angle-editor #angleMinMax="ngModel" name="angleMinMax" [options]="{ angleStyle: DD, decimalPrecision: 1, unsigned: true }"
-                          validateAll min="5" max="30" [(ngModel)]="minMaxAngle"></tbw-angle-editor>
-        <tbw-form-error-display [control]="angleMinMax"></tbw-form-error-display>
-      </div>
+  <div class="top-line">
+    <label [style.margin-right]="'1em'"><input type="checkbox"
+        [(ngModel)]="darkMode" (change)="settingsUpdated()">Dark mode</label>
+    <tbw-angle-editor></tbw-angle-editor>
+    <tbw-angle-editor [options]="{ angleStyle: DD_MM, compass: true }"></tbw-angle-editor>
+    <tbw-angle-editor [(ngModel)]="angle" [options]="{ compass: true, copyDecimal: true }"></tbw-angle-editor>
+    <tbw-angle-editor [(ngModel)]="angle" [options]="{ unsigned: true }"></tbw-angle-editor>
+    <tbw-angle-editor [options]="{ angleStyle: 0 }"></tbw-angle-editor>
+    <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 2 }"></tbw-angle-editor>
+    <div class="angle-min-max">
+      <tbw-angle-editor #angleMinMax="ngModel" name="angleMinMax" [options]="{ angleStyle: DD, decimalPrecision: 1, unsigned: true }"
+                        validateAll min="5" max="30" [(ngModel)]="minMaxAngle"></tbw-angle-editor>
+      <tbw-form-error-display [control]="angleMinMax"></tbw-form-error-display>
     </div>
-    <span>&nbsp;</span>
+    <div class="break"></div>
+    <label><input type="text" [(ngModel)]="date">ISO date string</label>
+    <tbw-time-editor [(date)]="date" options="iso_date"></tbw-time-editor>
+  </div>
 
+  <div class="top-grid">
     <tbw-time-editor tai
         [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
         [(ngModel)]="time"
@@ -69,10 +71,14 @@
     </span>
     <span class="description">Local with two-digit year</span>
 
-    <tbw-time-editor tai
-        [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
-        timezone="UTC"
-        [(ngModel)]="time"></tbw-time-editor>
+    <span>
+      <tbw-time-editor tai
+          [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
+          [blank]="blank"
+          timezone="UTC"
+          [(ngModel)]="time"></tbw-time-editor>
+      <label><input type="checkbox" [(ngModel)]="blank">Blank</label>
+    </span>
     <span class="description">UTC time only, with milliseconds</span>
   </div><br>
 

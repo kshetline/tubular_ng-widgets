@@ -1,8 +1,8 @@
-import { ChangeDetectorRef, Component, forwardRef, Input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import ttime, {
-  DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone, utToTaiMillis
+  DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone, utToTaiMillis, YMDDate
 } from '@tubular/time';
 import { abs, ceil, floor, max, min, mod } from '@tubular/math';
 import {
@@ -99,6 +99,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   private amPmStrings = ['AM', 'PM'];
   private baseDigit = '0';
   private centuryBase = DateTime.getDefaultCenturyBase();
+  private _date: string;
   private dateTime = new DateTime();
   private eraKeys = ['b', 'a'];
   private eraStrings = ['BC', 'AD'];
@@ -141,6 +142,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   localTimeMax: string;
   timeStep = '60';
 
+  @Output() dateChange = new EventEmitter<string>();
+
   constructor(sanitizer: DomSanitizer, private cdr: ChangeDetectorRef) {
     super(sanitizer);
     this.useAlternateTouchHandling = false;
@@ -149,6 +152,30 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   get value(): number { return this._tai ? this.dateTime.taiMillis : this.dateTime.utcMillis; }
   set value(newValue: number) {
     this.setValue(newValue, true);
+  }
+
+  get date(): string | YMDDate {
+    if (!this._date)
+      this._date = this.dateTime.toIsoString(10);
+
+    return this._date;
+  }
+
+  @Input() set date(newValue: string | YMDDate) {
+    const currDate = this.dateTime.wallTimeSparse;
+
+    newValue = new DateTime(newValue, Timezone.ZONELESS).wallTimeSparse;
+
+    if (newValue && !newValue.error &&
+        (currDate.y !== newValue.y || currDate.m !== newValue.m || currDate.d !== newValue.d)) {
+      const newDate = this.dateTime.clone();
+
+      newDate.set('year', newValue.y);
+      newDate.set('month', newValue.m);
+      newDate.set('day', newValue.d);
+
+      this.setValue(this._tai ? newDate.taiMillis : newDate.utcMillis, true);
+    }
   }
 
   protected validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
@@ -444,6 +471,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       const wasOutOfRange = this.outOfRange;
 
       this.updateDigits();
+      this._date = undefined;
 
       if (doCallback || (this.validateAll && !wasOutOfRange && this.outOfRange))
         this.reportValueChange();
@@ -1155,6 +1183,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
   protected roll(sign: number, sel = this.selection, updateTime = true): void {
     const dateTime = this.dateTime.clone();
+    const origDate = this._date;
     const tai = this._tai;
     let change = 0;
     let field = DateTimeField.YEAR;
@@ -1259,6 +1288,10 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
       this.reportValueChange();
       this.updateDigits(this.dateTime);
+      this._date = this.dateTime.toIsoString(10);
+
+      if (this._date !== origDate)
+        this.dateChange.emit(this._date);
 
       if (sel === this.signIndex && this.dateTime.wallTime.y === 0)
         this.items[sel].value = (wasNegative ? (sel > 0 ? '+' : NO_BREAK_SPACE) : '-');
@@ -1282,10 +1315,11 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
   protected digitTyped(charCode: number, key: string): void {
     const i = this.items;
-    const origDate = this.dayIndex >= 0 ?
+    const origDay = this.dayIndex >= 0 ?
       (i[this.dayIndex].value as number) * 10 + (i[this.dayIndex + 1].value as number) : 0;
     const sel = this.selection;
     const origValue = i[sel].value;
+    const origDate = this._date;
     let newValue: number | string = origValue;
 
     if (sel === this.eraIndex) {
@@ -1393,9 +1427,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         const gap = this.dateTime.getMissingDateRange(wallTime.y, wallTime.m);
 
         if (gap && gap[0] <= wallTime.d && wallTime.d <= gap[1]) // Mind the gap! Step to either side of it.
-          wallTime.d = (origDate > wallTime.d && gap[0] !== 1 ? gap[0] - 1 : min(gap[1] + 1, lastDate));
+          wallTime.d = (origDay > wallTime.d && gap[0] !== 1 ? gap[0] - 1 : min(gap[1] + 1, lastDate));
 
-        if (origDate > 0 && wallTime.d > lastDate) {
+        if (origDay > 0 && wallTime.d > lastDate) {
           if ((lastDate < 30 && wallTime.d >= 30 && sel === this.dayIndex) ||
               (wallTime.d > lastDate && sel === this.dayIndex + 1)) {
             i[sel].value = origValue;
@@ -1437,6 +1471,10 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.outOfRange = false;
       this.reportValueChange();
       this.updateDigits();
+      this._date = this.dateTime.toIsoString(10);
+
+      if (this._date !== origDate)
+        this.dateChange.emit(this._date);
 
       if (this.outOfRange)
         setTimeout(() => this.outOfRange = false);

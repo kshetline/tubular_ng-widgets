@@ -10,6 +10,7 @@ import { Point } from '@tubular/math';
 const intl_DisplayNames = (Intl as any).DisplayNames;
 const mobile = isAndroid() || isIOS();
 const defaultSettings = {
+  blank: false,
   customCycle: '0',
   customStyle:'0',
   customYear: 'false',
@@ -46,10 +47,12 @@ export class AppComponent {
   private updateTimer: any;
 
   angle = 0;
+  blank = false;
   customCycle = '0';
   customStyle = '0';
   customYear = 'false';
   darkMode = true;
+  date = new DateTime().toIsoString(10);
   float = false;
   floatPosition: Point = null;
   localeGood = true;

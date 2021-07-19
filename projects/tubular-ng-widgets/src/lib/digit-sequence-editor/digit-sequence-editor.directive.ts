@@ -252,6 +252,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private _viewOnly = false;
   private warningTimer: Subscription;
 
+  protected _blank = false;
   protected emSizer: HTMLElement;
   protected _floating = false;
   protected hiddenInput: HTMLInputElement;
@@ -479,6 +480,14 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   // DigitSequenceEditorDirective specifics
+
+  get blank(): boolean | string { return this._blank; }
+  @Input() set blank(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
+
+    this._blank = newValue;
+  }
 
   get floating(): boolean | string { return this._floating; }
   @Input() set floating(newValue: boolean | string) {
