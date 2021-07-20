@@ -1,6 +1,6 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
-  AfterViewInit, Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild
+  AfterViewInit, ChangeDetectorRef, Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, ViewChild
 } from '@angular/core';
 import { abs, floor, max, min, Point, random, round, sign } from '@tubular/math';
 import {
@@ -300,7 +300,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
   @ViewChild('emSizer', { static: true }) private emSizerRef: ElementRef;
   @ViewChild('wrapper', { static: true }) private wrapperRef: ElementRef;
 
-  protected constructor(protected sanitizer: DomSanitizer) {
+  protected constructor(
+    protected zone: NgZone,
+    protected cdr: ChangeDetectorRef,
+    protected sanitizer: DomSanitizer
+  ) {
     This.instances.add(this);
 
     if (!This.mutationObserver) {
@@ -328,12 +332,15 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (This.instances.size === 1) {
       document.addEventListener('mousedown', This.mouseDownOrTouch);
       document.addEventListener('touchstart', This.mouseDownOrTouch);
-      document.addEventListener('mousemove', This.headerDrag);
-      document.addEventListener('touchmove', This.headerDrag, { passive: false });
       document.addEventListener('mouseup', This.headerDragEnd);
       document.addEventListener('touchend', This.headerDragEnd);
       document.addEventListener('touchcancel', This.headerDragEnd);
       window.addEventListener('resize', This.assureAllFullyOnScreen);
+
+      zone.runOutsideAngular(() => {
+        document.addEventListener('mousemove', This.headerDrag);
+        document.addEventListener('touchmove', This.headerDrag, { passive: false });
+      });
     }
   }
 
@@ -601,14 +608,14 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     this.buttons.push({ key: 'Copy', html: this.sanitizer.bypassSecurityTrustHtml(
 /* eslint-disable max-len */
-`<svg viewBox="0 0 512 512" width="1em" height="1em" style="position: relative; left: 0.05em; top: 0.15em;">
-  <g fill="currentColor">
+`<svg viewBox="0 0 512 512" width="1em" height="1em" style="position: relative; left: 0.05em; top: 0.08em;">
+  <g fill="currentColor" style="" transform="matrix(1.307452, 0, 0, 1.307452, -79.275406, -79.4646)">
     <polygon points="304,96 288,96 288,176 368,176 368,160 304,160  "/>
     <path d="M325.3,64H160v48h-48v336h240v-48h48V139L325.3,64z M336,432H128V128h32v272h176V432z M384,384H176V80h142.7l65.3,65.6V384   z"/>
   </g>
 </svg>`)});
     this.buttons.push({ key: 'Paste', html: this.sanitizer.bypassSecurityTrustHtml(
-`<svg viewBox="0 0 512 512" width="1em" height="1em" style="position: relative; left: 0.02em; top: 0.07em;">
+`<svg viewBox="0 0 512 512" width="1em" height="1em" style="position: relative; left: 0.02em; top: 0.1em;">
   <g fill="currentColor">
     <g>
       <path d="M160,160h192c-1.7-20-9.7-35.2-27.9-40.1c-0.4-0.1-0.9-0.3-1.3-0.4c-12-3.4-20.8-7.5-20.8-20.7V78.2    c0-25.5-20.5-46.3-46-46.3c-25.5,0-46,20.7-46,46.3v20.6c0,13.1-8.8,17.2-20.8,20.6c-0.4,0.1-0.9,0.4-1.4,0.5    C169.6,124.8,161.9,140,160,160z M256,64.4c7.6,0,13.8,6.2,13.8,13.8c0,7.7-6.2,13.8-13.8,13.8c-7.6,0-13.8-6.2-13.8-13.8    C242.2,70.6,248.4,64.4,256,64.4z"/>
@@ -941,6 +948,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       This.dragee.headerDy = pt.y - This.headerStartY;
       This.dragee.assureFullyOnScreen();
       evt.preventDefault();
+      This.dragee.cdr.detectChanges();
     }
   }
 
@@ -1321,6 +1329,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
         const elem = document.createElement('input');
 
         elem.setAttribute('style', 'position: absolute; opacity: 0');
+        elem.setAttribute('inputmode', 'none');
         this.wrapper.appendChild(elem);
         elem.value = text;
         elem.select();

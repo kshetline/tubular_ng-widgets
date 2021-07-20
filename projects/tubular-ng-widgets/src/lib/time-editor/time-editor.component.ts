@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, forwardRef, Input, NgZone, OnInit, Output } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import ttime, {
@@ -144,8 +144,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
   @Output() dateChange = new EventEmitter<string>();
 
-  constructor(sanitizer: DomSanitizer, private cdr: ChangeDetectorRef) {
-    super(sanitizer);
+  constructor(zone: NgZone, cdr: ChangeDetectorRef, sanitizer: DomSanitizer) {
+    super(zone, cdr, sanitizer);
     this.useAlternateTouchHandling = false;
   }
 
@@ -990,7 +990,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         ((this.timezone as Timezone).error &&
         ((this.offsetIndex >= 0 && item.index === this.offsetIndex) ||
          (this.dstIndex >= 0 && item.index === this.dstIndex))) ||
-        (this.yearIndex <= item.index && item.index < this.yearIndex + this.yearDigits && !this.yearInRange(y)))
+        (this.yearIndex >= 0 && this.yearIndex <= item.index && item.index < this.yearIndex + this.yearDigits && !this.yearInRange(y)))
       qlass += ' tbw-dse-bad-value';
 
     return qlass?.trim() || null;

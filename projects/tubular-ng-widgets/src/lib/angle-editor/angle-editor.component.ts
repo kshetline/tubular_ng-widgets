@@ -1,4 +1,4 @@
-import { Component, forwardRef, Input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, forwardRef, Input, NgZone, OnInit } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { clone, convertDigitsToAscii, isArray, isEqual, last, repeat, toNumber } from '@tubular/util';
@@ -56,8 +56,9 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
   private signIndex = -1;
 
   // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-  constructor(sanitizer: DomSanitizer) { // But this isn't useless! It changes access from protected to public.
-    super(sanitizer);
+  constructor(zone: NgZone, cdr: ChangeDetectorRef, sanitizer: DomSanitizer) {
+    // But this isn't useless! It changes access from protected to public.
+    super(zone, cdr, sanitizer);
   }
 
   protected validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
