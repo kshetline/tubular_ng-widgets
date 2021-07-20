@@ -115,6 +115,9 @@ function getBackgroundColor(className: string, darkMode = false): string {
 }
 
 function getBackgroundLevel(elem: HTMLElement): number {
+  if (!elem)
+    return 255;
+
   const color = getCssValue(elem, 'background-color');
 
   if (color === 'transparent')
@@ -207,16 +210,17 @@ export abstract class DigitSequenceEditorDirective<T> implements
   // ControlValueAccessor/Validator-related fields
 
   private afterViewInit = false;
-  private _disabled = false;
   private pendingValueChange = false;
 
   protected changed = noop;
+  protected _disabled = false;
   protected _fakeUrl = false;
   protected lastValue: T = null;
   protected touched = noop;
   protected valid = true;
   protected _validateAll = false;
   protected _value: T = null;
+  protected _wideSpinner = false;
 
   @Output() private valueChange = new EventEmitter<T>();
 
@@ -251,7 +255,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private touchDeltaY = 0;
   private touchDeltaYs: number[] = [];
   private touchDeltaTimes: number[] = [];
-  private _viewOnly = false;
   private warningTimer: Subscription;
 
   protected _blank = false;
@@ -268,6 +271,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected showFocus = false;
   protected swipeIndex = -1;
   protected _tabindex = '0';
+  protected _viewOnly = false;
   protected wrapper: HTMLElement;
 
   protected static dragee: DigitSequenceEditorDirective<any>;
@@ -520,6 +524,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.adjustState();
   }
 
+  get inputOff(): boolean { return this._disabled || this._viewOnly || this._floating; }
+
   get validateAll(): boolean | string { return this._validateAll; }
   @Input() set validateAll(newValue: boolean | string) {
     if (isString(newValue))
@@ -575,6 +581,14 @@ export abstract class DigitSequenceEditorDirective<T> implements
         });
       }
     }
+  }
+
+  get wideSpinner(): boolean | string { return this._wideSpinner; }
+  @Input() set wideSpinner(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
+
+    this._wideSpinner = newValue;
   }
 
   protected abstract createDigits(): void;
@@ -675,7 +689,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     this.hiddenInput = document.createElement('input');
     this.hiddenInput.name = 'hidden-' + random(0, 99999999);
-    this.hiddenInput.inputMode = this._fakeUrl ? 'url' : 'decimal';
+    this.hiddenInput.inputMode = this.inputOff ? 'none' : this._fakeUrl ? 'url' : 'decimal';
     this.hiddenInput.pattern = this._fakeUrl ? '.*' : '[-+.0-9]*';
     this.hiddenInput.autocomplete = 'new-password';
     this.hiddenInput.setAttribute('autocapitalize', 'off');
@@ -859,12 +873,23 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     if (this.items[index]?.spinner && evt?.target) {
       const r = (evt.target as HTMLElement).getBoundingClientRect();
-      const y = ((evt as any).clientY ?? getClientXYForTouchEvent(evt as any).y);
 
-      if (y < r.top + r.height / 2)
-        index = SPIN_UP;
-      else
-        index = SPIN_DOWN;
+      if (this.wideSpinner) {
+        const x = ((evt as any).clientX ?? getClientXYForTouchEvent(evt as any).x);
+
+        if (x < r.left + r.width / 2)
+          index = SPIN_UP;
+        else
+          index = SPIN_DOWN;
+      }
+      else {
+        const y = ((evt as any).clientY ?? getClientXYForTouchEvent(evt as any).y);
+
+        if (y < r.top + r.height / 2)
+          index = SPIN_UP;
+        else
+          index = SPIN_DOWN;
+      }
     }
 
     if (!this.checkSpinAction(index))
@@ -946,18 +971,19 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     const x = this.headerX + this.headerDx;
     const y = this.headerY + this.headerDy;
+    const winWidth = max(window.innerWidth, document.documentElement.clientWidth);
+    const winHeight = min(window.innerHeight, document.documentElement.clientHeight);
     let dx;
     let dy;
 
     if (x < 0)
       this.headerX -= x;
-    // outerWidth can be less than innerWidth!? Apparently! (Same for height too.)
-    else if ((dx = x + r.width - min(window.innerWidth, window.outerWidth)) > 0)
+    else if (r.width < winWidth && (dx = x + r.width - winWidth) > 0)
       this.headerX -= dx;
 
     if (y < 0)
       this.headerY -= y;
-    else if ((dy = y + r.height - min(window.innerHeight, window.outerHeight)) > 0)
+    else if (r.height < winHeight && (dy = y + r.height - winHeight) > 0)
       this.headerY -= dy;
 
     this.position = { x: this.headerX, y: this.headerY };
@@ -1506,7 +1532,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected checkDarkMode(immediate = false): void {
     let newState: string;
 
-    this.darkMode = (getBackgroundLevel(this.wrapper.parentElement) < 128);
+    this.darkMode = (getBackgroundLevel(this.wrapper?.parentElement) < 128);
 
     if (this.darkMode && !this.displayState.startsWith('dark-'))
       newState = 'dark-' + this.displayState;
@@ -1526,8 +1552,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
       (this._viewOnly ? 'view-only' : (this._disabled ? 'disabled' : 'normal'));
 
     if (this.hiddenInput) {
+      const disabled = (this._floating || this._disabled || this._viewOnly);
       this.hiddenInput.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);
-      this.hiddenInput.disabled = !this._floating || !this._disabled || this._viewOnly;
+      this.hiddenInput.disabled = disabled;
+      this.hiddenInput.readOnly = disabled;
     }
   }
 

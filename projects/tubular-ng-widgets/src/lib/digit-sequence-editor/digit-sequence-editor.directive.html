@@ -22,9 +22,9 @@
       [class.tbw-dse-clear-focus-outline]="addFocusOutline && !hasFocus"
       [class.tbw-dse-dse-rtl]="rtl"
       [class.tbw-dse-floating]="floating"
-      [tabindex]="disabled || hasHiddenInput ? -1 : tabindex"
-      [attr.contenteditable]="!disabled && !disableContentEditable && !floating"
-      [attr.inputmode]="fakeUrl ? 'url' : 'decimal'"
+      [tabindex]="inputOff || hasHiddenInput ? '-1' : tabindex"
+      [attr.contenteditable]="!inputOff && !disableContentEditable"
+      [attr.inputmode]="inputOff ? 'none' : fakeUrl ? 'url' : 'decimal'"
       autocomplete="off" autocapitalize="off" autocorrect="off"
       (keydown)="onKeyDown($event)" (keyup)="onKeyUp()" (keypress)="onKeyPress($event)"
       (focus)="onFocus(true, $event)" (blur)="onFocus(false, $event)"
@@ -70,15 +70,23 @@
           class="tbw-dse-sizer"
       >{{item.sizer}}</span>
       <ng-template #dividerOrSpinner>
-        <div *ngIf="item.divider; else spinner" class="tbw-dse-divider">&nbsp;</div>
-        <ng-template #spinner>
-          <svg width="0.574em" height="1em" viewBox="0 0 353 614.6">
+        <div *ngIf="item.divider" class="tbw-dse-divider">&nbsp;</div>
+        <div *ngIf="item.spinner"
+            class="tbw-dse-spinner-layout"
+            [class.tbw-dse-wide-spinner]="wideSpinner"
+            (mousedown)="onMouseDown(item.index, $event)"
+            (touchstart)="onTouchStart(item.index, $event)">
+          <svg width="0.574em" height="0.5em" viewBox="0 0 353 307.3">
             <g>
               <path (mousedown)="onMouseDown(SPIN_UP, $event)"
                   (touchstart)="onTouchStart(SPIN_UP, $event)"
                   [ngClass]="(getBackgroundColorForItem(null, SPIN_UP) || '') + ' ' + (getColorForItem(null, SPIN_UP) || '')"
                   d="M 34.1 250.8 L 318.4 250.8 C 336 250.8 334.5 222.4 332.7 208.5 C 332.1 204.2 329.2 197.5 326.6 193.8 L 196.7 28.9 C 185.5 8.6 166.8 8.6 155.9 28.9 L 25.7 193.8 C 23.1 197.5 20.4 204.1 19.9 208.5 C 17.9 222.4 16.5 250.8 34.1 250.8 Z"
                   style="stroke-width: 33px"/>
+            </g>
+          </svg>
+          <svg width="0.574em" height="0.5em" viewBox="0 307.3 353 307.3">
+            <g>
               <path (mousedown)="onMouseDown(SPIN_DOWN, $event)"
                   (touchstart)="onTouchStart(SPIN_DOWN, $event)"
                   [ngClass]="(getBackgroundColorForItem(null, SPIN_DOWN) || '') + ' ' + (getColorForItem(null, SPIN_DOWN) || '')"
@@ -86,7 +94,7 @@
                   style="stroke-width: 33px"/>
             </g>
           </svg>
-        </ng-template>
+        </div>
       </ng-template>
     </div>
     <div class="tbw-dse-focus-indicator" [class.tbw-dse-show-focus]="floating && hasFocus">&nbsp;</div>

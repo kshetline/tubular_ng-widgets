@@ -75,9 +75,11 @@
       <tbw-time-editor tai
           [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
           [blank]="blank"
+          [wideSpinner]="wideSpinner"
           timezone="UTC"
           [(ngModel)]="time"></tbw-time-editor>
       <label><input type="checkbox" [(ngModel)]="blank">Blank</label>
+      <label><input type="checkbox" [(ngModel)]="wideSpinner">Wide spinner</label>
     </span>
     <span class="description">UTC time only, with milliseconds</span>
   </div><br>

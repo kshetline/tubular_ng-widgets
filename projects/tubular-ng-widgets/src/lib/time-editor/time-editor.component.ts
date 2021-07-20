@@ -379,9 +379,12 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
   protected adjustState(): void {
     super.adjustState();
 
-    this.localTime?.setAttribute('disabled',
-        this.disabled || this.viewOnly || !this.useAlternateTouchHandling ? '' : null);
-    this.localTime?.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);
+    if (this.localTime) {
+      const disabled = (this._disabled || this._viewOnly || this._floating || !this.useAlternateTouchHandling);
+
+      this.localTime.disabled = disabled;
+      this.localTime.setAttribute('tabindex', disabled ? '-1' : this.tabindex);
+    }
   }
 
   onTouchStart(index: number, evt: TouchEvent): void {

@@ -21,6 +21,7 @@ const defaultSettings = {
   showSeconds: false,
   timeDisabled: false,
   viewOnly: true,
+  wideSpinner: false,
   yearStyle: '0'
 };
 
@@ -66,6 +67,7 @@ export class AppComponent {
   timeDisabled = false;
   timezoneGood = true;
   viewOnly = true;
+  wideSpinner = false;
   yearStyle = '0';
 
   constructor() {
