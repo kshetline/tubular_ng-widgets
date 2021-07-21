@@ -603,8 +603,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
   protected createButtons(): void {
     this.buttons = [];
 
-    for (let i = 0; i <= 9; ++i)
-      this.buttons.push({ key: i.toString(), label: i.toString() });
+    for (let i = 1; i <= 10; ++i)
+      this.buttons.push({ key: (i % 10).toString(), label: (i % 10).toString() });
 
     this.buttons.push({ key: 'Copy', html: this.sanitizer.bypassSecurityTrustHtml(
 /* eslint-disable max-len */
@@ -1286,6 +1286,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
         if (this.pasteInput) {
           this.pasteInput.value = '';
           this.pasteInput.focus();
+          setTimeout(() => this.pasteInput.focus());
         }
       }
       else

@@ -100,14 +100,14 @@
   </div>
   <div *ngIf="floating"
       class="tbw-dse-footer"
-      (mousedown)="wrapper.focus()"
-      (touchstart)="wrapper.focus()">
+      (mousedown)="!showPasteInput && wrapper.focus()"
+      (touchstart)="!showPasteInput && wrapper.focus()">
     <ng-container *ngFor="let btn of buttons; let last = last">
       <span
           class="tbw-dse-button"
           tabindex="-1"
           (click)="onButtonKey(btn.key)"
-          (focus)="onButtonFocus()"
+          (focus)="!showPasteInput && onButtonFocus()"
           [innerHTML]="btn.html || htmlEscape(btn.label)"></span>
       <span *ngIf="!last" class="tbw-dse-button-spacer">&nbsp;</span>
     </ng-container>

@@ -27,6 +27,7 @@
 .tbw-dse-palette {
   display: inline-flex;
   flex-direction: column;
+  touch-action: manipulation;
 
   &.tbw-dse-floating {
     filter: drop-shadow(4px 4px 2px #888);
@@ -48,6 +49,7 @@
   overflow: hidden;
   padding-right: 0.25em;
   position: relative;
+  touch-action: manipulation;
   user-select: none;
 }
 
@@ -60,6 +62,7 @@
   overflow: hidden;
   position: relative;
   text-align: center;
+  touch-action: manipulation;
   width: 0.6em;
 
   svg {
@@ -80,6 +83,7 @@
   overflow: hidden;
   padding: 0 0.25em;
   position: relative;
+  touch-action: manipulation;
 
   .tbw-dse-button {
     border: #A6A6A6 solid max(1px, 0.0418em);
@@ -96,11 +100,13 @@
     padding: 0.1em 0.25em;
     position: relative;
     text-align: center;
+    touch-action: manipulation;
     user-select: none;
   }
 
   .tbw-dse-button-spacer {
     flex-shrink: 1;
+    touch-action: manipulation;
     width: 0.4em;
   }
 
@@ -121,14 +127,15 @@
   .tbw-dse-paste-hint {
     background-color: inherit;
     color: #888;
-    font-size: 0.8em;
+    font-size: 0.7em;
     font-style: italic;
     height: 1.75em;
-    left: calc(50% - 5em);
+    left: calc(50% - 6.25em);
     line-height: 1.85em;
     text-align: center;
     top: 0.1em;
-    width: 10em;
+    touch-action: manipulation;
+    width: 12.5em;
   }
 }
 
@@ -144,6 +151,7 @@
   overflow: hidden;
   padding: max(1px, 0.0836em) 0.2em;
   position: relative;
+  touch-action: manipulation;
   user-select: none;
 
   &.tbw-dse-floating {
@@ -188,6 +196,7 @@
   position: relative;
   white-space: nowrap;
   width: max(1px, 0.07em);
+  touch-action: manipulation;
   transform: rotate(-0.0000000001deg); // Silly trick to convince Chrome to do subpixel rendering.
 }
 
@@ -200,6 +209,7 @@
   position: relative;
   text-align: center;
   text-decoration: inherit;
+  touch-action: manipulation;
   user-select: none;
   white-space: nowrap;
   -webkit-text-stroke-width: 0.25px;
@@ -213,6 +223,7 @@
   padding: 0 0.1em;
   position: relative;
   top: 0.15em;
+  touch-action: manipulation;
 }
 
 .tbw-dse-spinner-layout {
@@ -220,6 +231,7 @@
   display: flex;
   flex-direction: column;
   stroke-width: 34px;
+  touch-action: manipulation;
 
   &.tbw-dse-wide-spinner {
     flex-direction: row;

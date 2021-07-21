@@ -4,6 +4,7 @@
 
 .tbw-dse-draggable {
   position: relative;
+  touch-action: manipulation;
 }
 
 .tbw-dse-draggable-extra {
@@ -12,6 +13,7 @@
   max-height: 0;
   overflow: visible;
   position: relative;
+  touch-action: manipulation;
   white-space: nowrap;
 }
 
@@ -23,12 +25,14 @@
   margin-bottom: -0.1px;
   overflow: hidden;
   position: relative;
+  touch-action: manipulation;
   white-space: pre;
 }
 
 .tbw-dse-backgrounder {
   height: 100%;
   position: absolute;
+  touch-action: manipulation;
   width: 100%;
 }
 
@@ -36,6 +40,7 @@
   display: inline-block;
   overflow: visible;
   text-decoration: inherit;
+  touch-action: manipulation;
   white-space: nowrap;
 }
 
@@ -53,5 +58,6 @@
   color: transparent;
   height: 0.1px;
   position: absolute;
+  touch-action: manipulation;
   width: 1em;
 }
