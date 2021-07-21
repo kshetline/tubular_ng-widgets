@@ -112,10 +112,10 @@
 
   input, .tbw-dse-paste-hint {
     background-color: transparent;
+    bottom: 3px;
     box-sizing: content-box;
     display: none;
     left: calc(50% - 6em);
-    height: calc(2.55em - 6px);
     min-width: 12em;
     position: absolute;
     top: 3px;
@@ -125,7 +125,9 @@
   input {
     border: 0;
     box-shadow: none;
+    font-size: 16px;
     outline: none;
+    touch-action: manipulation;
   }
 
   .tbw-dse-paste-hint {
