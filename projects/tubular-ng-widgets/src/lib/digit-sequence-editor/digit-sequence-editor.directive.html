@@ -98,10 +98,7 @@
     <div class="tbw-dse-focus-indicator" [class.tbw-dse-show-focus]="floating && hasFocus">&nbsp;</div>
     <div #emSizer class="tbw-dse-em-sizer">&nbsp;</div>
   </div>
-  <div *ngIf="floating"
-      class="tbw-dse-footer"
-      (mousedown)="!showPasteInput && wrapper.focus()"
-      (touchstart)="!showPasteInput && wrapper.focus()">
+  <div *ngIf="floating" class="tbw-dse-footer">
     <ng-container *ngFor="let btn of buttons; let last = last">
       <span
           class="tbw-dse-button"
@@ -111,11 +108,11 @@
           [innerHTML]="btn.html || htmlEscape(btn.label)"></span>
       <span *ngIf="!last" class="tbw-dse-button-spacer">&nbsp;</span>
     </ng-container>
-    <span class="tbw-dse-paste-hint" [style.display]="showPasteInput ? 'inline' : 'none'">paste here</span>
+    <div class="tbw-dse-paste-hint" [style.display]="showPasteInput ? 'block' : 'none'">paste here</div>
     <input name='paste-input'
         type="text"
         (input)="onPasteInput()"
         (blur)="onPasteBlur()"
-        [style.display]="showPasteInput ? 'inline' : 'none'">
+        [style.display]="showPasteInput ? 'inline-block' : 'none'">
   </div>
 </div>
