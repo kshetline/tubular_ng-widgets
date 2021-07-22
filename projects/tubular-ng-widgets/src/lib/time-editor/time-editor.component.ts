@@ -1582,7 +1582,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     if (format === origFormat)
       format = format.replace(/(M+)(\u200F[^a-zA-Z]+)(D+)(\u200F[^a-zA-Z]+)([yY]+)/, '$5$4$3$2$1');
 
-    format = format.replace('rZ', 'RZ');
+    format = format.replace('rZ', 'RZ').replace(/[\u2004-\u200D]/g, '').replace(/[\u00A0\u2000-\u2003]/g, ' ');
 
     return format;
   }
