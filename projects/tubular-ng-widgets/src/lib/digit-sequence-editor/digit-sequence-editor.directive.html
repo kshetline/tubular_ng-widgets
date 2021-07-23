@@ -104,8 +104,7 @@
           class="tbw-dse-button"
           tabindex="-1"
           (click)="onButtonKey(btn.key)"
-          (focus)="!showPasteInput && onButtonFocus()"
-          [innerHTML]="btn.html || htmlEscape(btn.label)"></span>
+          (focus)="!showPasteInput && onButtonFocus()"><div [innerHTML]="btn.html || htmlEscape(btn.label)"></div></span>
       <span *ngIf="!last" class="tbw-dse-button-spacer">&nbsp;</span>
     </ng-container>
     <div class="tbw-dse-paste-hint" [style.display]="showPasteInput ? 'block' : 'none'">paste here</div>

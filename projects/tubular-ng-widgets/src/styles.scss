@@ -86,14 +86,16 @@
   touch-action: manipulation;
 
   .tbw-dse-button {
+    align-items: center;
     border: #A6A6A6 solid max(1px, 0.0418em);
     border-radius: max(2px, 0.1em);
     box-sizing: border-box;
     cursor: pointer;
+    display: flex;
     flex-grow: 1;
     font-family: inherit;
     font-size: max(14px, 0.6em);
-    line-height: 1.4em;
+    justify-content: center;
     margin: 0.25em 0.1em;
     max-width: 2.5em;
     min-width: 1.5em;

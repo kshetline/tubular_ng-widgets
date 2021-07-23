@@ -234,6 +234,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private static mutationObserver: MutationObserver;
   private static pasteable: DigitSequenceEditorDirective<any>;
 
+  protected static dragStartsActive = false;
+
   static touchHasOccurred = false;
 
   private activeSpinner = NO_SELECTION;
@@ -923,6 +925,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     const pt = getThePoint(evt);
 
     This.dragee = this;
+    This.dragStartsActive = document.body.matches(':active');
     this.headerDx = this.headerDy = 0;
     This.headerStartX = pt.x;
     This.headerStartY = pt.y;
@@ -941,7 +944,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   static headerDrag(evt: MouseEvent | TouchEvent): void {
-    if (!document.body.matches(':active'))
+    if (This.dragStartsActive && !document.body.matches(':active'))
       This.headerDragEnd(evt);
     else if (This.dragee) {
       const pt = getThePoint(evt);
@@ -1000,12 +1003,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   onTouchStart(index: number, evt: TouchEvent): void {
+    This.dragStartsActive = document.body.matches(':active');
+
     if (this._disabled || this.viewOnly)
       return;
-    else if (!document.body.matches(':active')) {
-      this.onTouchEnd(evt);
-      return;
-    }
 
     if (evt.cancelable)
       evt.preventDefault();
@@ -1037,6 +1038,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
   onTouchMove(evt: TouchEvent): void {
     if (this._disabled || this.viewOnly)
       return;
+    else if (This.dragStartsActive && !document.body.matches(':active')) {
+      this.onTouchEnd(evt);
+      return;
+    }
 
     if (evt.cancelable) {
       evt.preventDefault();
