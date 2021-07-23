@@ -1,6 +1,6 @@
 {
   "name": "@tubular/ng-widgets",
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1-alpha.3",
   "peerDependencies": {
     "@angular/common": "^12.0.4",
     "@angular/core": "^12.0.4",

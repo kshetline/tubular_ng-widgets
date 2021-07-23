@@ -941,7 +941,9 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   static headerDrag(evt: MouseEvent | TouchEvent): void {
-    if (This.dragee) {
+    if (!document.body.matches(':active'))
+      This.headerDragEnd(evt);
+    else if (This.dragee) {
       const pt = getThePoint(evt);
 
       This.dragee.headerDx = pt.x - This.headerStartX;
@@ -1000,6 +1002,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
   onTouchStart(index: number, evt: TouchEvent): void {
     if (this._disabled || this.viewOnly)
       return;
+    else if (!document.body.matches(':active')) {
+      this.onTouchEnd(evt);
+      return;
+    }
 
     if (evt.cancelable)
       evt.preventDefault();
