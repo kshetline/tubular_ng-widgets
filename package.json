@@ -10,7 +10,8 @@
     "test": "ng test",
     "lint": "eslint 'projects/**/src/**/*.ts'",
     "publish-dry": "npm run build && npm publish ./dist/tubular-ng-widgets/ --dry-run",
-    "publish": "npm run build && npm publish ./dist/tubular-ng-widgets/"
+    "publish": "npm run build && npm publish ./dist/tubular-ng-widgets/",
+    "pack": "npm run build && npm pack ./dist/tubular-ng-widgets/"
   },
   "dependencies": {
     "@angular/animations": "~12.1.0",
