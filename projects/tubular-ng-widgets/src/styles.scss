@@ -336,3 +336,99 @@
   .tbw-warning-text { color: #E45; stroke: #E45; }
   .tbw-warning-background { background-color: #B80; fill: #B80; }
 }
+
+.tbw-cal-table {
+  border: 1px solid #A6A6A6;
+  border-collapse: collapse;
+  border-spacing: 0;
+  min-height: calc(9.0831em + 2px); // 6.8125 * 1.3333
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.tbw-cal-alt-table {
+  border: none;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%
+}
+
+.tbw-cal-table, .tbw-cal-alt-table {
+  td, th {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    color: black;
+    background: white;
+    padding: max(1px, 0.1em) max(3px, 0.3em);
+    cursor: default;
+    user-select: none;
+
+    &.tbw-cal-highlight {
+      background: #CFF;
+    }
+
+    &.tbw-cal-short-day {
+      color: #C00;
+    }
+
+    &.tbw-cal-long-day {
+      color: #0A0;
+    }
+
+    &.tbw-cal-other-month {
+      font-size: 0.6em;
+      color: #999;
+    }
+
+    &.tbw-cal-void-day {
+      font-size: 0.6em;
+      color: #999;
+      cursor: not-allowed;
+    }
+  }
+
+  td {
+    cursor: pointer;
+    text-align: center;
+  }
+}
+
+.tbw-cal-alt-cell {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+}
+
+.tbw-cal-arrow, .tbw-cal-title {
+  background: white;
+  display: inline-block;
+  cursor: pointer;
+  text-align: center;
+  user-select: none;
+  width: 14.28%
+}
+
+.tbw-cal-title {
+  position: relative;
+  width: 71.43%;
+
+  & > div {
+    bottom: 0;
+    left: 0;
+    opacity: 1;
+    position: absolute;
+    right: 0;
+    top: 0;
+    text-align: center;
+    transition: opacity 0.5s ease-in-out;
+  }
+}
+
+.tbw-cal-day-header {
+  font-size: 0.6em;
+  background: #EEE;
+}

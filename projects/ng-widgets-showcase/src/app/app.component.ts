@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { DateTime, newDateTimeFormat, Timezone } from '@tubular/time';
-import { isAndroid, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
+import { DateTime, newDateTimeFormat, Timezone, YMDDate } from '@tubular/time';
+import { isAndroid, isEqual, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
 import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle }
   from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
 import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
@@ -40,6 +40,7 @@ export class AppComponent {
   SIGNED = YearStyle.SIGNED;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;
 
+  private _calendarDate: YMDDate;
   private _customLocale = navigator.language;
   private _customTimezone = 'America/New_York';
   private _max = '';
@@ -285,5 +286,19 @@ export class AppComponent {
 
   inputBackground(good: boolean): string {
     return good ? 'inherit' : this.darkMode ? '#803' : '#FBC';
+  }
+
+  get calendarDate(): YMDDate {
+    const currDate = new DateTime({ tai: this.time }, Timezone.ZONELESS).wallTimeSparse;
+
+    delete currDate.hrs;
+    delete currDate.min;
+    delete currDate.sec;
+    delete currDate.millis;
+
+    if (!isEqual(this._calendarDate, currDate))
+      this._calendarDate = currDate;
+
+    return this._calendarDate;
   }
 }

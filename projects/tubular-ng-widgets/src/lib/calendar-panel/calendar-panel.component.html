@@ -1,0 +1,59 @@
+<div class="tbw-cal-header">
+  <div class="tbw-cal-arrow" (touchstart)="onTouchStart($event, -1)" (touchend)="stopTimer()"
+    (mousedown)="onMouseDown($event, -1)" (mouseup)="stopTimer()" (mouseleave)="stopTimer()"
+    (click)="onClick($event, -1)">
+    <svg viewBox="0 0 320 512" style="height: 0.625em; width: 1em">
+      <path fill="currentColor" d="M34.52 239.03L228.87 44.69c9.37-9.37 24.57-9.37
+        33.94 0l22.67 22.67c9.36 9.36 9.37 24.52.04 33.9L131.49 256l154.02
+        154.75c9.34 9.38 9.32 24.54-.04 33.9l-22.67 22.67c-9.37 9.37-24.57
+        9.37-33.94 0L34.52 272.97c-9.37-9.37-9.37-24.57 0-33.94z"></path>
+    </svg>
+  </div>
+  <div class="tbw-cal-title" (click)="onTitleClick()">&nbsp;
+    <div *ngFor="let n of counter(modeCount)" [class.tbw-cal-inactive]="selectMode !== n">{{title[n]}}</div>
+  </div>
+  <div class="tbw-cal-arrow" (touchstart)="onTouchStart($event, 1)" (touchend)="stopTimer()"
+    (mousedown)="onMouseDown($event,  1)" (mouseup)="stopTimer()" (mouseleave)="stopTimer()"
+    (click)="onClick($event,  1)">
+    <svg viewBox="0 0 320 512" style="height: 0.625em; width: 1em">
+      <path fill="currentColor" d="M285.476 272.971L91.132 467.314c-9.373
+        9.373-24.569 9.373-33.941
+        0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484
+        101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373
+        24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001
+        33.941z"></path>
+    </svg>
+  </div>
+</div>
+<div class="tbw-cal-table-wrapper">
+  <table class="tbw-cal-table" [class.tbw-cal-inactive]="selectMode !== 0">
+    <tr>
+      <th *ngFor="let d of daysOfWeek" class="tbw-cal-day-header">{{d}}</th>
+    </tr>
+    <tr *ngFor="let week of calendar">
+      <td *ngFor="let day of week" [ngClass]="{
+          'tbw-cal-highlight':   day.highlight,
+          'tbw-cal-short-day':   day.shortDay,
+          'tbw-cal-long-day':    day.longDay,
+          'tbw-cal-other-month': day.otherMonth,
+          'tbw-cal-void-day':    day.voidDay
+        }"
+        (click)="onDayClick(day)">{{day.text}}</td>
+    </tr>
+  </table>
+  <ng-container *ngFor="let n of counter(modeCount)" [ngTemplateOutlet]="altTable" [ngTemplateOutletContext]="{ mode: n }"></ng-container>
+  <ng-template #altTable let-mode="mode">
+    <table class="tbw-cal-alt-table" [class.tbw-cal-inactive]="selectMode === 0 || mode !== selectMode">
+      <tr *ngFor="let row of counter(rows)">
+        <td *ngFor="let col of counter(cols)">
+          <ng-container [ngTemplateOutlet]="textItem" [ngTemplateOutletContext]="{ text: getTableValue(row, col, mode) }"></ng-container>
+        </td>
+      </tr>
+    </table>
+  </ng-template>
+  <ng-template #textItem let-text="text">
+    <div class="tbw-cal-alt-cell" [class.tbw-cal-highlight]="text === highlightItem" (click)="onAltCellClick(text)">
+      <span>{{text}}</span>
+    </div>
+  </ng-template>
+</div>

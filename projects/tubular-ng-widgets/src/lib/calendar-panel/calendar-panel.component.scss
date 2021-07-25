@@ -1,0 +1,12 @@
+:host {
+  display: inline-block;
+}
+
+.tbw-cal-table-wrapper {
+  position: relative;
+}
+
+.tbw-cal-inactive {
+  opacity: 0 !important;
+  pointer-events: none;
+}
