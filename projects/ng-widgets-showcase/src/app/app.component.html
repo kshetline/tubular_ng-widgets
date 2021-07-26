@@ -176,6 +176,7 @@
    <div class="text-time" dir="auto">{{format(customTimezone, customLocale, getFormat())}}</div>
   </div>
 
-  <br><br>
-  <tbw-calendar [ngModel]="calendarDate"></tbw-calendar>
+  <div class='calendar'>
+    <tbw-calendar [(ngModel)]="calendarDate"></tbw-calendar>
+  </div>
 </div>
