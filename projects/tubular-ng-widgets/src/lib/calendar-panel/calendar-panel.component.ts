@@ -1,6 +1,6 @@
 import { Component, EventEmitter, forwardRef, Input, OnDestroy, Output } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { div_rd, min } from '@tubular/math';
+import { div_rd, max, min } from '@tubular/math';
 import { CalendarType, GregorianChange, DateTime, Timezone, YMDDate, getStartOfWeek, defaultLocale } from '@tubular/time';
 import { clone, isEqual, isObject, isString, noop, toBoolean, toNumber } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
@@ -124,15 +124,21 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     }
   }
 
-  get minYear(): number { return this._minYear; }
-  @Input() set minYear(year: number) {
+  get minYear(): number | string { return this._minYear; }
+  @Input() set minYear(year: number | string) {
+    if (isString(year))
+      year = toNumber(year);
+
     if (this._minYear !== year) {
       this._minYear = year;
     }
   }
 
-  get maxYear(): number { return this._maxYear; }
-  @Input() set maxYear(year: number) {
+  get maxYear(): number | string { return this._maxYear; }
+  @Input() set maxYear(year: number | string) {
+    if (isString(year))
+      year = toNumber(year);
+
     if (this._maxYear !== year) {
       this._maxYear = year;
     }
@@ -281,8 +287,12 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     else
       date.y = toNumber(value);
 
-    this.value = this.dateTime.normalizeDate(date);
+    const newDate = this.dateTime.normalizeDate(date);
+
+    newDate.y = min(max(newDate.y, this._minYear), this._maxYear);
+    this.value = newDate;
     --this.selectMode;
+    this.updateAltTable();
   }
 
   onTitleClick(): void {
@@ -311,11 +321,11 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     index -= +(index > 7);
 
     const value = this.baseValue[mode] + index * multiplier[mode];
-    const min = div_rd(this.minYear, multiplier[mode]) * multiplier[mode];
-    const max = (div_rd(this.maxYear - 1, multiplier[mode]) + 1) * multiplier[mode];
+    const minn = div_rd(this._minYear, multiplier[mode]) * multiplier[mode];
+    const maxx = (div_rd(this._maxYear - 1, multiplier[mode]) + 1) * multiplier[mode];
 
-    if ((min <= value && value <= max))
-      return value.toString();
+    if ((minn <= value && value <= maxx))
+      return min(max(value, this._minYear), this._maxYear).toString();
     else
       return '';
   }
@@ -324,7 +334,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     const mode = this.selectMode;
 
     if (mode !== SelectMode.DAY) {
-      this.title[mode] = (div_rd(this.ymd.y, multiplier[mode]) * multiplier[mode]).toString();
+      this.title[mode] = min(max(div_rd(this.ymd.y, multiplier[mode]) * multiplier[mode], this._minYear), this._maxYear).toString();
       this.baseValue[mode] = div_rd(this.ymd.y, multiplier[mode] * 10) * multiplier[mode] * 10;
 
       if (mode === SelectMode.MONTH)

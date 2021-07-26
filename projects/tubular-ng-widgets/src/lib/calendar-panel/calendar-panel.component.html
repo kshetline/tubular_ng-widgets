@@ -53,7 +53,7 @@
   </ng-template>
   <ng-template #textItem let-text="text">
     <div class="tbw-cal-alt-cell" [class.tbw-cal-highlight]="text === highlightItem" (click)="onAltCellClick(text)">
-      <span>{{text}}</span>
+      <span [style]="text.length < 5 ? undefined : 'font-size: ' + (4 / text.length) +'em'">{{text}}</span>
     </div>
   </ng-template>
 </div>
