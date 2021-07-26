@@ -289,7 +289,7 @@ export class AppComponent {
   }
 
   get calendarDate(): YMDDate {
-    const currDate = new DateTime({ tai: this.time }, Timezone.ZONELESS).wallTimeSparse;
+    const currDate = new DateTime({ tai: this.time }, Timezone.guess()).wallTimeSparse;
 
     delete currDate.hrs;
     delete currDate.min;
