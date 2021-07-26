@@ -2,7 +2,7 @@ import { Component, EventEmitter, forwardRef, Input, OnDestroy, Output } from '@
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { div_rd, min } from '@tubular/math';
 import { CalendarType, GregorianChange, DateTime, Timezone, YMDDate } from '@tubular/time';
-import { clone, isEqual, isObject, isString, noop, toNumber } from '@tubular/util';
+import { clone, isEqual, isObject, isString, noop, toBoolean, toNumber } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 
 const CLICK_REPEAT_DELAY = 500;
@@ -113,10 +113,13 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     }
   }
 
-  get showDst(): boolean { return this._showDst; }
-  @Input() set showDst(show: boolean) {
-    if (this._showDst !== show) {
-      this._showDst = show;
+  get showDst(): boolean | string { return this._showDst; }
+  @Input() set showDst(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
+
+    if (this._showDst !== newValue) {
+      this._showDst = newValue;
       this.updateCalendar();
     }
   }
