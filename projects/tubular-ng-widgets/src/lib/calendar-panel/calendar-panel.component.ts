@@ -1,7 +1,7 @@
 import { Component, EventEmitter, forwardRef, Input, OnDestroy, Output } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { div_rd, min } from '@tubular/math';
-import { CalendarType, GregorianChange, DateTime, Timezone, YMDDate } from '@tubular/time';
+import { CalendarType, GregorianChange, DateTime, Timezone, YMDDate, getStartOfWeek, defaultLocale } from '@tubular/time';
 import { clone, isEqual, isObject, isString, noop, toBoolean, toNumber } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 
@@ -34,7 +34,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   private _showDst = false;
   private _minYear = 1;
   private _maxYear = 9999;
-  private _firstDay = 0;
+  private _firstDay = getStartOfWeek(defaultLocale);
   private baseValue = [0, 0, 0];
   private dateTime: DateTime = new DateTime();
   private onTouchedCallback: () => void = noop;

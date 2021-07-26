@@ -45,34 +45,6 @@ export interface ButtonInfo {
   label?: string;
 }
 
-let _hasIntl = false;
-let _defaultLocale = 'en';
-
-try {
-  _hasIntl = typeof Intl !== 'undefined' && !!Intl?.DateTimeFormat;
-
-  if (_hasIntl)
-    Intl.NumberFormat('en').format(1.2);
-  else
-    console.warn('Intl.DateTimeFormat not available');
-}
-catch (e) {
-  _hasIntl = false;
-  console.warn('Intl.DateTimeFormat not available: %s', e.message || e.toString());
-}
-
-try {
-  if (typeof process === 'object' && process.env?.LANG)
-    _defaultLocale = process.env.LANG.replace(/\..*$/, '').replace(/_/g, '-');
-  else if (typeof navigator === 'object' && navigator.language)
-    _defaultLocale = navigator.language;
-}
-catch (e) {
-  _defaultLocale = 'en';
-}
-
-export const hasIntl = _hasIntl;
-export const defaultLocale = _defaultLocale;
 export const FORWARD_TAB_DELAY = 250;
 
 const FALSE_REPEAT_THRESHOLD = 50;

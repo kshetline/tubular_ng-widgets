@@ -2,7 +2,8 @@ import { ChangeDetectorRef, Component, EventEmitter, forwardRef, Input, NgZone, 
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import ttime, {
-  DateAndTime, DateTime, DateTimeField, getISOFormatDate, newDateTimeFormat, parseISODateTime, Timezone, utToTaiMillis, YMDDate
+  DateAndTime, DateTime, DateTimeField, defaultLocale, getISOFormatDate, hasIntlDateTime, newDateTimeFormat,
+  parseISODateTime, Timezone, utToTaiMillis, YMDDate
 } from '@tubular/time';
 import { abs, ceil, floor, max, min, mod } from '@tubular/math';
 import {
@@ -11,7 +12,7 @@ import {
 } from '@tubular/util';
 import { timer } from 'rxjs';
 import {
-  BACKGROUND_ANIMATIONS, defaultLocale, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, hasIntl, SequenceItemInfo
+  BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, FORWARD_TAB_DELAY, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
 import { TimeEditorLimit } from './time-editor-limit';
 import parse = ttime.parse;
@@ -643,7 +644,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     const extendLocale = (l: string): string => l + '-u-ca-gregory' + (opts.numbering ? '-nu-' + opts.numbering : '');
     const localeExt = isArray(locale) ? locale.map(l => extendLocale(l)) : (locale && extendLocale(locale));
     const decimal = opts.decimal ||
-      (hasIntl && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
+      (hasIntlDateTime && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
     let es = opts.eraSeparator ?? NO_BREAK_SPACE;
     let ds = opts.dateFieldSeparator ?? '/';
     let ts = opts.timeFieldSeparator ?? ':';
@@ -687,7 +688,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       else if (opts.yearStyle === YearStyle.AD_BC || isArray(opts.yearStyle)) {
         dateSteps.push('era');
 
-        if (hasIntl && opts.eraSeparator == null) {
+        if (hasIntlDateTime && opts.eraSeparator == null) {
           const era = convertDigitsToAscii(newDateTimeFormat(localeExt, { era: 'short' }).format(0));
           const sample = convertDigitsToAscii(newDateTimeFormat(localeExt,
                             { year: 'numeric', era: 'short' }).format(0)).replace(era, 'xxx');
@@ -798,7 +799,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         dateSteps.push('era');
     }
 
-    if (hasIntl && hasTime && hasDate && opts.dateTimeSeparator == null) {
+    if (hasIntlDateTime && hasTime && hasDate && opts.dateTimeSeparator == null) {
       const sample = convertDigitsToAscii(
         newDateTimeFormat(localeExt,
           { day: 'numeric', hour: 'numeric', hour12: false, hourCycle: 'h23' } as any).format(0));

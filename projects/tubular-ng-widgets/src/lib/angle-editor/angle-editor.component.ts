@@ -3,10 +3,11 @@ import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/form
 import { DomSanitizer } from '@angular/platform-browser';
 import { clone, convertDigitsToAscii, isArray, isEqual, last, repeat, toNumber } from '@tubular/util';
 import {
-  BACKGROUND_ANIMATIONS, defaultLocale, DigitSequenceEditorDirective, hasIntl, SequenceItemInfo
+  BACKGROUND_ANIMATIONS, DigitSequenceEditorDirective, SequenceItemInfo
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
 import { timer } from 'rxjs';
 import { abs, ceil, floor, mod, mod2, round, trunc } from '@tubular/math';
+import { defaultLocale, hasIntlDateTime } from '@tubular/time';
 
 export enum AngleStyle { DD, DD_MM, DD_MM_SS, DDD, DDD_MM, DDD_MM_SS }
 
@@ -199,7 +200,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     const opts = this._options;
     const locale = opts.locale || defaultLocale;
     const decimal = opts.decimal ||
-      (hasIntl && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
+      (hasIntlDateTime && convertDigitsToAscii(Intl.NumberFormat(locale).format(1.2)).replace(/\d/g, '').charAt(0)) || '.';
     const style = opts.angleStyle ?? AngleStyle.DDD_MM_SS;
 
     this.wrapAround = opts.wrapAround ?? (!opts.unsigned && style >= AngleStyle.DDD);
