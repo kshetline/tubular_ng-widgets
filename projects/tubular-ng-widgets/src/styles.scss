@@ -372,13 +372,13 @@
     font-family: Arial, Helvetica, sans-serif;
     font-weight: normal;
     color: black;
-    background: white;
+    background-color: white;
     padding: max(1px, 0.1em) max(3px, 0.3em);
     cursor: default;
     user-select: none;
 
     &.tbw-cal-highlight {
-      background: #CFF;
+      background-color: #CFF;
     }
 
     &.tbw-cal-short-day {
@@ -407,8 +407,16 @@
   }
 
   .tbw-cal-day-header {
-    font-size: 0.6em;
-    background: #EEE;
+    background-color: #EEE;
+    height: 1em;
+    min-height: 1em;
+    max-height: 1em;
+
+    th {
+      background: none !important;
+      font-size: 0.6em;
+      min-height: 2em;
+    }
   }
 }
 
@@ -420,7 +428,7 @@
 }
 
 .tbw-cal-arrow, .tbw-cal-title {
-  background: white;
+  background-color: white;
   display: inline-block;
   cursor: pointer;
   text-align: center;
@@ -451,18 +459,18 @@
 
     td, th {
       color: #EEE;
-      background: #333;
+      background-color: #333;
 
-      &.tbw-cal-highlight { background: #269; }
+      &.tbw-cal-highlight { background-color: #269; }
       &.tbw-cal-short-day { color: #C25; }
       &.tbw-cal-long-day { color: #0A0; }
       &.tbw-cal-void-day { color: #999; }
     }
 
-    .tbw-cal-day-header { background: #444; }
+    .tbw-cal-day-header { background-color: #444; }
   }
 
-  .tbw-cal-arrow, .tbw-cal-title, .tbw-cal-day-header {
+  .tbw-cal-arrow, .tbw-cal-title {
     background-color: #333;
     color: #EEE;
   }

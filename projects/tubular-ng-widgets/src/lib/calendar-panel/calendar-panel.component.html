@@ -27,8 +27,8 @@
 </div>
 <div class="tbw-cal-table-wrapper">
   <table class="tbw-cal-table" [class.tbw-cal-inactive]="selectMode !== 0">
-    <tr>
-      <th *ngFor="let d of daysOfWeek" class="tbw-cal-day-header">{{d}}</th>
+    <tr class="tbw-cal-day-header">
+      <th *ngFor="let d of daysOfWeek">{{d}}</th>
     </tr>
     <tr *ngFor="let week of calendar">
       <td *ngFor="let day of week" [ngClass]="{
