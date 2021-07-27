@@ -18,6 +18,8 @@ interface DateInfo extends YMDDate {
   voidDay?: boolean;
 }
 
+type DayDecorator = (dateInfo: DateInfo, year: number, month: number, day: number) => string;
+
 // noinspection JSUnusedGlobalSymbols
 enum SelectMode { DAY, MONTH, YEAR, DECADE, CENTURY, MILLENNIUM, MODE_COUNT }
 const multiplier = [0, 1, 1, 10, 100, 1000];
@@ -43,9 +45,11 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   private pendingDelta = 0;
   private pendingEvent: MouseEvent = null;
 
+  @Input() backgroundDecorator: DayDecorator;
   calendar: DateInfo[][] = [];
   cols = 4;
   daysOfWeek: string[] = [];
+  @Input() foregroundDecorator: DayDecorator;
   highlightItem = '';
   modeCount = SelectMode.MODE_COUNT;
   months: string[] = [];
@@ -342,5 +346,32 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
       else
         this.highlightItem = this.title[mode];
     }
+  }
+
+  getDayCellBackgroundContent(dateInfo: DateInfo): string {
+    return this.getDayCellForegroundContent(dateInfo, true);
+  }
+
+  getDayCellForegroundContent(dateInfo: DateInfo, asBackground = false): string {
+    const decorator = asBackground ? this.backgroundDecorator : this.foregroundDecorator;
+
+    if (!decorator)
+      return '';
+
+    let year = this.ymd.year;
+    let month = this.ymd.month;
+
+    if (dateInfo.otherMonth) {
+      if (dateInfo.day < 15) {
+        month = (month === 1 ? 12 : month - 1);
+        year = year - (month === 1 ? 1 : 0);
+      }
+      else {
+        month = (month === 12 ? 1 : month + 1);
+        year = year + (month === 12 ? 1 : 0);
+      }
+    }
+
+    return decorator(dateInfo, year, month, dateInfo.day);
   }
 }

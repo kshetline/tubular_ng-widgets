@@ -404,6 +404,21 @@
   td {
     cursor: pointer;
     text-align: center;
+
+    &.tbw-cal-day-cell {
+      position: relative;
+
+      .tbw-cal-day-cell-back, .tbw-cal-day-cell-fore {
+        align-items: center;
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+    }
   }
 
   .tbw-cal-day-header {

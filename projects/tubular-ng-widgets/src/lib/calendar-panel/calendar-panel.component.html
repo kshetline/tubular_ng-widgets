@@ -31,14 +31,20 @@
       <th *ngFor="let d of daysOfWeek">{{d}}</th>
     </tr>
     <tr *ngFor="let week of calendar">
-      <td *ngFor="let day of week" [ngClass]="{
+      <td *ngFor="let day of week"
+        class="tbw-cal-day-cell"
+        [ngClass]="{
           'tbw-cal-highlight':   day.highlight,
           'tbw-cal-short-day':   day.shortDay,
           'tbw-cal-long-day':    day.longDay,
           'tbw-cal-other-month': day.otherMonth,
           'tbw-cal-void-day':    day.voidDay
         }"
-        (click)="onDayClick(day)">{{day.text}}</td>
+        (click)="onDayClick(day)">
+          <div class="tbw-cal-day-cell-back" [innerHTML]="getDayCellBackgroundContent(day)"></div>
+          {{day.text}}
+          <div class="tbw-cal-day-cell-fore" [innerHTML]="getDayCellForegroundContent(day)"></div>
+      </td>
     </tr>
   </table>
   <ng-container *ngFor="let n of counter(modeCount)" [ngTemplateOutlet]="altTable" [ngTemplateOutletContext]="{ mode: n }"></ng-container>
