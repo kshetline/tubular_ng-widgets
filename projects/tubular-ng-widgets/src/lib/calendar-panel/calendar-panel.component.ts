@@ -4,11 +4,12 @@ import { div_rd, max, min } from '@tubular/math';
 import { CalendarType, GregorianChange, DateTime, Timezone, YMDDate, getStartOfWeek, defaultLocale } from '@tubular/time';
 import { clone, isEqual, isObject, isString, noop, toBoolean, toNumber } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
+import { SafeHtml } from '@angular/platform-browser';
 
 const CLICK_REPEAT_DELAY = 500;
 const CLICK_REPEAT_RATE  = 100;
 
-interface DateInfo extends YMDDate {
+export interface CalendarDateInfo extends YMDDate {
   text: string;
   dayLength: number;
   highlight?: boolean;
@@ -18,7 +19,7 @@ interface DateInfo extends YMDDate {
   voidDay?: boolean;
 }
 
-type DayDecorator = (dateInfo: DateInfo, year: number, month: number, day: number) => string;
+export type DayDecorator = (dateInfo: CalendarDateInfo) => string | SafeHtml;
 
 // noinspection JSUnusedGlobalSymbols
 enum SelectMode { DAY, MONTH, YEAR, DECADE, CENTURY, MILLENNIUM, MODE_COUNT }
@@ -46,7 +47,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   private pendingEvent: MouseEvent = null;
 
   @Input() backgroundDecorator: DayDecorator;
-  calendar: DateInfo[][] = [];
+  calendar: CalendarDateInfo[][] = [];
   cols = 4;
   daysOfWeek: string[] = [];
   @Input() foregroundDecorator: DayDecorator;
@@ -172,7 +173,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     const calendar = this.dateTime.getCalendarMonth(year, month, this._firstDay);
 
     this.calendar = [];
-    calendar.forEach((date: DateInfo, index: number) => {
+    calendar.forEach((date: CalendarDateInfo, index: number) => {
       const dayLength = this.dateTime.getMinutesInDay(date.y, date.m, Math.abs(date.d));
       const row = Math.floor(index / 7);
       const col = index % 7;
@@ -275,7 +276,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     this.value = this.dateTime.normalizeDate(date);
   }
 
-  onDayClick(dateInfo: DateInfo): void {
+  onDayClick(dateInfo: CalendarDateInfo): void {
     if (dateInfo.d > 0) {
       this.value = { y: dateInfo.y, m: dateInfo.m, d: dateInfo.d };
       this.dayClick.emit(dateInfo.d);
@@ -348,30 +349,17 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     }
   }
 
-  getDayCellBackgroundContent(dateInfo: DateInfo): string {
-    return this.getDayCellForegroundContent(dateInfo, true);
+  getDayCellBackgroundContent(dateInfo: CalendarDateInfo): string | SafeHtml {
+    if (this.backgroundDecorator)
+      return this.backgroundDecorator(dateInfo);
+    else
+      return '';
   }
 
-  getDayCellForegroundContent(dateInfo: DateInfo, asBackground = false): string {
-    const decorator = asBackground ? this.backgroundDecorator : this.foregroundDecorator;
-
-    if (!decorator)
+  getDayCellForegroundContent(dateInfo: CalendarDateInfo): string | SafeHtml {
+    if (this.foregroundDecorator)
+      return this.foregroundDecorator(dateInfo);
+    else
       return '';
-
-    let year = this.ymd.year;
-    let month = this.ymd.month;
-
-    if (dateInfo.otherMonth) {
-      if (dateInfo.day < 15) {
-        month = (month === 1 ? 12 : month - 1);
-        year = year - (month === 1 ? 1 : 0);
-      }
-      else {
-        month = (month === 12 ? 1 : month + 1);
-        year = year + (month === 12 ? 1 : 0);
-      }
-    }
-
-    return decorator(dateInfo, year, month, dateInfo.day);
   }
 }

@@ -6,6 +6,8 @@ import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle }
 import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
 import { AngleStyle } from '../../../tubular-ng-widgets/src/lib/angle-editor/angle-editor.component';
 import { Point } from '@tubular/math';
+import { CalendarDateInfo } from '../../../tubular-ng-widgets/src/lib/calendar-panel/calendar-panel.component';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 const intl_DisplayNames = (Intl as any).DisplayNames;
 const mobile = isAndroid() || isIOS();
@@ -71,7 +73,7 @@ export class AppComponent {
   wideSpinner = false;
   yearStyle = '0';
 
-  constructor() {
+  constructor(private sanitizer: DomSanitizer) {
     let settings: any;
 
     try {
@@ -321,4 +323,20 @@ export class AppComponent {
       this.time = dt.taiMillis;
     }
   }
+
+  getBackground = (dateInfo: CalendarDateInfo): string | SafeHtml => {
+    if (dateInfo.otherMonth || dateInfo.d >= 16)
+      return '';
+    else
+      return this.sanitizer.bypassSecurityTrustHtml(
+        '<span style="opacity: 0.5">' + String.fromCodePoint(0x1F600 + dateInfo.d - 1) + '</span>');
+  };
+
+  getForeground = (dateInfo: CalendarDateInfo): string | SafeHtml => {
+    if (dateInfo.otherMonth || dateInfo.d < 16)
+      return '';
+    else
+      return this.sanitizer.bypassSecurityTrustHtml(
+        '<span style="opacity: 0.5; pointer-events: none">' + String.fromCodePoint(0x1F600 + dateInfo.d - 1) + '</span>');
+  };
 }

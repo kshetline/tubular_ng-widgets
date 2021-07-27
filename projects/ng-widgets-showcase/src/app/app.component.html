@@ -10,8 +10,9 @@
     <tbw-angle-editor [options]="{ angleStyle: 0 }"></tbw-angle-editor>
     <tbw-angle-editor [options]="{ angleStyle: 0, decimalPrecision: 2 }"></tbw-angle-editor>
     <div class="angle-min-max">
-      <tbw-angle-editor #angleMinMax="ngModel" name="angleMinMax" [options]="{ angleStyle: DD, decimalPrecision: 1, unsigned: true }"
-                        validateAll min="5" max="30" [(ngModel)]="minMaxAngle"></tbw-angle-editor>
+      <tbw-angle-editor #angleMinMax="ngModel" name="angleMinMax"
+          [options]="{ angleStyle: DD, decimalPrecision: 1, unsigned: true }"
+          validateAll min="5" max="30" [(ngModel)]="minMaxAngle"></tbw-angle-editor>
       <tbw-form-error-display [control]="angleMinMax"></tbw-form-error-display>
     </div>
     <div class="break"></div>
@@ -177,6 +178,10 @@
   </div>
 
   <div class='calendar'>
-    <tbw-calendar minYear=-9999 showDst [(ngModel)]="calendarDate"></tbw-calendar>
+    <tbw-calendar minYear=-9999
+        [backgroundDecorator]="getBackground"
+        [foregroundDecorator]="getForeground"
+        showDst
+        [(ngModel)]="calendarDate"></tbw-calendar>
   </div>
 </div>

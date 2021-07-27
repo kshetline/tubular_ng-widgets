@@ -343,23 +343,32 @@
 
 // CalendarPanel
 
+$pref-height: 9.11em;
+
+.tbw-cal-table-wrapper {
+  align-items: stretch;
+  border: 1px solid #A6A6A6;
+  box-sizing: content-box;
+  display: flex;
+  height: $pref-height;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
 .tbw-cal-table, .tbw-cal-alt-table {
   background-color: white;
-  border: 1px solid #A6A6A6;
+  border: 0;
   border-collapse: collapse;
   border-spacing: 0;
   box-sizing: border-box;
   color: black;
+  height: $pref-height;
   opacity: 1;
   transition: opacity 0.5s ease-in-out;
 }
 
-.tbw-cal-table {
-  min-height: calc(9.0831em + 2px); // 6.8125 * 1.3333
-}
-
 .tbw-cal-alt-table {
-  height: 100%;
   left: 0;
   position: absolute;
   right: 0;
@@ -408,15 +417,27 @@
     &.tbw-cal-day-cell {
       position: relative;
 
+      &>div {
+        position: relative;
+      }
+
       .tbw-cal-day-cell-back, .tbw-cal-day-cell-fore {
-        align-items: center;
-        bottom: 0;
+        align-items: start;
         display: flex;
         justify-content: center;
         left: 0;
-        position: absolute;
+        overflow: visible;
         right: 0;
         top: 0;
+      }
+
+      .tbw-cal-day-cell-back {
+        height: 0;
+      }
+
+      .tbw-cal-day-cell-fore {
+        bottom: 0;
+        position: absolute;
       }
     }
   }
