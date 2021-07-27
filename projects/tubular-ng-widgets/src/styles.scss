@@ -343,7 +343,8 @@
 
 // CalendarPanel
 
-$pref-height: 9.11em;
+$min-width: 12.8em;
+$pref-height: 9.2em;
 
 .tbw-cal-table-wrapper {
   align-items: stretch;
@@ -351,6 +352,7 @@ $pref-height: 9.11em;
   box-sizing: content-box;
   display: flex;
   height: $pref-height;
+  min-width: $min-width;
   justify-content: center;
   overflow: hidden;
   position: relative;
@@ -364,6 +366,7 @@ $pref-height: 9.11em;
   box-sizing: border-box;
   color: black;
   height: $pref-height;
+  min-width: $min-width;
   opacity: 1;
   transition: opacity 0.5s ease-in-out;
 }

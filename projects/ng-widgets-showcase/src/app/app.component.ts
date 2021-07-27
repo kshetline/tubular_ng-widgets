@@ -328,15 +328,23 @@ export class AppComponent {
     if (dateInfo.otherMonth || dateInfo.d >= 16)
       return '';
     else
-      return this.sanitizer.bypassSecurityTrustHtml(
-        '<span style="opacity: 0.5">' + String.fromCodePoint(0x1F600 + dateInfo.d - 1) + '</span>');
+      return this.getForeground(dateInfo, true);
   };
 
-  getForeground = (dateInfo: CalendarDateInfo): string | SafeHtml => {
-    if (dateInfo.otherMonth || dateInfo.d < 16)
+  private htmlCache = new Map<number, SafeHtml>();
+
+  getForeground = (dateInfo: CalendarDateInfo, anyDay = false): string | SafeHtml => {
+    if (dateInfo.otherMonth || (dateInfo.d < 16 && !anyDay))
       return '';
-    else
-      return this.sanitizer.bypassSecurityTrustHtml(
+
+    let html = this.htmlCache.get(dateInfo.d);
+
+    if (!html) {
+      html = this.sanitizer.bypassSecurityTrustHtml(
         '<span style="opacity: 0.5; pointer-events: none">' + String.fromCodePoint(0x1F600 + dateInfo.d - 1) + '</span>');
+      this.htmlCache.set(dateInfo.d, html);
+    }
+
+    return html;
   };
 }
