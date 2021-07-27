@@ -1,7 +1,7 @@
 import { Component, EventEmitter, forwardRef, Input, OnDestroy, Output } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { div_rd, max, min } from '@tubular/math';
-import { CalendarType, GregorianChange, DateTime, Timezone, YMDDate, getStartOfWeek, defaultLocale } from '@tubular/time';
+import { CalendarType, DateTime, defaultLocale, getStartOfWeek, GregorianChange, Timezone, YMDDate } from '@tubular/time';
 import { clone, isEqual, isObject, isString, noop, toBoolean, toNumber } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { SafeHtml } from '@angular/platform-browser';
@@ -45,6 +45,8 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   private timerSubscription: Subscription;
   private pendingDelta = 0;
   private pendingEvent: MouseEvent = null;
+  private _weekDayFormat = 'ddd';
+  private _yearMonthFormat = 'MMM Y';
 
   @Input() backgroundDecorator: DayDecorator;
   calendar: CalendarDateInfo[][] = [];
@@ -158,18 +160,35 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     }
   }
 
+  get weekDayFormat(): string { return this._weekDayFormat; }
+  @Input() set weekDayFormat(value: string) {
+    if (this._weekDayFormat !== value) {
+      this._weekDayFormat = value;
+      this.updateDayHeadings();
+    }
+  }
+
+  get yearMonthFormat(): string { return this._yearMonthFormat; }
+  @Input() set yearMonthFormat(value: string) {
+    if (this._yearMonthFormat !== value) {
+      this._yearMonthFormat = value;
+      this.updateTitle();
+    }
+  }
+
   updateDayHeadings(): void {
     // Produce calendar day-of-week header using arbitrary days which start on the given first day of the week.
     this.daysOfWeek = [];
 
     for (let d = 1; d <= 7; ++d)
-      this.daysOfWeek.push(new DateTime({ y: 2017, m: 1, d: d + this._firstDay, hrs: 12 }, 'UTC', 'en-us').format('ddd'));
+      this.daysOfWeek.push(new DateTime({ y: 2017, m: 1, d: d + this._firstDay, hrs: 12 },
+        'UTC', 'en-us').format(this._weekDayFormat));
   }
 
   updateCalendar(): void {
-    const year  = this.ymd ? this.ymd.y : 2021;
-    const month = this.ymd ? this.ymd.m : 1;
-    const day   = this.ymd ? this.ymd.d : 1;
+    const year  = this.ymd?.y ?? 2021;
+    const month = this.ymd?.m ?? 1;
+    const day   = this.ymd?.d ?? 1;
     const calendar = this.dateTime.getCalendarMonth(year, month, this._firstDay);
 
     this.calendar = [];
@@ -206,8 +225,12 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
       this.calendar[row][col] = date;
     });
 
-    this.title[0] = new DateTime({ y: year, m: month }, 'UTC', 'en-us').format('MMM Y');
+    this.updateTitle();
     this.updateAltTable();
+  }
+
+  private updateTitle(): void {
+    this.title[0] = new DateTime({ y: this.ymd?.y ?? 2021, m: this.ymd?.m ?? 1 }, 'UTC', 'en-us').format(this._yearMonthFormat);
   }
 
   reset(): void {
