@@ -29,6 +29,7 @@
 // DigitSequenceEditor
 
 .tbw-dse-palette {
+  background-color: white;
   display: inline-flex;
   flex-direction: column;
   touch-action: manipulation;
@@ -289,7 +290,9 @@
 }
 
 .tbw-dark-mode {
-  background-color: #333;
+  .tbw-dse-palette {
+    background-color: #333;
+  }
 
   .tbw-dse-palette.tbw-dse-floating {
     filter: drop-shadow(4px 4px 2px black);
