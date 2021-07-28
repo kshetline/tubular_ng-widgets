@@ -80,8 +80,11 @@ function getBackgroundColor(className: string, darkMode = false): string {
   document.body.appendChild(outer);
   elem.classList.add(className);
   outer.appendChild(elem);
-  const result = getCssValue(elem, 'background-color');
+  let result = getCssValue(elem, 'background-color');
   document.body.removeChild(outer);
+
+  if (result === 'transparent' || result === 'rgba(0, 0, 0, 0)')
+    result = 'white';
 
   return result;
 }
