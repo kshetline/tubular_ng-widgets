@@ -1,4 +1,4 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
+import { animate, AnimationMetadata, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit, ChangeDetectorRef, Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, ViewChild
 } from '@angular/core';
@@ -70,7 +70,7 @@ const checkForRepeatedKeyTimestamps = isIOS();
 const disableContentEditable = isEdge();
 const useHiddenInput = isAndroid() || isChromeOS();
 
-function getBackgroundColor(className: string, darkMode = false): string {
+function getBackgroundColor(className: string, defaultColor: string, darkMode = false): string {
   const outer = document.createElement('div');
   const elem = document.createElement('div');
 
@@ -84,7 +84,7 @@ function getBackgroundColor(className: string, darkMode = false): string {
   document.body.removeChild(outer);
 
   if (result === 'transparent' || result === 'rgba(0, 0, 0, 0)')
-    result = 'white';
+    result = defaultColor;
 
   return result;
 }
@@ -129,32 +129,42 @@ const WARNING_BACKGROUND   = 'tbw-warning-background';
 
 const DOT_DOT_TYPING_INTERVAL = 500;
 
-export const BACKGROUND_ANIMATIONS = trigger('displayState', [
-  state('error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND) })),
-  state('normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND) })),
-  state('confirm',   style({ backgroundColor: getBackgroundColor(CONFIRM_BACKGROUND) })),
-  state('warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND) })),
-  state('view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND) })),
-  state('disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND) })),
-  state('dark-error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, true) })),
-  state('dark-normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, true) })),
-  state('dark-confirm',   style({ backgroundColor: getBackgroundColor(CONFIRM_BACKGROUND, true) })),
-  state('dark-warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, true) })),
-  state('dark-view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, true) })),
-  state('dark-disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, true) })),
-  transition('normal => error',   animate(FLASH_DURATION)),
-  transition('error => normal',   animate(FLASH_DURATION)),
-  transition('normal => confirm', animate(FLASH_DURATION)),
-  transition('confirm => normal', animate(FLASH_DURATION)),
-  transition('warning => error',  animate(FLASH_DURATION)),
-  transition('error => warning',  animate(FLASH_DURATION)),
-  transition('dark-normal => dark-error',   animate(FLASH_DURATION)),
-  transition('dark-error => dark-normal',   animate(FLASH_DURATION)),
-  transition('dark-normal => dark-confirm', animate(FLASH_DURATION)),
-  transition('dark-confirm => dark-normal', animate(FLASH_DURATION)),
-  transition('dark-warning => dark-error',  animate(FLASH_DURATION)),
-  transition('dark-error => dark-warning',  animate(FLASH_DURATION))
-]);
+const stateDefinitions: AnimationMetadata[] = [];
+let stateDefinitionsRefreshed = false;
+
+function updateStateDefinitions(): void {
+  stateDefinitions.length = 0;
+  stateDefinitions.push(...[
+    state('error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, '#F67') })),
+    state('normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, 'white') })),
+    state('confirm',   style({ backgroundColor: getBackgroundColor(CONFIRM_BACKGROUND, '#6C6') })),
+    state('warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, '#FC6') })),
+    state('view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, 'black') })),
+    state('disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, '#CCC') })),
+    state('dark-error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, '#C36', true) })),
+    state('dark-normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, '#333', true) })),
+    state('dark-confirm',   style({ backgroundColor: getBackgroundColor(CONFIRM_BACKGROUND, '#292', true) })),
+    state('dark-warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, '#B80', true) })),
+    state('dark-view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, '#0A0', true) })),
+    state('dark-disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, '#444', true) })),
+    transition('normal => error',   animate(FLASH_DURATION)),
+    transition('error => normal',   animate(FLASH_DURATION)),
+    transition('normal => confirm', animate(FLASH_DURATION)),
+    transition('confirm => normal', animate(FLASH_DURATION)),
+    transition('warning => error',  animate(FLASH_DURATION)),
+    transition('error => warning',  animate(FLASH_DURATION)),
+    transition('dark-normal => dark-error',   animate(FLASH_DURATION)),
+    transition('dark-error => dark-normal',   animate(FLASH_DURATION)),
+    transition('dark-normal => dark-confirm', animate(FLASH_DURATION)),
+    transition('dark-confirm => dark-normal', animate(FLASH_DURATION)),
+    transition('dark-warning => dark-error',  animate(FLASH_DURATION)),
+    transition('dark-error => dark-warning',  animate(FLASH_DURATION))
+  ]);
+}
+
+updateStateDefinitions();
+
+export const BACKGROUND_ANIMATIONS = trigger('displayState', stateDefinitions);
 
 export function getThePoint(evt: MouseEvent | TouchEvent): Point {
   if ((evt as any).pageX != null)
@@ -350,6 +360,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   ngAfterViewInit(): void {
+    if (!stateDefinitionsRefreshed) {
+      updateStateDefinitions();
+      stateDefinitionsRefreshed = true;
+    }
+
     this.checkDarkMode();
 
     setTimeout(() => {
