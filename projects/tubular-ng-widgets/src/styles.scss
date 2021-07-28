@@ -29,7 +29,6 @@
 // DigitSequenceEditor
 
 .tbw-dse-palette {
-  background-color: white;
   display: inline-flex;
   flex-direction: column;
   touch-action: manipulation;
@@ -150,6 +149,7 @@
 
 .tbw-dse-wrapper {
   align-items: baseline;
+  background-color: white;
   border: #A6A6A6 solid max(1px, 0.0836em) !important;
   border-radius: max(4px, 0.2em);
   caret-color: transparent;
@@ -290,7 +290,7 @@
 }
 
 .tbw-dark-mode {
-  .tbw-dse-palette {
+  .tbw-dse-wrapper {
     background-color: #333;
   }
 
