@@ -1,11 +1,11 @@
-import { animate, AnimationMetadata, state, style, transition, trigger } from '@angular/animations';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit, ChangeDetectorRef, Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, ViewChild
 } from '@angular/core';
 import { abs, floor, max, min, Point, random, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isEqual, isIOS, isNumber, isSamsung,
-  isString, noop, processMillis, toBoolean, toNumber
+  eventToKey, getCssRuleValue, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isEqual, isIOS,
+  isNumber, isSamsung, isString, noop, processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getClientXYForTouchEvent, getPageXYForTouchEvent } from '../util/touch-events';
@@ -80,7 +80,7 @@ function getBackgroundColor(className: string, defaultColor: string, darkMode = 
   document.body.appendChild(outer);
   elem.classList.add(className);
   outer.appendChild(elem);
-  let result = getCssValue(elem, 'background-color');
+  let result = getCssRuleValue(elem, 'background-color');
   document.body.removeChild(outer);
 
   if (result === 'transparent' || result === 'rgba(0, 0, 0, 0)')
@@ -129,42 +129,37 @@ const WARNING_BACKGROUND   = 'tbw-warning-background';
 
 const DOT_DOT_TYPING_INTERVAL = 500;
 
-const stateDefinitions: AnimationMetadata[] = [];
-let stateDefinitionsRefreshed = false;
+class DynamicColor {
+  private static colorMap: Record<string, string> = {};
 
-function updateStateDefinitions(): void {
-  stateDefinitions.length = 0;
-  stateDefinitions.push(...[
-    state('error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, '#F67') })),
-    state('normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, 'white') })),
-    state('confirm',   style({ backgroundColor: getBackgroundColor(CONFIRM_BACKGROUND, '#6C6') })),
-    state('warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, '#FC6') })),
-    state('view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, 'black') })),
-    state('disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, '#CCC') })),
-    state('dark-error',     style({ backgroundColor: getBackgroundColor(ERROR_BACKGROUND, '#C36', true) })),
-    state('dark-normal',    style({ backgroundColor: getBackgroundColor(NORMAL_BACKGROUND, '#333', true) })),
-    state('dark-confirm',   style({ backgroundColor: getBackgroundColor(CONFIRM_BACKGROUND, '#292', true) })),
-    state('dark-warning',   style({ backgroundColor: getBackgroundColor(WARNING_BACKGROUND, '#B80', true) })),
-    state('dark-view-only', style({ backgroundColor: getBackgroundColor(VIEW_ONLY_BACKGROUND, '#0A0', true) })),
-    state('dark-disabled',  style({ backgroundColor: getBackgroundColor(DISABLED_BACKGROUND, '#444', true) })),
-    transition('normal => error',   animate(FLASH_DURATION)),
-    transition('error => normal',   animate(FLASH_DURATION)),
-    transition('normal => confirm', animate(FLASH_DURATION)),
-    transition('confirm => normal', animate(FLASH_DURATION)),
-    transition('warning => error',  animate(FLASH_DURATION)),
-    transition('error => warning',  animate(FLASH_DURATION)),
-    transition('dark-normal => dark-error',   animate(FLASH_DURATION)),
-    transition('dark-error => dark-normal',   animate(FLASH_DURATION)),
-    transition('dark-normal => dark-confirm', animate(FLASH_DURATION)),
-    transition('dark-confirm => dark-normal', animate(FLASH_DURATION)),
-    transition('dark-warning => dark-error',  animate(FLASH_DURATION)),
-    transition('dark-error => dark-warning',  animate(FLASH_DURATION))
-  ]);
+  static update(key: string, darkMode = false): void {
+    DynamicColor.colorMap[key] = getBackgroundColor(key, DynamicColor.colorMap[key], darkMode);
+  }
+
+  constructor(private key: string, defaultColor: string) {
+    DynamicColor.colorMap[key] = defaultColor;
+  }
+
+  toString(): string {
+    return DynamicColor.colorMap[this.key];
+  }
 }
 
-updateStateDefinitions();
-
-export const BACKGROUND_ANIMATIONS = trigger('displayState', stateDefinitions);
+export const BACKGROUND_ANIMATIONS = trigger('displayState', [
+  state('error',     style({ backgroundColor: new DynamicColor(ERROR_BACKGROUND, '#F67') as unknown as string })),
+  state('normal',    style({ backgroundColor: new DynamicColor(NORMAL_BACKGROUND, 'white') as unknown as string })),
+  state('refresh',   style({ backgroundColor: 'gray' })),
+  state('confirm',   style({ backgroundColor: new DynamicColor(CONFIRM_BACKGROUND, '#6C6') as unknown as string })),
+  state('warning',   style({ backgroundColor: new DynamicColor(WARNING_BACKGROUND, '#FC6') as unknown as string })),
+  state('view-only', style({ backgroundColor: new DynamicColor(VIEW_ONLY_BACKGROUND, 'black') as unknown as string })),
+  state('disabled',  style({ backgroundColor: new DynamicColor(DISABLED_BACKGROUND, '#CCC') as unknown as string })),
+  transition('normal => error',   animate(FLASH_DURATION)),
+  transition('error => normal',   animate(FLASH_DURATION)),
+  transition('normal => confirm', animate(FLASH_DURATION)),
+  transition('confirm => normal', animate(FLASH_DURATION)),
+  transition('warning => error',  animate(FLASH_DURATION)),
+  transition('error => warning',  animate(FLASH_DURATION)),
+]);
 
 export function getThePoint(evt: MouseEvent | TouchEvent): Point {
   if ((evt as any).pageX != null)
@@ -360,11 +355,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   ngAfterViewInit(): void {
-    if (!stateDefinitionsRefreshed) {
-      updateStateDefinitions();
-      stateDefinitionsRefreshed = true;
-    }
-
     this.checkDarkMode();
 
     setTimeout(() => {
@@ -805,10 +795,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this.confirmTimer)
       return;
 
-    this.displayState = (this.darkMode ? 'dark-' : '') + 'confirm';
+    this.displayState = 'confirm';
     this.confirmTimer = timer(FLASH_DURATION).subscribe(() => {
       this.confirmTimer = undefined;
-      this.displayState = (this.darkMode ? 'dark-' : '') + 'normal';
+      this.displayState = 'normal';
     });
   }
 
@@ -817,11 +807,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return;
 
     if (!this.errorTimer)
-      this.displayState = (this.darkMode ? 'dark-' : '') + 'warning';
+      this.displayState = 'warning';
 
     this.warningTimer = timer(longer ? LONG_WARNING_DURATION : FLASH_DURATION).subscribe(() => {
       this.warningTimer = undefined;
-      this.displayState = (this.darkMode ? 'dark-' : '') + (this.errorTimer ? 'error' : 'normal');
+      this.displayState = (this.errorTimer ? 'error' : 'normal');
     });
   }
 
@@ -829,10 +819,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this.errorTimer)
       return;
 
-    this.displayState = (this.darkMode ? 'dark-' : '') + 'error';
+    this.displayState = 'error';
     this.errorTimer = timer(FLASH_DURATION).subscribe(() => {
       this.errorTimer = undefined;
-      this.displayState = (this.darkMode ? 'dark-' : '') + (this.warningTimer ? 'warning' : 'normal');
+      this.displayState = (this.warningTimer ? 'warning' : 'normal');
     });
   }
 
@@ -1540,27 +1530,30 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
-  protected checkDarkMode(immediate = false): void {
-    let newState: string;
+  protected checkDarkMode(_immediate = false): void {
+    const lastMode = this.darkMode;
 
     this.darkMode = (getBackgroundLevel(this.wrapper?.parentElement) < 128);
 
-    if (this.darkMode && !this.displayState.startsWith('dark-'))
-      newState = 'dark-' + this.displayState;
-    else if (!this.darkMode && this.displayState.startsWith('dark-'))
-      newState = this.displayState.substr(5);
+    if (this.darkMode !== lastMode) {
+      DynamicColor.update(ERROR_BACKGROUND, this.darkMode);
+      DynamicColor.update(NORMAL_BACKGROUND, this.darkMode);
+      DynamicColor.update(CONFIRM_BACKGROUND, this.darkMode);
+      DynamicColor.update(WARNING_BACKGROUND, this.darkMode);
+      DynamicColor.update(VIEW_ONLY_BACKGROUND, this.darkMode);
+      DynamicColor.update(DISABLED_BACKGROUND, this.darkMode);
 
-    if (newState) {
-      if (immediate)
-        this.displayState = newState;
-      else
-        setTimeout(() => this.displayState = newState);
+      const currentState = this.displayState;
+
+      setTimeout(() => {
+        this.displayState = 'refresh';
+        setTimeout(() => this.displayState = currentState);
+      });
     }
   }
 
   protected adjustState(): void {
-    this.displayState = (this.darkMode ? 'dark-' : '') +
-      (this._viewOnly ? 'view-only' : (this._disabled ? 'disabled' : 'normal'));
+    this.displayState = (this._viewOnly ? 'view-only' : (this._disabled ? 'disabled' : 'normal'));
 
     if (this.hiddenInput) {
       const disabled = (this._floating || this._disabled || this._viewOnly);
