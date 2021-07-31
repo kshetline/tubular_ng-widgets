@@ -64,7 +64,6 @@ const NO_SELECTION = -1;
 const SPIN_UP      = -2;
 const SPIN_DOWN    = -3;
 
-const addFocusOutline = isEdge() || isIOS();
 const alternateClipboard = navigator.clipboard == null || isAndroid() || isChromeOS() || isIOS() || isSamsung();
 const checkForRepeatedKeyTimestamps = isIOS();
 const disableContentEditable = isEdge();
@@ -147,12 +146,10 @@ class DynamicColor {
 
 export const BACKGROUND_ANIMATIONS = trigger('displayState', [
   state('error',     style({ backgroundColor: new DynamicColor(ERROR_BACKGROUND, '#F67') as unknown as string })),
-  state('normal',    style({ backgroundColor: new DynamicColor(NORMAL_BACKGROUND, 'white') as unknown as string })),
-  state('refresh',   style({ backgroundColor: 'gray' })),
+  state('normal',    style({ backgroundColor: 'transparent' })),
+  state('refresh',   style({ backgroundColor: 'rgba(0, 0, 0, 0.01)' })),
   state('confirm',   style({ backgroundColor: new DynamicColor(CONFIRM_BACKGROUND, '#6C6') as unknown as string })),
   state('warning',   style({ backgroundColor: new DynamicColor(WARNING_BACKGROUND, '#FC6') as unknown as string })),
-  state('view-only', style({ backgroundColor: new DynamicColor(VIEW_ONLY_BACKGROUND, 'black') as unknown as string })),
-  state('disabled',  style({ backgroundColor: new DynamicColor(DISABLED_BACKGROUND, '#CCC') as unknown as string })),
   transition('normal => error',   animate(FLASH_DURATION)),
   transition('error => normal',   animate(FLASH_DURATION)),
   transition('normal => confirm', animate(FLASH_DURATION)),
@@ -181,7 +178,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
     AfterViewInit, ControlValueAccessor, OnInit, OnDestroy, Validator {
   // Template accessibility
 
-  addFocusOutline = addFocusOutline;
   disableContentEditable = disableContentEditable;
   htmlEscape = htmlEscape;
   SPIN_DOWN = SPIN_DOWN;
@@ -490,10 +486,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (isString(newValue))
       newValue = toBoolean(newValue, false, true);
 
-    if (this._floating !== newValue) {
-      this._floating = newValue;
-      this.adjustState();
-    }
+    this._floating = newValue;
   }
 
   get tabindex(): string { return this._tabindex; }
@@ -1192,11 +1185,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
         this.lostFocus();
       }
     }
-
-    if (this.hiddenInput && !this.disabled)
-      this.wrapper.style.outline = getCssValue(this.hiddenInput, 'outline');
-    else if (addFocusOutline)
-      this.wrapper.style.outline = (newFocus && !this.disabled ? 'rgb(59, 153, 252) solid 1px' : 'black none 0px');
   }
 
   protected gainedFocus(): void {}
@@ -1537,11 +1525,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
     if (this.darkMode !== lastMode) {
       DynamicColor.update(ERROR_BACKGROUND, this.darkMode);
-      DynamicColor.update(NORMAL_BACKGROUND, this.darkMode);
       DynamicColor.update(CONFIRM_BACKGROUND, this.darkMode);
       DynamicColor.update(WARNING_BACKGROUND, this.darkMode);
-      DynamicColor.update(VIEW_ONLY_BACKGROUND, this.darkMode);
-      DynamicColor.update(DISABLED_BACKGROUND, this.darkMode);
 
       const currentState = this.displayState;
 
@@ -1553,8 +1538,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   protected adjustState(): void {
-    this.displayState = (this._viewOnly ? 'view-only' : (this._disabled ? 'disabled' : 'normal'));
-
     if (this.hiddenInput) {
       const disabled = (this._floating || this._disabled || this._viewOnly);
       this.hiddenInput.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);

@@ -17,9 +17,12 @@
     </span>
   </div>
   <div #wrapper class="tbw-dse-wrapper"
+      [class.tbw-normal-background]="!disabled && !viewOnly"
+      [class.tbw-disabled-background]="disabled"
+      [class.tbw-view-only-background]="viewOnly"
       [class.tbw-dse-no-focus]="disabled"
-      [class.tbw-dse-explicit-focus-outline]="addFocusOutline && hasFocus && !floating"
-      [class.tbw-dse-clear-focus-outline]="addFocusOutline && !hasFocus"
+      [class.tbw-dse-explicit-focus-outline]="hasFocus && !floating"
+      [class.tbw-dse-clear-focus-outline]="!hasFocus"
       [class.tbw-dse-dse-rtl]="rtl"
       [class.tbw-dse-floating]="floating"
       [tabindex]="inputOff || hasHiddenInput ? '-1' : tabindex"
@@ -29,11 +32,11 @@
       (keydown)="onKeyDown($event)" (keyup)="onKeyUp()" (keypress)="onKeyPress($event)"
       (focus)="onFocus(true, $event)" (blur)="onFocus(false, $event)"
       [ngClass]="getStaticBackgroundColor()"
-      [@displayState]="displayState"
       (mouseleave)="onMouseLeave()"
       (mouseup)="onMouseUp($event)"
       (touchmove)="onTouchMove($event)"
       (touchend)="onTouchEnd($event)">
+    <div class="tbw-dse-state-indicator" [@displayState]="displayState">&nbsp;</div>
     <div *ngFor="let item of displayItems"
         class="tbw-dse-digit dse-item-{{item.index}}"
         [ngClass]="(getClassForItem(item) || '') + ' ' + (getColorForItem(item) || '')"
