@@ -6,6 +6,7 @@
     "prepublishOnly": "npm run build",
     "start": "ng serve",
     "build": "ng build && sass ./projects/tubular-ng-widgets/src/styles.scss ./dist/tubular-ng-widgets/assets/styles.css",
+    "build:demo": "ng build ng-widgets-showcase",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "eslint 'projects/**/src/**/*.ts'",
