@@ -58,16 +58,16 @@
           [style.bottom]="item.spinner || item.divider ? '0' : baselineShift">&nbsp;</div>
       <span *ngIf="swipeable(item, 1)"
           class="tbw-dse-draggable-extra"
-          [style.top]="'calc(' + (-digitHeight + smoothedDeltaY) + 'px + ' + (item.deltaY || 0) + 'em)'"
+          [ngStyle]="getStyleForItem(item, -digitHeight)"
       >{{(item.alt_swipeAbove || item.swipeAbove) ?? '\u00A0'}}</span>
       <span *ngIf="swipeable(item, -1)"
           class="tbw-dse-draggable-extra"
-          [style.top]="'calc(' + (digitHeight + smoothedDeltaY) + 'px + ' + (item.deltaY || 0) + 'em)'"
+          [ngStyle]="getStyleForItem(item, digitHeight)"
       >{{(item.alt_swipeBelow || item.swipeBelow) ?? '\u00A0'}}</span>
       <span *ngIf="!item.spinner && !item.divider; else dividerOrSpinner"
           class="tbw-dse-draggable dse-item-{{item.index}}"
           [class.tbw-dse-sized]="!!item.sizer"
-          [style.top]="'calc(' + (swipeable(item, 0) ? smoothedDeltaY : 0) + 'px + ' + (item.deltaY || 0) + 'em)'"
+          [ngStyle]="getStyleForItem(item, 0)"
       >{{filterDisplayChars(item.alt_value || item.value)}}</span>
       <span *ngIf="item.sizer"
           class="tbw-dse-sizer"
