@@ -25,6 +25,7 @@ export interface SequenceItemInfo {
   hidden?: boolean;
   index?: number;
   indicator?: boolean;
+  maxChars?: number;
   monospaced?: boolean;
   name?: string;
   opacity?: number | string;
@@ -711,6 +712,33 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return 'tbw-dse-mono-font';
     else
       return null;
+  }
+
+  getStyleForItem(item: SequenceItemInfo, heightOffset: number): any {
+    const itemStyle: any = {
+      top: 'calc(' + (this.swipeable(item, 0) ? (this.smoothedDeltaY + heightOffset) : 0) +
+        'px + ' + (item.deltaY || 0) + 'em)'
+    };
+
+    if (item.maxChars) {
+      let value: string;
+
+      if (heightOffset < 0)
+        value = item.alt_swipeAbove || item.swipeAbove;
+      else if (heightOffset > 0)
+        value = item.alt_swipeBelow || item.swipeBelow;
+      else
+        value = this.filterDisplayChars(item.alt_value || item.value).toString();
+
+      const ratio = item.maxChars / value.toString().length;
+
+      if (ratio < 1) {
+        itemStyle.transform = `scale(${floor(ratio * 100) / 100}, 1)`;
+        itemStyle.width = '1px';
+      }
+    }
+
+    return itemStyle;
   }
 
   getStaticBackgroundColor(): string {

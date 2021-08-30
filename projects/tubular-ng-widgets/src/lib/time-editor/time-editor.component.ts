@@ -868,7 +868,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
           break;
         case 'off':
           this.offsetIndex = i;
-          this.items.push({ value: '+00:00', format: 'Z', indicator: true, monospaced: true });
+          this.items.push({ value: '+00:00', format: 'Z', indicator: true, monospaced: true, sizer: '+00:00', maxChars: 6 });
           break;
         case 'dst':
           this.dstIndex = i;
