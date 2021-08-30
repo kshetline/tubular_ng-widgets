@@ -46,7 +46,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   private pendingDelta = 0;
   private pendingEvent: MouseEvent = null;
   private _weekDayFormat = 'ddd';
-  private _yearMonthFormat = 'MMM Y';
+  private _yearMonthFormat = 'MMM~Y~';
 
   @Input() backgroundDecorator: DayDecorator;
   calendar: CalendarDateInfo[][] = [];
@@ -98,6 +98,14 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   @Input() set timezone(newZone: Timezone) {
     if (this.dateTime.timezone !== newZone) {
       this.dateTime.timezone = newZone;
+      this.updateCalendar();
+    }
+  }
+
+  get locale(): string | string[] { return this.dateTime.locale; }
+  @Input() set locale(value: string | string[]) {
+    if (!isEqual(this.dateTime.locale, value)) {
+      this.dateTime.locale = value;
       this.updateCalendar();
     }
   }
@@ -182,7 +190,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
 
     for (let d = 1; d <= 7; ++d)
       this.daysOfWeek.push(new DateTime({ y: 2017, m: 1, d: d + this._firstDay, hrs: 12 },
-        'UTC', 'en-us').format(this._weekDayFormat));
+        'UTC', this.dateTime.locale).format(this._weekDayFormat));
   }
 
   updateCalendar(): void {
@@ -230,7 +238,8 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   }
 
   private updateTitle(): void {
-    this.title[0] = new DateTime({ y: this.ymd?.y ?? 2021, m: this.ymd?.m ?? 1 }, 'UTC', 'en-us').format(this._yearMonthFormat);
+    this.title[0] = new DateTime({ y: this.ymd?.y ?? 2021, m: this.ymd?.m ?? 1 }, 'UTC',
+      this.dateTime.locale).format(this._yearMonthFormat);
   }
 
   reset(): void {
@@ -338,7 +347,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     else if (mode === SelectMode.MONTH) {
       const m = row * 4 + col + 1;
 
-      return (this.months[m] = new DateTime({ y: 4000, m, hrs: 12 }).format('MMM'));
+      return (this.months[m] = new DateTime({ y: 4000, m, hrs: 12 }, 'UTC', this.dateTime.locale).format('MMM'));
     }
 
     let index = row * this.cols + col;
