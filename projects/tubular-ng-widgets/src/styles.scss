@@ -22,6 +22,9 @@
 .tbw-warning-text { color: #C00; stroke: #C00; }
 .tbw-warning-background { background-color: #FC6; fill: #FC6; }
 
+.tbw-dse-fade { opacity: 0.2 };
+.tbw-view-only-text.tbw-dse-fade { opacity: 0.35 };
+
 .tbw-transparent {
   background-color: transparent;
 }
@@ -358,6 +361,9 @@
   .tbw-view-only-text { color: black; stroke: black; }
   .tbw-warning-text { color: #E45; stroke: #E45; }
   .tbw-warning-background { background-color: #B80; fill: #B80; }
+
+  .tbw-dse-fade { opacity: 0.28 };
+  .tbw-view-only-text.tbw-dse-fade { opacity: 0.2 };
 }
 
 // CalendarPanel

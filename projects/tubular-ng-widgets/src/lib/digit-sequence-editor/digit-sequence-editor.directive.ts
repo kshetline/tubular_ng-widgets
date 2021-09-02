@@ -21,6 +21,7 @@ export interface SequenceItemInfo {
   digit?: true;
   divider?: boolean;
   editable?: boolean;
+  fade?: boolean;
   format?: string;
   hidden?: boolean;
   index?: number;
@@ -28,7 +29,6 @@ export interface SequenceItemInfo {
   maxChars?: number;
   monospaced?: boolean;
   name?: string;
-  opacity?: number | string;
   selected?: boolean;
   sign?: boolean;
   sizer?: string;
@@ -218,7 +218,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private activeSpinner = NO_SELECTION;
   private clickTimer: Subscription;
   private confirmTimer: Subscription;
-  private darkMode = false;
   private errorTimer: Subscription;
   private firstTouchPoint: Point;
   private focusStretchTimer: any;
@@ -237,6 +236,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private warningTimer: Subscription;
 
   protected _blank = false;
+  protected darkMode = false;
   protected emSizer: HTMLElement;
   protected _floating = false;
   protected hiddenInput: HTMLInputElement;

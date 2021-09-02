@@ -211,7 +211,6 @@ export class AppComponent {
       catch {}
 
       this.numSystemGood = false;
-      return;
     }
   }
 

@@ -46,7 +46,7 @@
         [style.color]="blank && (item.editable || item.indicator) ? 'transparent' : undefined"
         [style.cursor]="(item.editable || item.spinner) && !disabled && !viewOnly ? 'pointer' : 'default'"
         [style.line-height]="lineHeight"
-        [style.opacity]="item.opacity?.toString() ?? '1'"
+        [class.tbw-dse-fade]="item.fade"
         [style.top]="item.divider || item.spinner ? undefined : baselineShift"
         [ngStyle]="item.width ? { width: item.width, 'white-space': 'nowrap', overflow: 'visible' } : null"
         (mousedown)="onMouseDown(item.index, $event)"

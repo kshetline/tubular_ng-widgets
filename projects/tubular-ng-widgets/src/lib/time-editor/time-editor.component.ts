@@ -847,7 +847,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         case 'month': this.monthIndex = i; addDigits(2, 'M'); break;
         case 'day': this.dayIndex = i; addDigits(2, 'D'); break;
         case 'dts': this.items.push({ value: dts, static: true,
-                                      opacity: dts === ISO_T ? 0.15 : 1,
+                                      fade: dts === ISO_T,
                                       width: dts === NO_BREAK_SPACE ?  '0.6em' : undefined }); break;
         case 'hour': this.hourIndex = i; addDigits(2, steps.includes('amPm') ? 'h' : 'H'); break;
         case 'aps': this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' }); break;
