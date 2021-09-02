@@ -179,11 +179,12 @@
 
   <div class='calendar'>
     <tbw-calendar minYear=-9999
+        [locale]="customLocale"
         [backgroundDecorator]="getBackground"
         [foregroundDecorator]="getForeground"
         showDst
         weekDayFormat="dd"
-        yearMonthFormat="MMM y n"
+        yearMonthFormat="MMM~y~n"
         [(ngModel)]="calendarDate"></tbw-calendar>
   </div>
 </div>

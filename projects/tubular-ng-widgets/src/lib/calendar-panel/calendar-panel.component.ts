@@ -2,7 +2,7 @@ import { Component, EventEmitter, forwardRef, Input, OnDestroy, Output } from '@
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { div_rd, max, min } from '@tubular/math';
 import { CalendarType, DateTime, defaultLocale, getStartOfWeek, GregorianChange, Timezone, YMDDate } from '@tubular/time';
-import { clone, isEqual, isObject, isString, noop, toBoolean, toNumber } from '@tubular/util';
+import { clone, convertDigits, convertDigitsToAscii, isEqual, isObject, isString, noop, toBoolean, toNumber } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { SafeHtml } from '@angular/platform-browser';
 
@@ -32,21 +32,22 @@ const multiplier = [0, 1, 1, 10, 100, 1000];
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CalendarPanelComponent), multi: true }]
 })
 export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
-  private ymd: YMDDate = { y: 2021, m: 1, d: 1 };
-  private _gregorianChange: GregorianChange;
-  private _showDst = false;
-  private _minYear = 1;
-  private _maxYear = 9999;
-  private _firstDay = getStartOfWeek(defaultLocale);
   private baseValue = [0, 0, 0];
   private dateTime: DateTime = new DateTime();
-  private onTouchedCallback: () => void = noop;
+  private digitBase = '0';
+  private _firstDay = getStartOfWeek(defaultLocale);
+  private _gregorianChange: GregorianChange;
+  private _maxYear = 9999;
+  private _minYear = 1;
   private onChangeCallback: (_: any) => void = noop;
-  private timerSubscription: Subscription;
+  private onTouchedCallback: () => void = noop;
   private pendingDelta = 0;
   private pendingEvent: MouseEvent = null;
+  private _showDst = false;
+  private timerSubscription: Subscription;
   private _weekDayFormat = 'ddd';
-  private _yearMonthFormat = 'MMM Y';
+  private _yearMonthFormat = 'MMM~Y~';
+  private ymd: YMDDate = { y: 2021, m: 1, d: 1 };
 
   @Input() backgroundDecorator: DayDecorator;
   calendar: CalendarDateInfo[][] = [];
@@ -64,6 +65,9 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
 
   constructor() {
     this.updateDayHeadings();
+    const base: string[] = [];
+    convertDigitsToAscii(this.dateTime.format('D'), base);
+    this.digitBase = base[0];
   }
 
   ngOnDestroy(): void {
@@ -98,6 +102,17 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   @Input() set timezone(newZone: Timezone) {
     if (this.dateTime.timezone !== newZone) {
       this.dateTime.timezone = newZone;
+      this.updateCalendar();
+    }
+  }
+
+  get locale(): string | string[] { return this.dateTime.locale; }
+  @Input() set locale(value: string | string[]) {
+    if (!isEqual(this.dateTime.locale, value)) {
+      this.dateTime.locale = value;
+      const base: string[] = [];
+      convertDigitsToAscii(this.dateTime.format('D'), base);
+      this.digitBase = base[0];
       this.updateCalendar();
     }
   }
@@ -182,7 +197,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
 
     for (let d = 1; d <= 7; ++d)
       this.daysOfWeek.push(new DateTime({ y: 2017, m: 1, d: d + this._firstDay, hrs: 12 },
-        'UTC', 'en-us').format(this._weekDayFormat));
+        'UTC', this.dateTime.locale).format(this._weekDayFormat));
   }
 
   updateCalendar(): void {
@@ -198,7 +213,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
       const col = index % 7;
 
       date.dayLength = dayLength;
-      date.text = String(date.d);
+      date.text = convertDigits(String(date.d), this.digitBase);
       date.otherMonth = (date.m !== month);
       date.highlight = (date.m === month && date.d === day);
 
@@ -230,7 +245,8 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   }
 
   private updateTitle(): void {
-    this.title[0] = new DateTime({ y: this.ymd?.y ?? 2021, m: this.ymd?.m ?? 1 }, 'UTC', 'en-us').format(this._yearMonthFormat);
+    this.title[0] = new DateTime({ y: this.ymd?.y ?? 2021, m: this.ymd?.m ?? 1 }, 'UTC',
+      this.dateTime.locale).format(this._yearMonthFormat);
   }
 
   reset(): void {
@@ -338,7 +354,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     else if (mode === SelectMode.MONTH) {
       const m = row * 4 + col + 1;
 
-      return (this.months[m] = new DateTime({ y: 4000, m, hrs: 12 }).format('MMM'));
+      return (this.months[m] = new DateTime({ y: 4000, m, hrs: 12 }, 'UTC', this.dateTime.locale).format('MMM'));
     }
 
     let index = row * this.cols + col;
@@ -353,7 +369,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     const maxx = (div_rd(this._maxYear - 1, multiplier[mode]) + 1) * multiplier[mode];
 
     if ((minn <= value && value <= maxx))
-      return min(max(value, this._minYear), this._maxYear).toString();
+      return convertDigits(min(max(value, this._minYear), this._maxYear).toString(), this.digitBase);
     else
       return '';
   }
