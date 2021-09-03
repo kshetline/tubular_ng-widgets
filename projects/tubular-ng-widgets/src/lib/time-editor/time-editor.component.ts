@@ -1098,7 +1098,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
     this.setDigits(this.minuteIndex, 2, wallTime.min, field);
     this.setDigits(this.secondIndex, 2, wallTime.sec, field);
-    this.setDigits(this.millisIndex, this._options.millisDigits, wallTime.millis, field);
+    this.setDigits(this.millisIndex, this._options.millisDigits,
+      wallTime.millis / 10 ** (3 - this._options.millisDigits), field);
 
     if (this.occIndex >= 0)
       i[this.occIndex][field] = (dateTime.wallTime.occurrence === 2 ? OCC2 : NO_BREAK_SPACE);
@@ -1231,7 +1232,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
     else if (this.millisIndex >= 0 && this.millisIndex <= sel && sel < this.millisIndex + mDigits) {
       field = tai ? DateTimeField.MILLI_TAI : DateTimeField.MILLI;
-      change = 10 ** (5 - mDigits + this.millisIndex - sel);
+      change = 10 ** (2 + this.millisIndex - sel);
     }
     else if (this.secondIndex >= 0 && (sel === this.secondIndex || sel === this.secondIndex + 1)) {
       field = tai ? DateTimeField.SECOND_TAI : DateTimeField.SECOND;

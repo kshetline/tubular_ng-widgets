@@ -155,9 +155,14 @@
       <option value="1">24-hour time</option>
       <option value="2">AM/PM time</option>
     </select>
-    <label *ngIf="customStyle !== '1'"><input type="checkbox" [(ngModel)]="showSeconds"
-        (change)="settingsUpdated()">Show seconds</label>
-    <div class="wrap">&nbsp;</div>
+    <select *ngIf="customStyle !== '1'" [(ngModel)]="secondsMode" (change)="settingsUpdated()">
+      <option value="0">No seconds</option>
+      <option value="1">Seconds</option>
+      <option value="2">Seconds/10</option>
+      <option value="3">Seconds/100</option>
+      <option value="4">Milliseconds</option>
+    </select>
+  <div class="wrap">&nbsp;</div>
 
     <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="inputBackground(minGood)"></label>
     <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="inputBackground(maxGood)"></label>
