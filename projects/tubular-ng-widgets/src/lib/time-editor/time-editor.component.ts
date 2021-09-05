@@ -45,6 +45,8 @@ export interface TimeEditorOptions {
   yearStyle?: YearStyle | string[];
 }
 
+export type MixedTimeEditorOptions = string | TimeEditorOptions | (string | TimeEditorOptions)[];
+
 const OCC2 = '\u20092\u2009';
 const ISO_T = '\u200AT\u200A';
 const NO_BREAK_SPACE = '\u00A0';
@@ -228,8 +230,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return this.getValueAsText();
   }
 
-  get options(): string | TimeEditorOptions | (string | TimeEditorOptions)[] { return this._options; }
-  @Input() set options(newValue: string | TimeEditorOptions | (string | TimeEditorOptions)[]) {
+  get options(): MixedTimeEditorOptions { return this._options; }
+  @Input() set options(newValue: MixedTimeEditorOptions) {
     if (isArray(newValue)) {
       const orig = newValue;
 
