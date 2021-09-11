@@ -20,70 +20,72 @@
     <tbw-time-editor [(date)]="date" options="iso_date"></tbw-time-editor>
   </div>
 
-  <div class="top-grid">
-    <tbw-time-editor tai
-        [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
-        [(ngModel)]="time"
-        [nativeDateTime]="native"></tbw-time-editor>
-    <span class="description">Locale time, with occurrence, UTC offset and DST symbol</span>
-    <div>
-        <button (click)="setCurrentTime()">Set now</button>
-        <button (click)="time = 1636264837000">Sample time</button>
-        <button (click)="time = 1483228836000">Sample leap second</button>
-        <label *ngIf="mobile"><input id="native" type="checkbox" [ngModel]="native"
-            (change)="native = settingsUpdated() && $any($event.target).checked"/>Mobile native date/time</label><br>
+  <tbw-shrink-wrap minScale="73%" threshold="870">
+    <div class="top-grid">
+      <tbw-time-editor tai
+          [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
+          [(ngModel)]="time"
+          [nativeDateTime]="native"></tbw-time-editor>
+      <span class="description">Locale time, with occurrence, UTC offset and DST symbol</span>
+      <div>
+          <button (click)="setCurrentTime()">Set now</button>
+          <button (click)="time = 1636264837000">Sample time</button>
+          <button (click)="time = 1483228836000">Sample leap second</button>
+          <label *ngIf="mobile"><input id="native" type="checkbox" [ngModel]="native"
+              (change)="native = settingsUpdated() && $any($event.target).checked"/>Mobile native date/time</label><br>
+      </div>
+      <span>&nbsp;</span>
+
+      <span>
+        <tbw-time-editor tai
+            id="utc-editor"
+            [disabled]="float"
+            [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
+            timezone="UTC"
+            [(ngModel)]="time"></tbw-time-editor>
+        <tbw-time-editor *ngIf="float" tai
+            floating
+            showCloser
+            (close)="setFloat(false)"
+            [(position)]="floatPosition"
+            [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
+            timezone="UTC"
+            [(ngModel)]="time"></tbw-time-editor>
+        <label><input type="checkbox" [ngModel]="float" (change)="setFloat($any($event.target).checked)"/>Float</label>
+      </span>
+      <span class="description">UTC, in signed ISO-8601 date/time format</span>
+
+      <span>
+        <tbw-time-editor tai
+            [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
+            [viewOnly]="viewOnly"
+            [(ngModel)]="time"></tbw-time-editor>
+        <label><input type="checkbox" [(ngModel)]="viewOnly" (change)="settingsUpdated()">View only</label>
+      </span>
+      <span class="description">Local with AD/BC</span>
+
+      <span>
+        <tbw-time-editor tai
+            [options]="{ twoDigitYear: true, yearStyle: POSITIVE_ONLY }"
+            [disabled]="timeDisabled"
+            [(ngModel)]="time"></tbw-time-editor>
+        <label><input type="checkbox" [(ngModel)]="timeDisabled" (change)="settingsUpdated()">Disabled</label>
+      </span>
+      <span class="description">Local with two-digit year</span>
+
+      <span>
+        <tbw-time-editor tai
+            [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
+            [blank]="blank"
+            [wideSpinner]="wideSpinner"
+            timezone="UTC"
+            [(ngModel)]="time"></tbw-time-editor>
+        <label><input type="checkbox" [(ngModel)]="blank">Blank</label>
+        <label><input type="checkbox" [(ngModel)]="wideSpinner">Wide spinner</label>
+      </span>
+      <span class="description">UTC time only, with milliseconds</span>
     </div>
-    <span>&nbsp;</span>
-
-    <span>
-      <tbw-time-editor tai
-          id="utc-editor"
-          [disabled]="float"
-          [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
-          timezone="UTC"
-          [(ngModel)]="time"></tbw-time-editor>
-      <tbw-time-editor *ngIf="float" tai
-          floating
-          showCloser
-          (close)="setFloat(false)"
-          [(position)]="floatPosition"
-          [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
-          timezone="UTC"
-          [(ngModel)]="time"></tbw-time-editor>
-      <label><input type="checkbox" [ngModel]="float" (change)="setFloat($any($event.target).checked)"/>Float</label>
-    </span>
-    <span class="description">UTC, in signed ISO-8601 date/time format</span>
-
-    <span>
-      <tbw-time-editor tai
-          [options]="{ twoDigitYear: false, yearStyle: AD_BC }"
-          [viewOnly]="viewOnly"
-          [(ngModel)]="time"></tbw-time-editor>
-      <label><input type="checkbox" [(ngModel)]="viewOnly" (change)="settingsUpdated()">View only</label>
-    </span>
-    <span class="description">Local with AD/BC</span>
-
-    <span>
-      <tbw-time-editor tai
-          [options]="{ twoDigitYear: true, yearStyle: POSITIVE_ONLY }"
-          [disabled]="timeDisabled"
-          [(ngModel)]="time"></tbw-time-editor>
-      <label><input type="checkbox" [(ngModel)]="timeDisabled" (change)="settingsUpdated()">Disabled</label>
-    </span>
-    <span class="description">Local with two-digit year</span>
-
-    <span>
-      <tbw-time-editor tai
-          [options]="['iso', { dateTimeStyle: TIME_ONLY, millisDigits: 3 }]"
-          [blank]="blank"
-          [wideSpinner]="wideSpinner"
-          timezone="UTC"
-          [(ngModel)]="time"></tbw-time-editor>
-      <label><input type="checkbox" [(ngModel)]="blank">Blank</label>
-      <label><input type="checkbox" [(ngModel)]="wideSpinner">Wide spinner</label>
-    </span>
-    <span class="description">UTC time only, with milliseconds</span>
-  </div><br>
+  </tbw-shrink-wrap><br>
 
   <div class="bottom-grid">
     <span>Arabic, general, AD/BC</span>

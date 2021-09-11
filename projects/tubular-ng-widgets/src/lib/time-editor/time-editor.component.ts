@@ -1057,7 +1057,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.outOfRange = outOfRange;
 
     if (reUpdate && delta === 0) {
-      timer().subscribe(() => {
+      timer(0).subscribe(() => {
         this.errorFlash();
         dateTime.wallTime = wallTime;
         this.reportValueChange();

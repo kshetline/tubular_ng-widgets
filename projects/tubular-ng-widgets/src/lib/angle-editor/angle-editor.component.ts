@@ -320,7 +320,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
         angle = (angle < this.minAngle ? this.minAngle : this.maxAngle);
         intAngle = trunc(angle * this.angleDivisor);
 
-        timer().subscribe(() => {
+        timer(0).subscribe(() => {
           this.errorFlash();
           this.setIntAngle(intAngle);
           this.updateDigits();
