@@ -52,6 +52,7 @@ const ISO_T = '\u200AT\u200A';
 const NO_BREAK_SPACE = '\u00A0';
 const platformNativeDateTime = (isIOS() || (isAndroid() && isChrome()));
 const RTL_CHECK = /[\u0590-\u07BF\u0860-\u08FF\u200F\u2067\u202B\u202E\uFB1D-\uFDCF\uFDF0-\uFDFF\uFE70-\uFEFF]/;
+const DAY_MILLIS = 86_400_000;
 
 export const OPTIONS_DATE_ONLY: TimeEditorOptions = {
   dateTimeStyle: DateTimeStyle.DATE_ONLY,
@@ -253,9 +254,16 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       newValue = namedOptions[newValue.toLowerCase()] ?? {};
 
     if (!isEqual(this._options, newValue)) {
+      const wasTimeOnly = (this._options.dateTimeStyle === DateTimeStyle.TIME_ONLY);
+
       this._options = clone(newValue);
       this.createDigits();
       this.createDisplayOrder();
+
+      if (!wasTimeOnly && this._options.dateTimeStyle === DateTimeStyle.TIME_ONLY &&
+          (this.value < 0 || this.value >= DAY_MILLIS)) {
+        setTimeout(() => this.value = mod(this.value, DAY_MILLIS));
+      }
     }
   }
 
@@ -469,6 +477,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
 
     if ((tai && this.dateTime.taiMillis !== newValue) || (!tai && this.dateTime.utcMillis !== newValue)) {
+      if (this._options.dateTimeStyle === DateTimeStyle.TIME_ONLY)
+        newValue = mod(newValue, DAY_MILLIS);
+
       if (tai)
         this.dateTime.taiMillis = newValue;
       else
