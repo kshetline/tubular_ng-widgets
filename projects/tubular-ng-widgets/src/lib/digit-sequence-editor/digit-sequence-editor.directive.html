@@ -65,7 +65,8 @@
           [ngStyle]="getStyleForItem(item, digitHeight)"
       >{{(item.alt_swipeBelow || item.swipeBelow) ?? '\u00A0'}}</span>
       <span *ngIf="!item.spinner && !item.divider; else dividerOrSpinner"
-          class="tbw-dse-draggable dse-item-{{item.index}}"
+          class="tbw-dse-draggable dse-item-{{item.index}} {{getCursorMode(item)}}"
+          [style.animation-duration]="isSelected(item) && cursorRate"
           [class.tbw-dse-sized]="!!item.sizer"
           [ngStyle]="getStyleForItem(item, 0)"
       >{{filterDisplayChars(item.alt_value || item.value)}}</span>

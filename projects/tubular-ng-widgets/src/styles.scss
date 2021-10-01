@@ -219,6 +219,21 @@
   }
 }
 
+@keyframes tbw-dse-blinker {
+  from, to { background-color: black; color: white; }
+  10%, 20% { background-color: black; color: white; }
+  50%, 60%, 70% { background-color: transparent; color: black; }
+}
+
+.tbw-dse-blinking-cursor {
+  animation: 1060ms infinite tbw-dse-blinker;
+}
+
+.tbw-dse-steady-cursor {
+  background-color: black;
+  color: white;
+}
+
 .tbw-dse-divider {
   align-self: stretch;
   background-color: #A6A6A6;
@@ -365,6 +380,21 @@
 
   .tbw-dse-fade { opacity: 0.28 };
   .tbw-view-only-text.tbw-dse-fade { opacity: 0.2 };
+
+  @keyframes tbw-dse-blinker-dark {
+    from, to { background-color: #EEE; color: #333; }
+    10%, 20% { background-color: #EEE; color: #333; }
+    50%, 60%, 70% { background-color: transparent; color: #EEE; }
+  }
+
+  .tbw-dse-blinking-cursor {
+    animation-name: tbw-dse-blinker-dark;
+  }
+
+  .tbw-dse-steady-cursor {
+    background-color: #EEE;
+    color: #333;
+  }
 }
 
 // CalendarPanel
