@@ -1558,7 +1558,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   protected restartCursorAnimation(): void {
-    const cursor = this.wrapper.querySelector('.tbw-dse-blinker') as HTMLElement;
+    const cursor = this.wrapper.querySelector('.tbw-dse-blinking-cursor') as HTMLElement;
 
     if (cursor) {
       cursor.style.animation = 'none';
