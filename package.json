@@ -24,7 +24,7 @@
     "@angular/platform-browser-dynamic": "~12.2.5",
     "@angular/router": "~12.2.5",
     "@tubular/math": "^3.1.0",
-    "@tubular/time": "^3.7.0",
+    "@tubular/time": "^3.7.1",
     "@tubular/util": "^4.4.0",
     "detect-resize": "^0.1.5",
     "lodash": "^4.17.21",
