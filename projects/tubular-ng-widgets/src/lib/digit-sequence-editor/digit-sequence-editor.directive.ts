@@ -4,8 +4,8 @@ import {
 } from '@angular/core';
 import { abs, floor, max, min, Point, random, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssRuleValue, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isEqual, isIOS,
-  isNumber, isSamsung, isString, noop, processMillis, toBoolean, toNumber
+  eventToKey, getCssRuleValue, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isEqual,
+  isIOS14OrEarlier, isNumber, isSamsung, isString, noop, processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getClientXYForTouchEvent, getPageXYForTouchEvent } from '../util/touch-events';
@@ -65,8 +65,8 @@ const NO_SELECTION = -1;
 const SPIN_UP      = -2;
 const SPIN_DOWN    = -3;
 
-const alternateClipboard = navigator.clipboard == null || isAndroid() || isChromeOS() || isIOS() || isSamsung();
-const checkForRepeatedKeyTimestamps = isIOS();
+const alternateClipboard = navigator.clipboard == null || isAndroid() || isChromeOS() || isIOS14OrEarlier() || isSamsung();
+const checkForRepeatedKeyTimestamps = isIOS14OrEarlier();
 const disableContentEditable = isEdge();
 const useHiddenInput = isAndroid() || isChromeOS();
 

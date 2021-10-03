@@ -41,6 +41,7 @@ export class AppComponent {
   POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
   SIGNED = YearStyle.SIGNED;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;
+  isIOS = isIOS();
 
   private _calendarDate: YMDDate;
   private _customLocale = navigator.language;

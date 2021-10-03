@@ -1,5 +1,4 @@
-<div [ngClass]="{'content': true, 'app-dark-mode': darkMode, 'tbw-dark-mode': darkMode}"
-     xmlns="http://www.w3.org/1999/html">
+<div [ngClass]="{'content': true, 'app-dark-mode': darkMode, 'tbw-dark-mode': darkMode}">
   <div class="top-line">
     <label [style.margin-right]="'1em'"><input type="checkbox"
         [(ngModel)]="darkMode" (change)="settingsUpdated()">Dark mode</label>
@@ -121,8 +120,9 @@
         [options]="{ locale: 'de' }"
         timezone="Europe/Berlin"
         [(ngModel)]="time"></tbw-time-editor>
+    <!-- TODO: Change code below when zh locale stops crashing iOS 15+-->
     <tbw-time-editor tai
-        [options]="{ locale: 'zh' }"
+        [options]="{ locale: isIOS ? 'ja' : 'zh' }"
         timezone="Asia/Shanghai"
         [(ngModel)]="time"></tbw-time-editor>
 
@@ -164,7 +164,7 @@
       <option value="3">Seconds/100</option>
       <option value="4">Milliseconds</option>
     </select>
-  <div class="wrap">&nbsp;</div>
+    <div class="wrap">&nbsp;</div>
 
     <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="inputBackground(minGood)"></label>
     <label>Maximum value: <input type="text" autocorrect="off" [(ngModel)]="max" [style.background-color]="inputBackground(maxGood)"></label>
