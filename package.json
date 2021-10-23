@@ -1,6 +1,7 @@
 {
   "name": "tubular-ng-widgets",
   "version": "0.0.0",
+  "private": true,
   "scripts": {
     "ng": "ng",
     "prepublishOnly": "npm run build",
@@ -24,7 +25,7 @@
     "@angular/platform-browser-dynamic": "~12.2.5",
     "@angular/router": "~12.2.5",
     "@tubular/math": "^3.1.0",
-    "@tubular/time": "^3.7.1",
+    "@tubular/time": "^3.7.3",
     "@tubular/util": "^4.5.1",
     "detect-resize": "^0.1.5",
     "lodash": "^4.17.21",
