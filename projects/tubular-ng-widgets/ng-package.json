@@ -3,11 +3,6 @@
   "dest": "../../dist/tubular-ng-widgets",
   "lib": {
     "cssUrl": "inline",
-    "entryFile": "src/public-api.ts",
-    "umdModuleIds": {
-      "@tubular/math": "tbMath",
-      "@tubular/time": "tbTime",
-      "@tubular/util": "tbUtil"
-    }
+    "entryFile": "src/public-api.ts"
   }
 }

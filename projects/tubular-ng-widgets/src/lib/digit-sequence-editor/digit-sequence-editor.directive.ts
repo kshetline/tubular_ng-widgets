@@ -122,7 +122,6 @@ const NORMAL_BACKGROUND    = 'tbw-normal-background';
 const NORMAL_TEXT          = 'tbw-normal-text';
 // const SELECTED_BACKGROUND  = 'tbw-selected-background';
 const SELECTED_TEXT        = 'tbw-selected-text';
-const SPINNER_FILL         = 'tbw-spinner-fill';
 const VIEW_ONLY_TEXT       = 'tbw-view-only-text';
 const VIEW_ONLY_BACKGROUND = 'tbw-view-only-background';
 const WARNING_BACKGROUND   = 'tbw-warning-background';
@@ -779,9 +778,9 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
     if (this.isSelected(item, index))
-      return 'tbw-transparent';
+      return index === SPIN_UP || index === SPIN_DOWN ? 'tbw-spinner-fill-active' : 'tbw-transparent';
     else if (!this._disabled && !this.viewOnly && (index === SPIN_UP || index === SPIN_DOWN))
-      return SPINNER_FILL;
+      return 'tbw-spinner-fill';
     else
       return 'tbw-transparent';
   }

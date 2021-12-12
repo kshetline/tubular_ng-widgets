@@ -17,6 +17,7 @@
 .tbw-selected-background { background-color: black; fill: black; }
 .tbw-selected-text { color: white; stroke: white; }
 .tbw-spinner-fill { background-color: #EEE; fill: #EEE; }
+.tbw-spinner-fill-active { background-color: #999; fill: #999; }
 .tbw-view-only-background { background-color: black; fill: black; }
 .tbw-view-only-text { color: #0F0; stroke: #0F0; }
 .tbw-warning-text { color: #C00; stroke: #C00; }
@@ -200,7 +201,7 @@
   }
 }
 
-.tbw-dse-state-indicator, .tbw-dse-focus-indicator{
+.tbw-dse-state-indicator, .tbw-dse-focus-indicator {
   bottom: 0;
   background-color: transparent;
   left: 0;
