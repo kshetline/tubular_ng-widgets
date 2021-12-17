@@ -46,6 +46,7 @@ export class AppComponent {
   private _calendarDate: YMDDate;
   private _customLocale = navigator.language;
   private _customTimezone = 'America/New_York';
+  private readonly initDate = new DateTime(null, 'TAI');
   private _max = '';
   private millis = 0;
   private _min = '';
@@ -59,7 +60,7 @@ export class AppComponent {
   customStyle = '0';
   customYear = 'false';
   darkMode = true;
-  date = new DateTime().toIsoString(10);
+  date = this.initDate.toIsoString(10);
   float = false;
   floatPosition: Point = null;
   localeGood = true;
@@ -69,7 +70,7 @@ export class AppComponent {
   native = false;
   numSystemGood = true;
   showSeconds = false;
-  time = new DateTime().taiMillis;
+  time = this.initDate.taiMillis;
   timeDisabled = false;
   timezoneGood = true;
   viewOnly = true;
@@ -229,7 +230,7 @@ export class AppComponent {
   }
 
   setCurrentTime(): void {
-    this.time = new DateTime().taiMillis;
+    this.time = new DateTime(null, 'TAI').taiMillis;
   }
 
   format(zone: string = null, locale: string = null, fmt: string | Intl.DateTimeFormatOptions): string {
