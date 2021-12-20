@@ -24,6 +24,7 @@
   height: 0.1px;
   margin-bottom: -0.1px;
   overflow: hidden;
+  pointer-events: none;
   position: relative;
   touch-action: manipulation;
   user-select: none;
@@ -58,6 +59,7 @@
   background-color: transparent;
   color: transparent;
   height: 0.1px;
+  pointer-events: none;
   position: absolute;
   touch-action: manipulation;
   width: 1em;
