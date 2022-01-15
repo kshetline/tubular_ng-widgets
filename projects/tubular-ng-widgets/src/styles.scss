@@ -482,7 +482,7 @@ $pref-height: 9.2em;
       }
 
       .tbw-cal-day-cell-back, .tbw-cal-day-cell-fore {
-        align-items: start;
+        align-items: flex-start;
         display: flex;
         justify-content: center;
         left: 0;
