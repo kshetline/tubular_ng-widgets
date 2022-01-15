@@ -10,6 +10,9 @@ export class TimeEditorLimit {
   year?: number;
 
   constructor(limit: Date | number | string, private asLow = false, asTai = false) {
+    if (isString(limit) && !/\d-\d/.test(limit) && limit.includes(':'))
+      limit = '1970-01-01 ' + limit;
+
     if (limit == null || limit === '')
       limit = asLow ? '-9999' : '9999';
     else if (isNumber(limit) && abs(limit) < 10000)

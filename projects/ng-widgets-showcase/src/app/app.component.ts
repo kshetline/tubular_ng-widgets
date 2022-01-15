@@ -5,7 +5,7 @@ import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle }
   from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
 import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
 import { AngleStyle } from '../../../tubular-ng-widgets/src/lib/angle-editor/angle-editor.component';
-import { Point } from '@tubular/math';
+import { max, Point } from '@tubular/math';
 import { CalendarDateInfo } from '../../../tubular-ng-widgets/src/lib/calendar-panel/calendar-panel.component';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -20,7 +20,7 @@ const defaultSettings = {
   float: false,
   floatPosition: null as Point,
   native: false,
-  showSeconds: false,
+  secondsMode: 0,
   timeDisabled: false,
   viewOnly: true,
   wideSpinner: false,
@@ -41,13 +41,17 @@ export class AppComponent {
   POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
   SIGNED = YearStyle.SIGNED;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;
+  isIOS = isIOS();
 
   private _calendarDate: YMDDate;
   private _customLocale = navigator.language;
   private _customTimezone = 'America/New_York';
+  private readonly initDate = new DateTime(null, 'TAI');
   private _max = '';
+  private millis = 0;
   private _min = '';
   private _numSystem = '';
+  private _secondsMode = 0;
   private updateTimer: any;
 
   angle = 0;
@@ -56,7 +60,7 @@ export class AppComponent {
   customStyle = '0';
   customYear = 'false';
   darkMode = true;
-  date = new DateTime().toIsoString(10);
+  date = this.initDate.toIsoString(10);
   float = false;
   floatPosition: Point = null;
   localeGood = true;
@@ -66,7 +70,7 @@ export class AppComponent {
   native = false;
   numSystemGood = true;
   showSeconds = false;
-  time = new DateTime().taiMillis;
+  time = this.initDate.taiMillis;
   timeDisabled = false;
   timezoneGood = true;
   viewOnly = true;
@@ -211,12 +215,22 @@ export class AppComponent {
       catch {}
 
       this.numSystemGood = false;
-      return;
+    }
+  }
+
+  get secondsMode(): number { return this._secondsMode; }
+  set secondsMode(value: number) {
+    value = toNumber(value);
+
+    if (this._secondsMode !== value) {
+      this._secondsMode = value;
+      this.showSeconds = (value > 0);
+      this.millis = max(value - 1, 0);
     }
   }
 
   setCurrentTime(): void {
-    this.time = new DateTime().taiMillis;
+    this.time = new DateTime(null, 'TAI').taiMillis;
   }
 
   format(zone: string = null, locale: string = null, fmt: string | Intl.DateTimeFormatOptions): string {
@@ -240,6 +254,7 @@ export class AppComponent {
       dateTimeStyle: toNumber(this.customStyle),
       hourStyle: toNumber(this.customCycle),
       locale: this.customLocale,
+      millisDigits: this.millis,
       numbering: this.numSystem || undefined,
       showSeconds: this.showSeconds,
       twoDigitYear: this.customYear ? toBoolean(this.customYear) : undefined,
@@ -262,7 +277,7 @@ export class AppComponent {
     const numbering = this.numSystem && ',numberingSystem:' + this.numSystem;
 
     return `I${style}{${era}${year}${monthDay}${hour}${hourCycle}${seconds}${numbering}}`
-      .replace('{,' , '{').replace('{},' , '');
+      .replace('{,', '{').replace('{},', '');
   }
 
   getCustomCaption(lang?: string): string {

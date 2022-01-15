@@ -55,6 +55,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   daysOfWeek: string[] = [];
   @Input() foregroundDecorator: DayDecorator;
   highlightItem = '';
+  inTransition = false;
   modeCount = SelectMode.MODE_COUNT;
   months: string[] = [];
   rows = 3;
@@ -251,6 +252,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
 
   reset(): void {
     this.selectMode = SelectMode.DAY;
+    this.modeTransition();
     this.updateCalendar();
   }
 
@@ -336,11 +338,13 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     newDate.y = min(max(newDate.y, this._minYear), this._maxYear);
     this.value = newDate;
     --this.selectMode;
+    this.modeTransition();
     this.updateAltTable();
   }
 
   onTitleClick(): void {
     this.selectMode = (this.selectMode + 1) % SelectMode.MODE_COUNT;
+    this.modeTransition();
     this.updateAltTable();
   }
 
@@ -400,5 +404,10 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
       return this.foregroundDecorator(dateInfo);
     else
       return '';
+  }
+
+  private modeTransition(): void {
+    this.inTransition = true;
+    setTimeout(() => this.inTransition = false, 500);
   }
 }

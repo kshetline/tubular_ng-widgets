@@ -17,10 +17,14 @@
 .tbw-selected-background { background-color: black; fill: black; }
 .tbw-selected-text { color: white; stroke: white; }
 .tbw-spinner-fill { background-color: #EEE; fill: #EEE; }
+.tbw-spinner-fill-active { background-color: #999; fill: #999; }
 .tbw-view-only-background { background-color: black; fill: black; }
 .tbw-view-only-text { color: #0F0; stroke: #0F0; }
 .tbw-warning-text { color: #C00; stroke: #C00; }
 .tbw-warning-background { background-color: #FC6; fill: #FC6; }
+
+.tbw-dse-fade { opacity: 0.2 };
+.tbw-view-only-text.tbw-dse-fade { opacity: 0.35 };
 
 .tbw-transparent {
   background-color: transparent;
@@ -169,6 +173,7 @@
   cursor: default;
   direction: ltr;
   display: inline-flex;
+  justify-content: center;
   overflow: hidden;
   padding: max(1px, 0.0836em) 0.2em;
   position: relative;
@@ -196,7 +201,7 @@
   }
 }
 
-.tbw-dse-state-indicator, .tbw-dse-focus-indicator{
+.tbw-dse-state-indicator, .tbw-dse-focus-indicator {
   bottom: 0;
   background-color: transparent;
   left: 0;
@@ -213,6 +218,21 @@
   &.tbw-dse-show-focus {
     border-color: #007AFF;
   }
+}
+
+@keyframes tbw-dse-blinker {
+  from, to { background-color: black; color: white; }
+  10%, 20% { background-color: black; color: white; }
+  50%, 60%, 70% { background-color: transparent; color: black; }
+}
+
+.tbw-dse-blinking-cursor {
+  animation: 1060ms infinite tbw-dse-blinker;
+}
+
+.tbw-dse-steady-cursor {
+  background-color: black;
+  color: white;
 }
 
 .tbw-dse-divider {
@@ -358,6 +378,24 @@
   .tbw-view-only-text { color: black; stroke: black; }
   .tbw-warning-text { color: #E45; stroke: #E45; }
   .tbw-warning-background { background-color: #B80; fill: #B80; }
+
+  .tbw-dse-fade { opacity: 0.28 };
+  .tbw-view-only-text.tbw-dse-fade { opacity: 0.2 };
+
+  @keyframes tbw-dse-blinker-dark {
+    from, to { background-color: #EEE; color: #333; }
+    10%, 20% { background-color: #EEE; color: #333; }
+    50%, 60%, 70% { background-color: transparent; color: #EEE; }
+  }
+
+  .tbw-dse-blinking-cursor {
+    animation-name: tbw-dse-blinker-dark;
+  }
+
+  .tbw-dse-steady-cursor {
+    background-color: #EEE;
+    color: #333;
+  }
 }
 
 // CalendarPanel
@@ -444,7 +482,7 @@ $pref-height: 9.2em;
       }
 
       .tbw-cal-day-cell-back, .tbw-cal-day-cell-fore {
-        align-items: start;
+        align-items: flex-start;
         display: flex;
         justify-content: center;
         left: 0;

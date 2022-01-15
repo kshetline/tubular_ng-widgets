@@ -46,7 +46,7 @@
         [style.color]="blank && (item.editable || item.indicator) ? 'transparent' : undefined"
         [style.cursor]="(item.editable || item.spinner) && !disabled && !viewOnly ? 'pointer' : 'default'"
         [style.line-height]="lineHeight"
-        [style.opacity]="item.opacity?.toString() ?? '1'"
+        [class.tbw-dse-fade]="item.fade"
         [style.top]="item.divider || item.spinner ? undefined : baselineShift"
         [ngStyle]="item.width ? { width: item.width, 'white-space': 'nowrap', overflow: 'visible' } : null"
         (mousedown)="onMouseDown(item.index, $event)"
@@ -65,7 +65,8 @@
           [ngStyle]="getStyleForItem(item, digitHeight)"
       >{{(item.alt_swipeBelow || item.swipeBelow) ?? '\u00A0'}}</span>
       <span *ngIf="!item.spinner && !item.divider; else dividerOrSpinner"
-          class="tbw-dse-draggable dse-item-{{item.index}}"
+          class="tbw-dse-draggable dse-item-{{item.index}} {{getCursorMode(item)}}"
+          [style.animation-duration]="isSelected(item) && cursorRate"
           [class.tbw-dse-sized]="!!item.sizer"
           [ngStyle]="getStyleForItem(item, 0)"
       >{{filterDisplayChars(item.alt_value || item.value)}}</span>

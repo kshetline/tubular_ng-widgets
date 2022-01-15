@@ -4,8 +4,8 @@ import {
 } from '@angular/core';
 import { abs, floor, max, min, Point, random, round, sign } from '@tubular/math';
 import {
-  eventToKey, getCssRuleValue, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isEqual, isIOS,
-  isNumber, isSamsung, isString, noop, processMillis, toBoolean, toNumber
+  eventToKey, getCssRuleValue, getCssValue, htmlEscape, isAndroid, isChrome, isChromeOS, isEdge, isEqual,
+  isIOS14OrEarlier, isNumber, isSamsung, isString, noop, processMillis, toBoolean, toNumber
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { getClientXYForTouchEvent, getPageXYForTouchEvent } from '../util/touch-events';
@@ -21,6 +21,7 @@ export interface SequenceItemInfo {
   digit?: true;
   divider?: boolean;
   editable?: boolean;
+  fade?: boolean;
   format?: string;
   hidden?: boolean;
   index?: number;
@@ -28,7 +29,6 @@ export interface SequenceItemInfo {
   maxChars?: number;
   monospaced?: boolean;
   name?: string;
-  opacity?: number | string;
   selected?: boolean;
   sign?: boolean;
   sizer?: string;
@@ -65,8 +65,8 @@ const NO_SELECTION = -1;
 const SPIN_UP      = -2;
 const SPIN_DOWN    = -3;
 
-const alternateClipboard = navigator.clipboard == null || isAndroid() || isChromeOS() || isIOS() || isSamsung();
-const checkForRepeatedKeyTimestamps = isIOS();
+const alternateClipboard = navigator.clipboard == null || isAndroid() || isChromeOS() || isIOS14OrEarlier() || isSamsung();
+const checkForRepeatedKeyTimestamps = isIOS14OrEarlier();
 const disableContentEditable = isEdge();
 const useHiddenInput = isAndroid() || isChromeOS();
 
@@ -120,9 +120,8 @@ const ERROR_BACKGROUND     = 'tbw-error-background';
 const INDICATOR_TEXT       = 'tbw-indicator-text';
 const NORMAL_BACKGROUND    = 'tbw-normal-background';
 const NORMAL_TEXT          = 'tbw-normal-text';
-const SELECTED_BACKGROUND  = 'tbw-selected-background';
+// const SELECTED_BACKGROUND  = 'tbw-selected-background';
 const SELECTED_TEXT        = 'tbw-selected-text';
-const SPINNER_FILL         = 'tbw-spinner-fill';
 const VIEW_ONLY_TEXT       = 'tbw-view-only-text';
 const VIEW_ONLY_BACKGROUND = 'tbw-view-only-background';
 const WARNING_BACKGROUND   = 'tbw-warning-background';
@@ -203,6 +202,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   // DigitSequenceEditorDirective specifics
 
+  private static defaultCursorRate: string | null = null;
   private static headerStartX = 0;
   private static headerStartY = 0;
   private static instances = new Set<DigitSequenceEditorDirective<any>>();
@@ -211,6 +211,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private static mutationObserver: MutationObserver;
   private static pasteable: DigitSequenceEditorDirective<any>;
 
+  static setDefaultCursorRate(value: number | string | null | undefined): void {
+    this.defaultCursorRate = value && isString(value) ? value : (isNumber(value) ? value + 'ms' : null);
+  }
+
   protected static dragStartsActive = false;
 
   static touchHasOccurred = false;
@@ -218,7 +222,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private activeSpinner = NO_SELECTION;
   private clickTimer: Subscription;
   private confirmTimer: Subscription;
-  private darkMode = false;
   private errorTimer: Subscription;
   private firstTouchPoint: Point;
   private focusStretchTimer: any;
@@ -237,6 +240,8 @@ export abstract class DigitSequenceEditorDirective<T> implements
   private warningTimer: Subscription;
 
   protected _blank = false;
+  protected _cursorRate: string | null = null;
+  protected darkMode = false;
   protected emSizer: HTMLElement;
   protected _floating = false;
   protected hiddenInput: HTMLInputElement;
@@ -473,6 +478,11 @@ export abstract class DigitSequenceEditorDirective<T> implements
   }
 
   // DigitSequenceEditorDirective specifics
+
+  get cursorRate(): number | string | null | undefined { return this._cursorRate || DigitSequenceEditorDirective.defaultCursorRate; }
+  @Input() set cursorRate(value: number | string | null | undefined) {
+    this._cursorRate = value && isString(value) ? value : (isNumber(value) ? value + 'ms' : value);
+  }
 
   get blank(): boolean | string { return this._blank; }
   @Input() set blank(newValue: boolean | string) {
@@ -750,14 +760,27 @@ export abstract class DigitSequenceEditorDirective<T> implements
       return NORMAL_BACKGROUND;
   }
 
-  getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
+  isSelected(item?: SequenceItemInfo, index = item?.index): boolean {
     const showFocus = (this.showFocus || !!this.focusStretchTimer);
 
-    if (!this._disabled && showFocus && !this.selectionHidden &&
-        ((item && index === this.selection) || (!item && this.activeSpinner === index)))
-      return SELECTED_BACKGROUND;
+    return (!this._disabled && showFocus && !this.selectionHidden &&
+        ((item && index === this.selection) || (!item && this.activeSpinner === index)));
+  }
+
+  getCursorMode(item?: SequenceItemInfo, index = item?.index): string {
+    if (!this.isSelected(item, index))
+      return '';
+    else if (this.cursorRate === '0ms')
+      return 'tbw-dse-steady-cursor';
+    else
+      return 'tbw-dse-blinking-cursor';
+  }
+
+  getBackgroundColorForItem(item?: SequenceItemInfo, index = item?.index): string {
+    if (this.isSelected(item, index))
+      return index === SPIN_UP || index === SPIN_DOWN ? 'tbw-spinner-fill-active' : 'tbw-transparent';
     else if (!this._disabled && !this.viewOnly && (index === SPIN_UP || index === SPIN_DOWN))
-      return SPINNER_FILL;
+      return 'tbw-spinner-fill';
     else
       return 'tbw-transparent';
   }
@@ -1455,8 +1478,10 @@ export abstract class DigitSequenceEditorDirective<T> implements
         break;
 
       default:
-        if (key && key.length === 1)
+        if (key && key.length === 1) {
+          this.restartCursorAnimation();
           this.digitTyped(key.charCodeAt(0), key);
+        }
     }
 
     if (advance)
@@ -1531,11 +1556,24 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
+  protected restartCursorAnimation(): void {
+    const cursor = this.wrapper.querySelector('.tbw-dse-blinking-cursor') as HTMLElement;
+
+    if (cursor) {
+      cursor.style.animation = 'none';
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions, chai-friendly/no-unused-expressions
+      cursor.offsetHeight; /* trigger reflow */
+      cursor.style.animation = null;
+    }
+  }
+
   protected increment(): void {
+    this.restartCursorAnimation();
     this.roll(1);
   }
 
   protected decrement(): void {
+    this.restartCursorAnimation();
     this.roll(-1);
   }
 

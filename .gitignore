@@ -33,6 +33,7 @@ chrome-profiler-events*.json
 .history/*
 
 # misc
+/.angular
 /.sass-cache
 /connect.lock
 /coverage

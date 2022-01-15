@@ -2,8 +2,8 @@ import { ChangeDetectorRef, Component, EventEmitter, forwardRef, Input, NgZone, 
 import { AbstractControl, NG_VALIDATORS, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import ttime, {
-  DateAndTime, DateTime, DateTimeField, defaultLocale, getISOFormatDate, hasIntlDateTime, newDateTimeFormat,
-  parseISODateTime, Timezone, utToTaiMillis, YMDDate
+  DateAndTime, DateTime, DateTimeField, defaultLocale, getISOFormatDate, hasIntlDateTime,
+  newDateTimeFormat, parseISODateTime, Timezone, utToTaiMillis, YMDDate
 } from '@tubular/time';
 import { abs, ceil, floor, max, min, mod } from '@tubular/math';
 import {
@@ -45,11 +45,14 @@ export interface TimeEditorOptions {
   yearStyle?: YearStyle | string[];
 }
 
+export type MixedTimeEditorOptions = string | TimeEditorOptions | (string | TimeEditorOptions)[];
+
 const OCC2 = '\u20092\u2009';
 const ISO_T = '\u200AT\u200A';
 const NO_BREAK_SPACE = '\u00A0';
 const platformNativeDateTime = (isIOS() || (isAndroid() && isChrome()));
 const RTL_CHECK = /[\u0590-\u07BF\u0860-\u08FF\u200F\u2067\u202B\u202E\uFB1D-\uFDCF\uFDF0-\uFDFF\uFE70-\uFEFF]/;
+const DAY_MILLIS = 86_400_000;
 
 export const OPTIONS_DATE_ONLY: TimeEditorOptions = {
   dateTimeStyle: DateTimeStyle.DATE_ONLY,
@@ -228,8 +231,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return this.getValueAsText();
   }
 
-  get options(): string | TimeEditorOptions | (string | TimeEditorOptions)[] { return this._options; }
-  @Input() set options(newValue: string | TimeEditorOptions | (string | TimeEditorOptions)[]) {
+  get options(): MixedTimeEditorOptions { return this._options; }
+  @Input() set options(newValue: MixedTimeEditorOptions) {
     if (isArray(newValue)) {
       const orig = newValue;
 
@@ -251,9 +254,16 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       newValue = namedOptions[newValue.toLowerCase()] ?? {};
 
     if (!isEqual(this._options, newValue)) {
+      const wasTimeOnly = (this._options.dateTimeStyle === DateTimeStyle.TIME_ONLY);
+
       this._options = clone(newValue);
       this.createDigits();
       this.createDisplayOrder();
+
+      if (!wasTimeOnly && this._options.dateTimeStyle === DateTimeStyle.TIME_ONLY &&
+          (this.value < 0 || this.value >= DAY_MILLIS)) {
+        setTimeout(() => this.value = mod(this.value, DAY_MILLIS));
+      }
     }
   }
 
@@ -467,6 +477,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
 
     if ((tai && this.dateTime.taiMillis !== newValue) || (!tai && this.dateTime.utcMillis !== newValue)) {
+      if (this._options.dateTimeStyle === DateTimeStyle.TIME_ONLY)
+        newValue = mod(newValue, DAY_MILLIS);
+
       if (tai)
         this.dateTime.taiMillis = newValue;
       else
@@ -847,7 +860,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
         case 'month': this.monthIndex = i; addDigits(2, 'M'); break;
         case 'day': this.dayIndex = i; addDigits(2, 'D'); break;
         case 'dts': this.items.push({ value: dts, static: true,
-                                      opacity: dts === ISO_T ? 0.15 : 1,
+                                      fade: dts === ISO_T,
                                       width: dts === NO_BREAK_SPACE ?  '0.6em' : undefined }); break;
         case 'hour': this.hourIndex = i; addDigits(2, steps.includes('amPm') ? 'h' : 'H'); break;
         case 'aps': this.items.push({ value: NO_BREAK_SPACE, static: true, width: '0.25em' }); break;
@@ -1055,7 +1068,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.outOfRange = outOfRange;
 
     if (reUpdate && delta === 0) {
-      timer().subscribe(() => {
+      timer(0).subscribe(() => {
         this.errorFlash();
         dateTime.wallTime = wallTime;
         this.reportValueChange();
@@ -1098,7 +1111,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
     this.setDigits(this.minuteIndex, 2, wallTime.min, field);
     this.setDigits(this.secondIndex, 2, wallTime.sec, field);
-    this.setDigits(this.millisIndex, this._options.millisDigits, wallTime.millis, field);
+    this.setDigits(this.millisIndex, this._options.millisDigits,
+      wallTime.millis / 10 ** (3 - this._options.millisDigits), field);
 
     if (this.occIndex >= 0)
       i[this.occIndex][field] = (dateTime.wallTime.occurrence === 2 ? OCC2 : NO_BREAK_SPACE);
@@ -1231,7 +1245,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
     else if (this.millisIndex >= 0 && this.millisIndex <= sel && sel < this.millisIndex + mDigits) {
       field = tai ? DateTimeField.MILLI_TAI : DateTimeField.MILLI;
-      change = 10 ** (5 - mDigits + this.millisIndex - sel);
+      change = 10 ** (2 + this.millisIndex - sel);
     }
     else if (this.secondIndex >= 0 && (sel === this.secondIndex || sel === this.secondIndex + 1)) {
       field = tai ? DateTimeField.SECOND_TAI : DateTimeField.SECOND;
