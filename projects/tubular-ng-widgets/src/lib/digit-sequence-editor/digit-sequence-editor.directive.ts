@@ -190,6 +190,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   protected changed = noop;
   protected _disabled = false;
+  protected _disableMobileKeyboard = false;
   protected _fakeUrl = false;
   protected lastValue: T = null;
   protected touched = noop;
@@ -508,6 +509,17 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
   }
 
+  get disableMobileKeyboard(): boolean | string { return this._disableMobileKeyboard; }
+  @Input() set disableMobileKeyboard(newValue: boolean | string) {
+    if (isString(newValue))
+      newValue = toBoolean(newValue, false, true);
+
+    if (this._disableMobileKeyboard !== newValue) {
+      this._disableMobileKeyboard = newValue;
+      this.adjustState();
+    }
+  }
+
   get viewOnly(): boolean | string { return this._viewOnly; }
   @Input() set viewOnly(newValue: boolean | string) {
     if (isString(newValue))
@@ -517,7 +529,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.adjustState();
   }
 
-  get inputOff(): boolean { return this._disabled || this._viewOnly || this._floating; }
+  get inputOff(): boolean { return this._disabled || this._viewOnly || this._floating || this._disableMobileKeyboard; }
 
   get validateAll(): boolean | string { return this._validateAll; }
   @Input() set validateAll(newValue: boolean | string) {
@@ -1262,7 +1274,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     }
 
     // With Android many on-screen keyboard key events carry no useful information about the key that was
-    // pressed. They instead match the following test and we have to grab a character out of the hidden
+    // pressed. They instead match the following test, and we have to grab a character out of the hidden
     // input field to find out what was actually typed in.
     // noinspection JSDeprecatedSymbols (for `keyCode`)
     if (this.hiddenInput && key === 'Unidentified' && evt.keyCode === 229) {
@@ -1605,7 +1617,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   protected adjustState(): void {
     if (this.hiddenInput) {
-      const disabled = (this._floating || this._disabled || this._viewOnly);
+      const disabled = (this._floating || this._disabled || this._viewOnly || this._disableMobileKeyboard);
       this.hiddenInput.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);
       this.hiddenInput.disabled = disabled;
       this.hiddenInput.readOnly = disabled;
