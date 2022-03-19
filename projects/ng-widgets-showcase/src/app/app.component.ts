@@ -17,6 +17,7 @@ const defaultSettings = {
   customStyle:'0',
   customYear: 'false',
   darkMode: true,
+  disableMobileKeyboard: false,
   float: false,
   floatPosition: null as Point,
   native: false,
@@ -61,6 +62,7 @@ export class AppComponent {
   customYear = 'false';
   darkMode = true;
   date = this.initDate.toIsoString(10);
+  disableMobileKeyboard = false;
   float = false;
   floatPosition: Point = null;
   localeGood = true;
