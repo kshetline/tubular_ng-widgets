@@ -24,14 +24,19 @@
       <tbw-time-editor tai
           [options]="{ showDstSymbol: true, showOccurrence: true, showSeconds: true, showUtcOffset: true, twoDigitYear: false }"
           [(ngModel)]="time"
-          [nativeDateTime]="native"></tbw-time-editor>
+          [disableMobileKeyboard]="disableMobileKeyboard"
+          [nativeDateTime]="native && !disableMobileKeyboard"></tbw-time-editor>
       <span class="description">Locale time, with occurrence, UTC offset and DST symbol</span>
       <div>
           <button (click)="setCurrentTime()">Set now</button>
           <button (click)="time = 1636264837000">Sample time</button>
           <button (click)="time = 1483228836000">Sample leap second</button>
-          <label *ngIf="mobile"><input id="native" type="checkbox" [ngModel]="native"
-              (change)="native = settingsUpdated() && $any($event.target).checked"/>Mobile native date/time</label><br>
+          <label *ngIf="mobile"><input type="checkbox" class="narrow"
+              [(ngModel)]="disableMobileKeyboard" (change)="settingsUpdated()">Disable mobile keyboard</label>
+          <label *ngIf="mobile" [style.opacity]="disableMobileKeyboard ? '0.33' : '1'"><input id="native" type="checkbox" class="narrow"
+              [ngModel]="native" [disabled]="disableMobileKeyboard"
+              (change)="native = settingsUpdated() && $any($event.target).checked"/>Mobile native date/time</label>
+          <br>
       </div>
       <span>&nbsp;</span>
 

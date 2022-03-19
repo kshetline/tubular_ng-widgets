@@ -48,6 +48,10 @@
 
   input[type='checkbox'] {
     margin-left: 2em;
+
+    &.narrow {
+      margin-left: 0.5em;
+    }
   }
 
   tbw-time-editor {

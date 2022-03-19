@@ -349,6 +349,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     this.localTime.setAttribute('min', this.localTimeMin);
     this.localTime.setAttribute('max', this.localTimeMax);
     this.localTime.setAttribute('step', this.timeStep);
+    this.localTime.disabled = this.disableMobileKeyboard as boolean;
     this.localTime.style.position = 'absolute';
     this.localTime.style.opacity = '0';
     (this.localTime.style as any)['caret-color'] = 'transparent';
@@ -391,7 +392,8 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     super.adjustState();
 
     if (this.localTime) {
-      const disabled = (this._disabled || this._viewOnly || this._floating || !this.useAlternateTouchHandling);
+      const disabled = (this._disabled || this._viewOnly || this._floating || this._disableMobileKeyboard ||
+        !this.useAlternateTouchHandling);
 
       this.localTime.disabled = disabled;
       this.localTime.setAttribute('tabindex', disabled ? '-1' : this.tabindex);
@@ -433,7 +435,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     if (this.localTimeFormat !== format || this.timeStep !== timeStep) {
       // Changing the format of the input (using the "type" attribute) sets off a number of updates
       // that don't stabilize very well if we leave it up to Angular's change detection process to do
-      // all of the updating, so we'll update all of the changing input attributes and input value
+      // all the updating, so we'll update all the changing input attributes and input value
       // directly, all in one go.
       this.localTimeFormat = format;
       this.timeStep = timeStep;
