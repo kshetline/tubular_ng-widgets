@@ -164,9 +164,9 @@ export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
     else {
       this.innerStyle = {
         transform: `scale(${this.scale})`,
-        'transform-origin': 'top center',
+        'transform-origin': 'top center', // eslint-disable-line @typescript-eslint/naming-convention
         margin: `0 ${this.marginX}px ${this.marginY}px ${this.marginX}px`,
-        'max-width': `${scalingWidth}px`
+        'max-width': `${scalingWidth}px` // eslint-disable-line @typescript-eslint/naming-convention
       };
       this.outerStyle.padding = '0.05px'; // prevents margin collapse
     }

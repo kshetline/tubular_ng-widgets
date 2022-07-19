@@ -544,7 +544,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
         this._options.angleStyle === AngleStyle.DD || this._options.angleStyle === AngleStyle.DDD)
       return this.value.toString();
     else
-      return this.items.map(item => item.value.toString()).join('');
+      return this.items.map(item => (item.value ?? '').toString()).join('');
   }
 
   private parseText(text: string): number {
