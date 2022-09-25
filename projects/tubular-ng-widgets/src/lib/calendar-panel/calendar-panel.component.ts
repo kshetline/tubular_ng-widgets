@@ -2,7 +2,9 @@ import { Component, EventEmitter, forwardRef, Input, OnDestroy, Output } from '@
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { div_rd, max, min } from '@tubular/math';
 import { CalendarType, DateTime, defaultLocale, getStartOfWeek, GregorianChange, Timezone, YMDDate } from '@tubular/time';
-import { clone, convertDigits, convertDigitsToAscii, isEqual, isObject, isString, noop, toBoolean, toNumber } from '@tubular/util';
+import {
+  clone, convertDigits, convertDigitsToAscii, first, isArray, isEqual, isObject, isString, noop, toBoolean, toNumber
+} from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { SafeHtml } from '@angular/platform-browser';
 
@@ -114,8 +116,15 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
       const base: string[] = [];
       convertDigitsToAscii(this.dateTime.format('D'), base);
       this.digitBase = base[0];
+      this.updateDayHeadings();
       this.updateCalendar();
     }
+  }
+
+  get textDirection(): number {
+    const locale = isArray(this.locale) ? first(this.locale) : this.locale;
+
+    return /^(ar|arc|dv|fa|ha|he|khw|ks|ku|ps|ur|yi)\b/i.test(locale) ? -1 : 1;
   }
 
   get gregorianChangeDate(): GregorianChange { return this._gregorianChange; }
