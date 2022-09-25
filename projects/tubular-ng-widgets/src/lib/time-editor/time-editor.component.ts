@@ -79,10 +79,20 @@ export const OPTIONS_ISO_DATE: TimeEditorOptions = {
   twoDigitYear: false
 };
 
+export const OPTIONS_ISO_TIME: TimeEditorOptions = {
+  dateTimeStyle: DateTimeStyle.TIME_ONLY,
+  decimal: '.',
+  hourStyle: HourStyle.HOURS_24,
+  numbering: 'latn',
+  showSeconds: true,
+  timeFieldSeparator: ':',
+};
+
 const namedOptions: Record<string, TimeEditorOptions> = {
   date_only: OPTIONS_DATE_ONLY,
   iso: OPTIONS_ISO,
-  iso_date: OPTIONS_ISO_DATE
+  iso_date: OPTIONS_ISO_DATE,
+  iso_time: OPTIONS_ISO_TIME
 };
 
 type TimeFormat = 'date' | 'time' | 'datetime-local';
@@ -1395,8 +1405,37 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
 
     if (newValue !== origValue || this.outOfRange) {
       i[sel].value = newValue;
+      let wallTime = this.getWallTimeFromDigits();
 
-      const wallTime = this.getWallTimeFromDigits();
+      if (this.yearIndex >= 0 &&
+          (sel === this.signIndex || (this.yearIndex <= sel && sel < this.yearIndex + this.yearDigits))) {
+        const yi = this.yearIndex;
+        const yd = this.yearDigits;
+        const len = sel - yi + 2;
+        const yv = this.getDigits(yi, yd);
+        const yp = ((yv >= 0 ? '+' : '-') + abs(yv).toString().padStart(yd, '0')).substring(0, len);
+        let yearTarget: number;
+        let timeTarget: number | DateAndTime;
+
+        if (this.minLimit.year != null && wallTime.y < this.minLimit.year) {
+          yearTarget = this.minLimit.year;
+          timeTarget = this.minLimit.wallTime ?? this.minLimit.utc;
+        }
+        else if (this.maxLimit.year != null && wallTime.y > this.maxLimit.year) {
+          yearTarget = this.maxLimit.year;
+          timeTarget = this.maxLimit.wallTime ?? this.maxLimit.utc;
+        }
+
+        if (yearTarget != null) {
+          const tp = ((yearTarget >= 0 ? '+' : '-') + abs(yearTarget).toString().padStart(yd, '0')).substring(0, len);
+
+          if (yp === tp) {
+            this.updateDigits(new DateTime(timeTarget, this.timezone));
+            wallTime = this.getWallTimeFromDigits();
+          }
+        }
+      }
+
       const wasLeap = (this._tai && wallTime.sec >= 60);
       let extraSec = (wasLeap ? 1 : 0);
 

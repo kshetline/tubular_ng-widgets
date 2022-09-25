@@ -1,12 +1,12 @@
 {
   "name": "@tubular/ng-widgets",
-  "version": "2.1.0",
+  "version": "2.2.2",
   "peerDependencies": {
-    "@angular/common": "^13.0.0",
-    "@angular/core": "^13.0.0",
+    "@angular/common": ">13.0.0",
+    "@angular/core": ">13.0.0",
     "@tubular/math": "^3.1.0",
-    "@tubular/time": "^3.8.0",
-    "@tubular/util": "^4.5.1",
+    "@tubular/time": "^3.8.6",
+    "@tubular/util": "^4.13.0",
     "detect-resize": "^0.1.5",
     "lodash": "^4.17.21"
   },

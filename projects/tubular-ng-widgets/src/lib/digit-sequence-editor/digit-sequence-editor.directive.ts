@@ -1619,6 +1619,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this.hiddenInput) {
       const disabled = (this._floating || this._disabled || this._viewOnly || this._disableMobileKeyboard);
       this.hiddenInput.setAttribute('tabindex', this.disabled ? '-1' : this.tabindex);
+      this.hiddenInput.inputMode = this.inputOff ? 'none' : this._fakeUrl ? 'url' : 'decimal';
       this.hiddenInput.disabled = disabled;
       this.hiddenInput.readOnly = disabled;
     }

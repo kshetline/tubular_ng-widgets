@@ -2,7 +2,7 @@
   <div class="top-line">
     <label [style.margin-right]="'1em'"><input type="checkbox"
         [(ngModel)]="darkMode" (change)="settingsUpdated()">Dark mode</label>
-    <tbw-angle-editor></tbw-angle-editor>
+    <tbw-angle-editor [viewOnly]="viewOnly"></tbw-angle-editor>
     <tbw-angle-editor [options]="{ angleStyle: DD_MM, compass: true }"></tbw-angle-editor>
     <tbw-angle-editor [(ngModel)]="angle" [options]="{ compass: true, copyDecimal: true }"></tbw-angle-editor>
     <tbw-angle-editor [(ngModel)]="angle" [options]="{ unsigned: true }"></tbw-angle-editor>

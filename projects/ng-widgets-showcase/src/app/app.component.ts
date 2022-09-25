@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { DateAndTime, DateTime, newDateTimeFormat, Timezone, YMDDate } from '@tubular/time';
 import { clone, isAndroid, isEqual, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
-import { DateTimeStyle, HourStyle, TimeEditorOptions, YearStyle }
+import { DateTimeStyle, HourStyle, OPTIONS_ISO, OPTIONS_ISO_DATE, OPTIONS_ISO_TIME, TimeEditorOptions, YearStyle }
   from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
 import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
 import { AngleStyle } from '../../../tubular-ng-widgets/src/lib/angle-editor/angle-editor.component';
@@ -252,15 +252,32 @@ export class AppComponent {
   }
 
   getOptions(): TimeEditorOptions {
+    const style = toNumber(this.customStyle);
+    let yearStyle = toNumber(this.yearStyle);
+
+    if (this.customLocale?.toLowerCase() === 'iso') {
+      const options = clone(style === DateTimeStyle.DATE_ONLY ? OPTIONS_ISO_DATE :
+        style === DateTimeStyle.TIME_ONLY ? OPTIONS_ISO_TIME : OPTIONS_ISO);
+
+      if (yearStyle === YearStyle.AD_BC)
+        yearStyle = YearStyle.SIGNED;
+
+      return Object.assign(options, {
+        millisDigits: this.millis,
+        showSeconds: this.showSeconds,
+        yearStyle
+      });
+    }
+
     return {
-      dateTimeStyle: toNumber(this.customStyle),
+      dateTimeStyle: style,
       hourStyle: toNumber(this.customCycle),
       locale: this.customLocale,
       millisDigits: this.millis,
       numbering: this.numSystem || undefined,
       showSeconds: this.showSeconds,
       twoDigitYear: this.customYear ? toBoolean(this.customYear) : undefined,
-      yearStyle: toNumber(this.yearStyle)
+      yearStyle
     };
   }
 
