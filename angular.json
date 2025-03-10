@@ -152,7 +152,6 @@
       }
     }
   },
-  "defaultProject": "tubular-ng-widgets",
   "cli": {
     "analytics": false
   }
