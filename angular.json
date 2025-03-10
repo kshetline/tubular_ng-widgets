@@ -108,10 +108,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "ng-widgets-showcase:build:production"
+              "buildTarget": "ng-widgets-showcase:build:production"
             },
             "development": {
-              "browserTarget": "ng-widgets-showcase:build:development"
+              "buildTarget": "ng-widgets-showcase:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -119,7 +119,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "ng-widgets-showcase:build"
+            "buildTarget": "ng-widgets-showcase:build"
           }
         },
         "test": {

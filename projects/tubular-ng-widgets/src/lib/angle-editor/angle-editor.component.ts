@@ -509,8 +509,8 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       return;
     }
 
-    if (((sel === this.minuteIndex || sel === this.secondIndex) && newValue > 5) ||
-        (sel === this.degreeIndex && this.leftDigits > 2 && newValue > (this.wrapAround ? 1 : 3))) {
+    if (((sel === this.minuteIndex || sel === this.secondIndex) && (newValue as number) > 5) ||
+        (sel === this.degreeIndex && this.leftDigits > 2 && (newValue as number) > (this.wrapAround ? 1 : 3))) {
       this.errorFlash();
       return;
     }
