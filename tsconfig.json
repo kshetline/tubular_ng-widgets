@@ -13,9 +13,12 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2020",
+    "target": "ES2022",
     "module": "es2020",
-    "types": ["jasmine", "node"],
+    "types": [
+      "jasmine",
+      "node"
+    ],
     "lib": [
       "es2020",
       "dom"
@@ -25,7 +28,8 @@
         "dist/tubular-ng-widgets/tubular-ng-widgets",
         "dist/tubular-ng-widgets"
       ]
-    }
+    },
+    "useDefineForClassFields": false
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
