@@ -125,9 +125,8 @@
         [options]="{ locale: 'de' }"
         timezone="Europe/Berlin"
         [(ngModel)]="time"></tbw-time-editor>
-    <!-- TODO: Change code below when zh locale stops crashing iOS 15+-->
     <tbw-time-editor tai
-        [options]="{ locale: isIOS ? 'ja' : 'zh' }"
+        [options]="{ locale: 'zh' }"
         timezone="Asia/Shanghai"
         [(ngModel)]="time"></tbw-time-editor>
 
