@@ -7,6 +7,7 @@ import {
 } from '@tubular/util';
 import { Subscription, timer } from 'rxjs';
 import { SafeHtml } from '@angular/platform-browser';
+import { NgClass, NgTemplateOutlet } from '@angular/common';
 
 const CLICK_REPEAT_DELAY = 500;
 const CLICK_REPEAT_RATE  = 100;
@@ -31,7 +32,9 @@ const multiplier = [0, 1, 1, 10, 100, 1000];
   selector: 'tbw-calendar',
   templateUrl: './calendar-panel.component.html',
   styleUrls: ['./calendar-panel.component.scss'],
-  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CalendarPanelComponent), multi: true }]
+  imports: [NgClass, NgTemplateOutlet],
+  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CalendarPanelComponent), multi: true }],
+  standalone: true
 })
 export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   private baseValue = [0, 0, 0];
@@ -214,7 +217,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     const year  = this.ymd?.y ?? 2021;
     const month = this.ymd?.m ?? 1;
     const day   = this.ymd?.d ?? 1;
-    const calendar = this.dateTime.getCalendarMonth(year, month, this._firstDay);
+    const calendar = this.dateTime.getCalendarMonth(year, month, this._firstDay) as CalendarDateInfo[];
 
     this.calendar = [];
     calendar.forEach((date: CalendarDateInfo, index: number) => {

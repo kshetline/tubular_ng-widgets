@@ -7,7 +7,7 @@
       "projectType": "library",
       "root": "projects/tubular-ng-widgets",
       "sourceRoot": "projects/tubular-ng-widgets/src",
-      "prefix": "lib",
+      "prefix": "tbw",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
@@ -77,8 +77,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
                 }
               ],
               "fileReplacements": [

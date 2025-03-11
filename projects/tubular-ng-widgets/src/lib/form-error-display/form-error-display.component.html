@@ -1,5 +1,7 @@
-<ul class="tbw-fed-error-list"
-  *ngIf="shouldShowErrors()">
-  <li class="tbw-warning-text tbw-fed-error"
-    *ngFor="let error of listOfErrors()">{{error}}</li>
-</ul>
+@if (shouldShowErrors()) {
+  <ul class="tbw-fed-error-list">
+  @for (error of listOfErrors(); track error) {
+    <li class="tbw-warning-text tbw-fed-error">{{error}}</li>
+  }
+  </ul>
+}

@@ -12,7 +12,7 @@ import { getClientXYForTouchEvent, getPageXYForTouchEvent } from '../util/touch-
 import { AbstractControl, ControlValueAccessor, Validator } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
-export interface SequenceItemInfo {
+export interface SequenceItemInfo extends Record<string, any> {
   alt_swipeAbove?: string;
   alt_swipeBelow?: string;
   alt_value?: string;
@@ -173,8 +173,7 @@ export function isNilOrBlank(v: any): boolean {
 // eslint-disable-next-line prefer-const
 let This: typeof DigitSequenceEditorDirective;
 
-// @dynamic
-@Directive()
+@Directive({ standalone: true })
 export abstract class DigitSequenceEditorDirective<T> implements
     AfterViewInit, ControlValueAccessor, OnInit, OnDestroy, Validator {
   // Template accessibility
@@ -906,7 +905,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     if (this.focusStretchTimer)
       clearTimeout(this.focusStretchTimer);
 
-    this.focusStretchTimer = setTimeout(() => this.focusStretchTimer = undefined, LOSE_FOCUS_DELAY);
+    this.focusStretchTimer = setTimeout((): void => this.focusStretchTimer = undefined, LOSE_FOCUS_DELAY);
     this.wrapper.focus();
   }
 

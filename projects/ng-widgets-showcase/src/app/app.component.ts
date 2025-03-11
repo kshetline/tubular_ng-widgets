@@ -1,13 +1,20 @@
 import { Component } from '@angular/core';
-import { DateAndTime, DateTime, newDateTimeFormat, Timezone, YMDDate } from '@tubular/time';
-import { clone, isAndroid, isEqual, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
-import { DateTimeStyle, HourStyle, OPTIONS_ISO, OPTIONS_ISO_DATE, OPTIONS_ISO_TIME, TimeEditorOptions, YearStyle }
+import { DateTimeStyle, HourStyle, OPTIONS_ISO, OPTIONS_ISO_DATE, OPTIONS_ISO_TIME, TimeEditorComponent, TimeEditorOptions, YearStyle }
   from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor.component';
-import { TimeEditorLimit } from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
-import { AngleStyle } from '../../../tubular-ng-widgets/src/lib/angle-editor/angle-editor.component';
+import { AngleEditorComponent, AngleStyle }
+  from '../../../tubular-ng-widgets/src/lib/angle-editor/angle-editor.component';
+import { NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { FormErrorDisplayComponent }
+  from '../../../tubular-ng-widgets/src/lib/form-error-display/form-error-display.component';
+import { DateAndTime, DateTime, newDateTimeFormat, Timezone, YMDDate } from '@tubular/time';
 import { max, Point } from '@tubular/math';
-import { CalendarDateInfo } from '../../../tubular-ng-widgets/src/lib/calendar-panel/calendar-panel.component';
+import { clone, isAndroid, isEqual, isIOS, isString, toBoolean, toNumber } from '@tubular/util';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { TimeEditorLimit }
+  from '../../../tubular-ng-widgets/src/lib/time-editor/time-editor-limit';
+import { CalendarDateInfo, CalendarPanelComponent } from '../../../tubular-ng-widgets/src/lib/calendar-panel/calendar-panel.component';
+import { ShrinkWrapComponent } from '../../../tubular-ng-widgets/src/lib/shrink-wrap/shrink-wrap.component';
 
 const intl_DisplayNames = (Intl as any).DisplayNames;
 const mobile = isAndroid() || isIOS();
@@ -30,8 +37,11 @@ const defaultSettings = {
 
 @Component({
   selector: 'app-root',
+  imports: [AngleEditorComponent, CalendarPanelComponent, FormErrorDisplayComponent, FormsModule, NgClass,
+            ShrinkWrapComponent, TimeEditorComponent],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrl: './app.component.scss',
+  standalone: true
 })
 export class AppComponent {
   AD_BC = YearStyle.AD_BC;
@@ -42,7 +52,6 @@ export class AppComponent {
   POSITIVE_ONLY = YearStyle.POSITIVE_ONLY;
   SIGNED = YearStyle.SIGNED;
   TIME_ONLY = DateTimeStyle.TIME_ONLY;
-  isIOS = isIOS();
 
   private _calendarDate: YMDDate;
   private _customLocale = navigator.language;

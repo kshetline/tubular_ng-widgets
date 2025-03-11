@@ -9,4 +9,3 @@ export * from './lib/form-error-display/form-error-display.component';
 export * from './lib/shrink-wrap/shrink-wrap.component';
 export * from './lib/time-editor/time-editor.component';
 export * from './lib/time-editor/time-editor-limit';
-export * from './lib/tubular-ng-widgets.module';

@@ -9,7 +9,8 @@ let This: typeof FormErrorDisplayComponent;
 @Component({
   selector: 'tbw-form-error-display',
   templateUrl: './form-error-display.component.html',
-  styleUrls: ['./form-error-display.component.scss']
+  styleUrls: ['./form-error-display.component.scss'],
+  standalone: true
 })
 export class FormErrorDisplayComponent {
   private static readonly errorMessages = {
@@ -22,7 +23,7 @@ export class FormErrorDisplayComponent {
     'minNumber': (params: any): string => `The minimum allowed value is ${params.min}`,
     'max': (params: any): string => `The maximum allowed value is ${params.max}`,
     'maxNumber': (params: any): string => `The maximum allowed value is ${params.max}`,
-  };
+  } as Record<string, Function>;
 
   @Input() control: AbstractControlDirective | AbstractControl;
 

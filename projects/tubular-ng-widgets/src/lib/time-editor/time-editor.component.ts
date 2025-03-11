@@ -16,6 +16,7 @@ import {
 } from '../digit-sequence-editor/digit-sequence-editor.directive';
 import { TimeEditorLimit } from './time-editor-limit';
 import parse = ttime.parse;
+import { NgClass, NgStyle } from '@angular/common';
 
 export enum DateFieldOrder { PER_LOCALE, YMD, DMY, MDY }
 export enum DateTimeStyle { DATE_AND_TIME, DATE_ONLY, TIME_ONLY }
@@ -104,7 +105,9 @@ type TimeFormat = 'date' | 'time' | 'datetime-local';
   templateUrl: '../digit-sequence-editor/digit-sequence-editor.directive.html',
   styleUrls: ['../digit-sequence-editor/digit-sequence-editor.directive.scss', './time-editor.component.scss'],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TimeEditorComponent), multi: true },
-              { provide: NG_VALIDATORS, useExisting: forwardRef(() => TimeEditorComponent), multi: true }]
+              { provide: NG_VALIDATORS, useExisting: forwardRef(() => TimeEditorComponent), multi: true }],
+  imports: [NgClass, NgStyle],
+  standalone: true
 })
 export class TimeEditorComponent extends DigitSequenceEditorDirective<number> implements OnInit {
   static get supportsNativeDateTime(): boolean { return platformNativeDateTime; }
@@ -163,8 +166,9 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     this.useAlternateTouchHandling = false;
   }
 
-  get value(): number { return this._tai ? this.dateTime.taiMillis : this.dateTime.utcMillis; }
-  set value(newValue: number) {
+  override get value(): number { return this._tai ? this.dateTime.taiMillis : this.dateTime.utcMillis; }
+
+  override set value(newValue: number) {
     this.setValue(newValue, true);
   }
 
@@ -192,7 +196,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
   }
 
-  protected validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
+  protected override validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
     if (this.outOfRange) {
       const year = this.dateTime.wallTime.year;
 
@@ -211,7 +215,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return null;
   }
 
-  protected applyPastedText(text: string): void {
+  protected override applyPastedText(text: string): void {
     const parsed = this.parseText(text);
 
     if (parsed == null) {
@@ -237,7 +241,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.confirmFlash();
   }
 
-  protected getClipboardText(): string {
+  protected override getClipboardText(): string {
     return this.getValueAsText();
   }
 
@@ -329,7 +333,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
     super.ngOnInit();
     this.createLocalTimeInput();
     this.localTime?.setAttribute('tabindex', this.useAlternateTouchHandling ? this.tabindex : '-1');
@@ -375,18 +379,18 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     this.wrapper.setAttribute('tabindex', '-1');
   }
 
-  protected hasAComponentInFocus(): boolean {
+  protected override hasAComponentInFocus(): boolean {
     return super.hasAComponentInFocus() || this.hasLocalTimeFocus;
   }
 
-  protected checkFocus(): void {
+  protected override checkFocus(): void {
     if (this.initialNativeDateTimePrompt())
       return;
 
     super.checkFocus();
   }
 
-  protected gainedFocus(): void {
+  protected override gainedFocus(): void {
     if (this.initialNativeDateTimePrompt())
       return;
 
@@ -394,11 +398,11 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.localTime?.focus();
   }
 
-  protected lostFocus(): void {
+  protected override lostFocus(): void {
     this.touched();
   }
 
-  protected adjustState(): void {
+  protected override adjustState(): void {
     super.adjustState();
 
     if (this.localTime) {
@@ -410,12 +414,12 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
   }
 
-  onTouchStart(index: number, evt: TouchEvent): void {
+  override onTouchStart(index: number, evt: TouchEvent): void {
     if (!this.initialNativeDateTimePrompt(evt))
       super.onTouchStart(index, evt);
   }
 
-  onTouchMove(evt: TouchEvent): void {
+  override onTouchMove(evt: TouchEvent): void {
     if (!this.nativeDateTime)
       super.onTouchMove(evt);
   }
@@ -436,7 +440,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return false;
   }
 
-  protected onTouchStartAlternate(_index: number, _event: TouchEvent): void {
+  protected override onTouchStartAlternate(_index: number, _event: TouchEvent): void {
     const style = this._options.dateTimeStyle;
     const format: TimeFormat = (style === DateTimeStyle.TIME_ONLY ? 'time' :
       (style === DateTimeStyle.DATE_ONLY ? 'date' : 'datetime-local'));
@@ -464,7 +468,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     setTimeout(() => this.localTime.click(), 250);
   }
 
-  writeValue(newValue: number): void {
+  override writeValue(newValue: number): void {
     this.setValue(newValue);
   }
 
@@ -635,7 +639,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return DigitSequenceEditorDirective.touchHasOccurred && this.nativeDateTime && TimeEditorComponent.supportsNativeDateTime;
   }
 
-  protected createHiddenInput(): void {
+  protected override createHiddenInput(): void {
     super.createHiddenInput();
 
     if (this.hiddenInput)
@@ -990,7 +994,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     }
   }
 
-  getAlignmentForItem(item: SequenceItemInfo): string {
+  override getAlignmentForItem(item: SequenceItemInfo): string {
     if (this.rtl && ((this.amPmIndex >= 0 && item.index === this.amPmIndex) ||
                      (this.eraIndex >= 0 && item.index === this.eraIndex))) {
       const displayIndex = this.displayItems.findIndex(i => item === i);
@@ -1002,7 +1006,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     return super.getAlignmentForItem(item);
   }
 
-  getClassForItem(item: SequenceItemInfo): string {
+  override getClassForItem(item: SequenceItemInfo): string {
     let qlass: string;
 
     if (item?.name === '2occ')
@@ -1211,7 +1215,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
     };
   }
 
-  protected roll(sign: number, sel = this.selection, updateTime = true): void {
+  protected override roll(sign: number, sel = this.selection, updateTime = true): void {
     const dateTime = this.dateTime.clone();
     const origDate = this._date;
     const tai = this._tai;
@@ -1330,7 +1334,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       this.updateDigits(dateTime, sign);
   }
 
-  onKey(key: string): void {
+  override onKey(key: string): void {
     const keyLc = key.toLocaleLowerCase(this._options.locale);
     const editable = !this.disabled && !this.viewOnly;
 
@@ -1343,7 +1347,7 @@ export class TimeEditorComponent extends DigitSequenceEditorDirective<number> im
       super.onKey(key);
   }
 
-  protected digitTyped(charCode: number, key: string): void {
+  protected override digitTyped(charCode: number, key: string): void {
     const i = this.items;
     const origDay = this.dayIndex >= 0 ?
       (i[this.dayIndex].value as number) * 10 + (i[this.dayIndex + 1].value as number) : 0;

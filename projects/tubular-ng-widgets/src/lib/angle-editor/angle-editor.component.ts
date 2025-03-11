@@ -8,10 +8,11 @@ import {
 import { timer } from 'rxjs';
 import { abs, ceil, floor, mod, mod2, round, trunc } from '@tubular/math';
 import { defaultLocale, hasIntlDateTime } from '@tubular/time';
+import { NgClass, NgStyle } from '@angular/common';
 
 export enum AngleStyle { DD, DD_MM, DD_MM_SS, DDD, DDD_MM, DDD_MM_SS }
 
-export interface AngleEditorOptions {
+export interface AngleEditorOptions extends Record<string, any> {
   angleStyle?: AngleStyle;
   compass?: boolean | string[];
   copyDecimal?: boolean;
@@ -32,7 +33,9 @@ export interface AngleEditorOptions {
   templateUrl: '../digit-sequence-editor/digit-sequence-editor.directive.html',
   styleUrls: ['../digit-sequence-editor/digit-sequence-editor.directive.scss'],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => AngleEditorComponent), multi: true },
-              { provide: NG_VALIDATORS, useExisting: forwardRef(() => AngleEditorComponent), multi: true }]
+              { provide: NG_VALIDATORS, useExisting: forwardRef(() => AngleEditorComponent), multi: true }],
+  imports: [NgStyle, NgClass],
+  standalone: true
 })
 export class AngleEditorComponent extends DigitSequenceEditorDirective<number> implements OnInit {
   private angle = 0;
@@ -62,7 +65,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     super(zone, cdr, sanitizer);
   }
 
-  protected validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
+  protected override validateImpl(_value: number, _control?: AbstractControl): Record<string, any> {
     if (this.outOfRange) {
       if (this.value < this.minAngle)
         return { min: { min: this.min } };
@@ -73,7 +76,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     return null;
   }
 
-  protected applyPastedText(text: string): void {
+  protected override applyPastedText(text: string): void {
     const newValue = this.parseText(text);
 
     if (newValue == null || isNaN(newValue) || newValue < this.minAngle || newValue > this.maxAngle)
@@ -84,7 +87,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     }
   }
 
-  protected getClipboardText(): string {
+  protected override getClipboardText(): string {
     return this.getValueAsText();
   }
 
@@ -101,12 +104,12 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     }
   }
 
-  writeValue(newValue: number): void {
+  override writeValue(newValue: number): void {
     this.setValue(newValue);
   }
 
-  get value(): number { return this.angle; }
-  set value(newValue: number) {
+  override get value(): number { return this.angle; }
+  override set value(newValue: number) {
     this.setValue(newValue, true);
   }
 
@@ -280,7 +283,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
           break;
         case 'comp':
           this.compassIndex = i;
-          this.items.push({ value: opts.compass[1], editable: true, monospaced: true, sign: true,
+          this.items.push({ value: (opts.compass as string[])[1], editable: true, monospaced: true, sign: true,
                             sizer: this.compassPoints.join('\n') });
           break;
       }
@@ -292,7 +295,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     this.updateDigits();
   }
 
-  getClassForItem(item: SequenceItemInfo): string {
+  override getClassForItem(item: SequenceItemInfo): string {
     let qlass = super.getClassForItem(item) ?? '';
 
     if (this.outOfRange && item.editable)
@@ -401,7 +404,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     return sign * intAngle;
   }
 
-  protected roll(sign: number, sel = this.selection, updateAngle = true): void {
+  protected override roll(sign: number, sel = this.selection, updateAngle = true): void {
     let change = 0;
     let intAngle = this.intAngle;
     const div = this.angleDivisor;
@@ -453,7 +456,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
     this.flipSign = false;
   }
 
-  onKey(key: string): void {
+  override onKey(key: string): void {
     const keyLc = key.toLocaleLowerCase(this._options.locale);
     const editable = !this.disabled && !this.viewOnly;
 
@@ -465,7 +468,7 @@ export class AngleEditorComponent extends DigitSequenceEditorDirective<number> i
       super.onKey(key);
   }
 
-  protected digitTyped(charCode: number, key: string): void {
+  protected override digitTyped(charCode: number, key: string): void {
     const i = this.items;
     const sel = this.selection;
     const origValue = i[sel].value;

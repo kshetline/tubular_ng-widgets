@@ -31,11 +31,13 @@
           <button (click)="setCurrentTime()">Set now</button>
           <button (click)="time = 1636264837000">Sample time</button>
           <button (click)="time = 1483228836000">Sample leap second</button>
-          <label *ngIf="mobile"><input type="checkbox" class="narrow"
+          @if (mobile) {
+            <label><input type="checkbox" class="narrow"
               [(ngModel)]="disableMobileKeyboard" (change)="settingsUpdated()">Disable mobile keyboard</label>
-          <label *ngIf="mobile" [style.opacity]="disableMobileKeyboard ? '0.33' : '1'"><input id="native" type="checkbox" class="narrow"
+            <label [style.opacity]="disableMobileKeyboard ? '0.33' : '1'"><input id="native" type="checkbox" class="narrow"
               [ngModel]="native" [disabled]="disableMobileKeyboard"
               (change)="native = settingsUpdated() && $any($event.target).checked"/>Mobile native date/time</label>
+          }
           <br>
       </div>
       <span>&nbsp;</span>
@@ -47,14 +49,16 @@
             [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
             timezone="UTC"
             [(ngModel)]="time"></tbw-time-editor>
-        <tbw-time-editor *ngIf="float" tai
-            floating
-            showCloser
-            (close)="setFloat(false)"
-            [(position)]="floatPosition"
-            [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
-            timezone="UTC"
-            [(ngModel)]="time"></tbw-time-editor>
+        @if (float) {
+          <tbw-time-editor tai
+              floating
+              showCloser
+              (close)="setFloat(false)"
+              [(position)]="floatPosition"
+              [options]="['iso', { showSeconds: true, yearStyle: SIGNED }]"
+              timezone="UTC"
+              [(ngModel)]="time"></tbw-time-editor>
+        }
         <label><input type="checkbox" [ngModel]="float" (change)="setFloat($any($event.target).checked)"/>Float</label>
       </span>
       <span class="description">UTC, in signed ISO-8601 date/time format</span>
@@ -125,9 +129,8 @@
         [options]="{ locale: 'de' }"
         timezone="Europe/Berlin"
         [(ngModel)]="time"></tbw-time-editor>
-    <!-- TODO: Change code below when zh locale stops crashing iOS 15+-->
     <tbw-time-editor tai
-        [options]="{ locale: isIOS ? 'ja' : 'zh' }"
+        [options]="{ locale: 'zh' }"
         timezone="Asia/Shanghai"
         [(ngModel)]="time"></tbw-time-editor>
 
@@ -147,28 +150,32 @@
       <option value="1">Date only</option>
       <option value="2">Time only</option>
     </select>
-    <select *ngIf="customStyle !== '2'" [(ngModel)]="yearStyle" (change)="settingsUpdated()">
-      <option value="0">Positive-only years</option>
-      <option value="1">AD/BC years</option>
-      <option value="2">Signed years</option>
-    </select>
-    <select *ngIf="customStyle !== '2'" [(ngModel)]="customYear" (change)="settingsUpdated()">
-      <option value="">Year length per locale</option>
-      <option value="false">4/variable-digit year</option>
-      <option value="true">2-digit year</option>
-    </select>
-    <select *ngIf="customStyle !== '1'" [(ngModel)]="customCycle" (change)="settingsUpdated()">
-      <option value="0">12/24 hours, per locale</option>
-      <option value="1">24-hour time</option>
-      <option value="2">AM/PM time</option>
-    </select>
-    <select *ngIf="customStyle !== '1'" [(ngModel)]="secondsMode" (change)="settingsUpdated()">
-      <option value="0">No seconds</option>
-      <option value="1">Seconds</option>
-      <option value="2">Seconds/10</option>
-      <option value="3">Seconds/100</option>
-      <option value="4">Milliseconds</option>
-    </select>
+    @if (customStyle !== '2') {
+      <select [(ngModel)]="yearStyle" (change)="settingsUpdated()">
+        <option value="0">Positive-only years</option>
+        <option value="1">AD/BC years</option>
+        <option value="2">Signed years</option>
+      </select>
+      <select [(ngModel)]="customYear" (change)="settingsUpdated()">
+        <option value="">Year length per locale</option>
+        <option value="false">4/variable-digit year</option>
+        <option value="true">2-digit year</option>
+      </select>
+    }
+    @if (customStyle !== '1') {
+      <select [(ngModel)]="customCycle" (change)="settingsUpdated()">
+        <option value="0">12/24 hours, per locale</option>
+        <option value="1">24-hour time</option>
+        <option value="2">AM/PM time</option>
+      </select>
+      <select [(ngModel)]="secondsMode" (change)="settingsUpdated()">
+        <option value="0">No seconds</option>
+        <option value="1">Seconds</option>
+        <option value="2">Seconds/10</option>
+        <option value="3">Seconds/100</option>
+        <option value="4">Milliseconds</option>
+      </select>
+    }
     <div class="wrap">&nbsp;</div>
 
     <label class="line-start">Minimum value: <input type="text" autocorrect="off" [(ngModel)]="min" [style.background-color]="inputBackground(minGood)"></label>
