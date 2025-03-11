@@ -1,6 +1,4 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { addResizeListener, removeResizeListener } from 'detect-resize';
-import { debounce } from 'lodash';
 import { isNumber, isString } from '@tubular/util';
 
 const docElem = document.documentElement;
@@ -8,7 +6,7 @@ const DEFAULT_MIN = 0.75;
 
 // This component fails to work (sometimes in a very dramatic fashion, with the content it's
 // supposed to be showing doing a dramatic animated dive off the screen!) on the original
-// non-Chromium version of Microsoft Edge. Therefore we want to disable it for that browser.
+// non-Chromium version of Microsoft Edge. Therefore, we want to disable it for that browser.
 // At the time of this writing, the user agent string for the original Edge has the word
 // "Edge" fully spelled out, while the beta Chromium Edge simply has "Edg". If that changes
 // in the future, the test for Edge below will have to be updated.
@@ -26,6 +24,7 @@ const NOT_SUPPORTED = / Edge\//.test(navigator.userAgent) ||
 export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
   private afterInit = false;
   private _boundingElement: HTMLElement = docElem;
+  private debouncer: any;
   private _minScale = DEFAULT_MIN;
   private inner: HTMLDivElement;
   private sizer: HTMLDivElement;
@@ -33,6 +32,7 @@ export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
   private lastWidth = 0;
   private lastHeight = 0;
   private lastSizerWidth = 0;
+  private resizeListener = new ResizeObserver(() => this.onResize());
   private thresholdWidth: number;
 
   innerStyle: any = {};
@@ -112,7 +112,14 @@ export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
 
   @Output() scaleChange = new EventEmitter<number>();
 
-  onResize = debounce(() => {
+  private onResize = (): void => {
+    if (!this.debouncer)
+      this.debouncer = setTimeout(() => this.onResizeAux(), 10);
+  };
+
+  private onResizeAux(): void {
+    this.debouncer = undefined;
+
     const innerWidth = this.inner.clientWidth - this.marginX * 2;
     const innerHeight = this.inner.clientHeight - this.marginY;
     const boundingWidth = this.getBoundingWidth();
@@ -172,7 +179,7 @@ export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     this.scaleChange.emit(this.scale);
-  }, 10);
+  }
 
   ngOnInit(): void {
     this.inner = this.innerRef.nativeElement;
@@ -232,13 +239,13 @@ export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
     return width;
   }
 
-  private addResizeListener(elem): void {
+  private addResizeListener(elem: HTMLElement): void {
     if (elem !== docElem)
-      addResizeListener(elem, this.onResize);
+      this.resizeListener.observe(elem);
   }
 
-  private removeResizeListener(elem): void {
+  private removeResizeListener(elem: HTMLElement): void {
     if (elem !== docElem)
-      removeResizeListener(elem, this.onResize);
+      this.resizeListener.unobserve(elem);
   }
 }

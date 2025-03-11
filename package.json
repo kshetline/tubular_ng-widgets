@@ -6,13 +6,13 @@
     "ng": "ng",
     "prepublishOnly": "npm run build",
     "start": "ng serve",
-    "build": "ng build && sass ./projects/tubular-ng-widgets/src/styles.scss ./dist/tubular-ng-widgets/assets/styles.css",
+    "build": "ng build tubular-ng-widgets && sass ./projects/tubular-ng-widgets/src/styles.scss ./dist/tubular-ng-widgets/assets/styles.css",
     "build:demo": "ng build ng-widgets-showcase",
-    "watch": "ng build --watch --configuration development",
+    "watch": "ng build tubular-ng-widgets --watch --configuration development",
     "test": "ng test",
     "lint": "npx eslint 'projects/**/src/**/*.ts'",
-    "publish-dry": "npm run build && npm publish ./dist/tubular-ng-widgets/ --dry-run",
-    "publish": "npm run build && npm publish ./dist/tubular-ng-widgets/",
+    "publish-dry": "npm run build && npm publish --tag latest-nsa ./dist/tubular-ng-widgets/ --dry-run",
+    "publish": "npm run build && npm publish --tag latest-nsa ./dist/tubular-ng-widgets/",
     "pack": "npm run build && npm pack ./dist/tubular-ng-widgets/"
   },
   "dependencies": {
@@ -27,8 +27,6 @@
     "@tubular/math": "^3.3.1",
     "@tubular/time": "^3.9.8",
     "@tubular/util": "^4.16.1",
-    "detect-resize": "^0.1.5",
-    "lodash": "^4.17.21",
     "rxjs": "~7.5.5",
     "tslib": "^2.4.0",
     "zone.js": "~0.14.10"

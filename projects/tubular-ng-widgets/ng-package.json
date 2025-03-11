@@ -4,5 +4,9 @@
   "lib": {
     "cssUrl": "inline",
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "allowedNonPeerDependencies": [
+    "@tubular/math",
+    "@tubular/util"
+  ]
 }
