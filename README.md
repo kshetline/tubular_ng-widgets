@@ -1,59 +1,13 @@
-# TubularNgxWidgets
+# @tubular/ng-widgets
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.1.
+This project is a small (and possibly growing?) collection of UI widgets for the Angular environment.
 
-## Development server
+Two of the widgets are date/time input fields, `<tbw-time-editor>` (`TimeEditorComponent`) and `<tbw-calendar>` (`CalendarPanelComponent`), both related to and requiring the `@tubular/time` library, and thus capable of the leveraging the elaborate support `@tubular/time` provides for handling Daylight Saving Time changes, leap seconds, and historical time zone changes.
 
-To start a local development server, run:
+Another widget is `<tbw-angle-editor>` (`AngleEditorComponent`), used for the input of angular values in either decimal or sexagesimal format, and particularly useful for the input of latitude and longitude. Together with the two time widgets this provides an input scheme particularly useful to astronomical applications.
 
-```bash
-ng serve
-```
+The forth widget currently available, `<tbw-shrink-wrap>` (`ShrinkWrapComponent`), is here, I will admit, simply because it's the only other Angular widget I've created worthy of broad use beyond the application for which it was originally created, and this was a convenient home for it.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+`<tbw-shrink-wrap>` is a wrapper for other components that makes those components smoothly resizeable in a way that the CSS `scale` transform alone does not provide, as the CSS transform only changes the scale of rendering within a component without a corresponding change in the display real estate that the component demands.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+If you tell `<tbw-shrink-wrap>` to scale by 90%, the content will be rendered 10% smaller and the entire wrapped set of components will also demand 10% less width and height.
