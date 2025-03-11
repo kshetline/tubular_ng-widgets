@@ -9,5 +9,9 @@
       "@tubular/time": "tbTime",
       "@tubular/util": "tbUtil"
     }
-  }
+  },
+  "allowedNonPeerDependencies": [
+    "@tubular/math",
+    "@tubular/util"
+  ]
 }
