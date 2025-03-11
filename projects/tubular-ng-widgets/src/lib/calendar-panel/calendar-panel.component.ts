@@ -42,7 +42,6 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   private _maxYear = 9999;
   private _minYear = 1;
   private onChangeCallback: (_: any) => void = noop;
-  private onTouchedCallback: () => void = noop;
   private pendingDelta = 0;
   private pendingEvent: MouseEvent = null;
   private _showDst = false;
@@ -50,6 +49,8 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   private _weekDayFormat = 'ddd';
   private _yearMonthFormat = 'MMM~Y~';
   private ymd: YMDDate = { y: 2021, m: 1, d: 1 };
+
+  protected onTouchedCallback: () => void = noop;
 
   @Input() backgroundDecorator: DayDecorator;
   calendar: CalendarDateInfo[][] = [];
@@ -101,10 +102,10 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
     this.onTouchedCallback = fn;
   }
 
-  get timezone(): Timezone { return this.dateTime.timezone; }
-  @Input() set timezone(newZone: Timezone) {
+  get timezone(): Timezone | string { return this.dateTime.timezone; }
+  @Input() set timezone(newZone: Timezone | string) {
     if (this.dateTime.timezone !== newZone) {
-      this.dateTime.timezone = newZone;
+      this.dateTime.timezone = newZone as any;
       this.updateCalendar();
     }
   }
@@ -116,8 +117,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
       const base: string[] = [];
       convertDigitsToAscii(this.dateTime.format('D'), base);
       this.digitBase = base[0];
-      this.updateDayHeadings();
-      this.updateCalendar();
+      this.firstDay = getStartOfWeek(this.dateTime.locale);
     }
   }
 
@@ -259,6 +259,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
       this.dateTime.locale).format(this._yearMonthFormat);
   }
 
+  // noinspection JSUnusedGlobalSymbols
   reset(): void {
     this.selectMode = SelectMode.DAY;
     this.modeTransition();
@@ -358,7 +359,7 @@ export class CalendarPanelComponent implements ControlValueAccessor, OnDestroy {
   }
 
   counter(length: number): number[] {
-    return [...Array(length)].map((a, i) => i);
+    return [...Array(length)].map((_a, i) => i);
   }
 
   getTableValue(row: number, col: number, mode: number): string {
