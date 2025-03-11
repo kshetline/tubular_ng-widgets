@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { debounce } from 'lodash';
 import { isNumber, isString } from '@tubular/util';
 import { NgStyle } from '@angular/common';
 
@@ -28,6 +27,7 @@ const NOT_SUPPORTED = / Edge\//.test(navigator.userAgent) ||
 export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
   private afterInit = false;
   private _boundingElement: HTMLElement = docElem;
+  private debouncer: any;
   private _minScale = DEFAULT_MIN;
   private inner: HTMLDivElement;
   private sizer: HTMLDivElement;
@@ -115,7 +115,14 @@ export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
 
   @Output() scaleChange = new EventEmitter<number>();
 
-  onResize = debounce(() => {
+  private onResize = (): void => {
+    if (!this.debouncer)
+      this.debouncer = setTimeout(() => this.onResizeAux(), 10);
+  };
+
+  private onResizeAux(): void {
+    this.debouncer = undefined;
+
     const innerWidth = this.inner.clientWidth - this.marginX * 2;
     const innerHeight = this.inner.clientHeight - this.marginY;
     const boundingWidth = this.getBoundingWidth();
@@ -175,7 +182,7 @@ export class ShrinkWrapComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     this.scaleChange.emit(this.scale);
-  }, 10);
+  }
 
   ngOnInit(): void {
     this.inner = this.innerRef.nativeElement;

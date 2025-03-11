@@ -7,8 +7,6 @@
   },
   "allowedNonPeerDependencies": [
     "@tubular/math",
-    "@tubular/time",
-    "@tubular/util",
-    "lodash"
+    "@tubular/util"
   ]
 }
