@@ -2,6 +2,7 @@
 import { Component, Input } from '@angular/core';
 import { AbstractControl, AbstractControlDirective } from '@angular/forms';
 
+// eslint-disable-next-line prefer-const
 let This: typeof FormErrorDisplayComponent;
 
 // @dynamic

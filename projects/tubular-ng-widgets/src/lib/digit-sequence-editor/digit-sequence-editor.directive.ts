@@ -170,6 +170,7 @@ export function isNilOrBlank(v: any): boolean {
   return v == null || v === '';
 }
 
+// eslint-disable-next-line prefer-const
 let This: typeof DigitSequenceEditorDirective;
 
 // @dynamic
@@ -263,7 +264,6 @@ export abstract class DigitSequenceEditorDirective<T> implements
 
   baselineShift = '0';
   buttons: ButtonInfo[] = [];
-  // eslint-disable-next-line @angular-eslint/no-output-native
   @Output() close = new EventEmitter<void>();
   digitHeight = 17;
   displayItems: SequenceItemInfo[] = [];
