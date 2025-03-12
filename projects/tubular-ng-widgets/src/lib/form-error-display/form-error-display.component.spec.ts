@@ -9,7 +9,8 @@ import { By } from '@angular/platform-browser';
     <input type="text" [formControl]="control"/>
     <tbw-form-error-display #errorDisplay [control]="control"></tbw-form-error-display>
   `,
-  standalone: false
+  imports: [ReactiveFormsModule, FormErrorDisplayComponent],
+  standalone: true
 })
 class FormControlComponent {
   control = new FormControl('');
@@ -19,51 +20,56 @@ class FormControlComponent {
 describe('FormErrorDisplayComponent', () => {
   let fixture: ComponentFixture<FormControlComponent>;
   let formControl: FormControlComponent;
-  let comp: FormErrorDisplayComponent;
+  let errorDisplay: FormErrorDisplayComponent;
   let input: HTMLInputElement;
 
-  function fakeTyping(s: string): void {
+  async function fakeTyping(s: string): Promise<void> {
     input.value = s;
     input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  function byCss(selector: string): HTMLElement {
+    return fixture.debugElement.query(By.css(selector))?.nativeElement;
   }
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [FormControlComponent],
-      imports: [ReactiveFormsModule, FormErrorDisplayComponent]
-    }).compileComponents();
+    await TestBed.configureTestingModule({}).compileComponents();
 
     fixture = TestBed.createComponent(FormControlComponent);
     input = fixture.debugElement.query(By.css('input')).nativeElement as HTMLInputElement;
     formControl = fixture.componentInstance;
-    comp = formControl.errorDisplay;
+    errorDisplay = formControl.errorDisplay;
   });
 
   describe('shouldShowErrors', () => {
     it('should not try to show error if control is undefined', () => {
-      comp.control = undefined;
-      fixture.detectChanges();
-      expect(comp.shouldShowErrors()).toBeFalse();
+      errorDisplay.control = undefined;
+      expect(errorDisplay.shouldShowErrors()).toBeFalse();
     });
 
-    it('should show no error if control is valid', () => {
-      expect(comp.shouldShowErrors()).toBeFalse();
+    it('should show no error if control is valid', async () => {
+      expect(errorDisplay.shouldShowErrors()).toBeFalse();
       formControl.control.addValidators([Validators.required, Validators.minLength(4)]);
       fixture.detectChanges();
-      fakeTyping('book');
-      expect(comp.shouldShowErrors()).toBeFalse();
+      await fakeTyping('book');
+      expect(errorDisplay.shouldShowErrors()).toBeFalse();
     });
 
-    it('should show error if control is invalid', async () => {
-      formControl.control.addValidators([Validators.required, Validators.minLength(4)]);
+    it('should show error if control empty but required', async () => {
+      formControl.control.addValidators(Validators.required);
       fixture.detectChanges();
-      fakeTyping('');
-      expect(comp.shouldShowErrors()).toBeTrue();
-      expect(comp.listOfErrors()).toEqual(['This field is required']);
-      fakeTyping('abc');
-      await fixture.whenStable();
-      expect(comp.shouldShowErrors()).toBeTrue();
-      expect(comp.listOfErrors()).toEqual(['The min. allowed number of characters is 4']);
+      await fakeTyping('');
+      expect(errorDisplay.shouldShowErrors()).toBeTrue();
+      expect(byCss('ul').textContent).toEqual('This field is required');
+    });
+
+    it('should show error if input is shorter than required', async () => {
+      formControl.control.addValidators(Validators.minLength(4));
+      fixture.detectChanges();
+      await fakeTyping('abc');
+      expect(byCss('ul').textContent).toEqual('The min. allowed number of characters is 4');
     });
   });
 });
