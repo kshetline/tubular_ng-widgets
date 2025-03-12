@@ -62,14 +62,27 @@ describe('FormErrorDisplayComponent', () => {
       fixture.detectChanges();
       await fakeTyping('');
       expect(errorDisplay.shouldShowErrors()).toBeTrue();
-      expect(byCss('ul').textContent).toEqual('This field is required');
+      expect(byCss('ul')?.textContent).toEqual('This field is required');
+      await fakeTyping('x');
+      expect(byCss('ul')?.textContent || '').toEqual('');
     });
 
     it('should show error if input is shorter than required', async () => {
       formControl.control.addValidators(Validators.minLength(4));
       fixture.detectChanges();
       await fakeTyping('abc');
-      expect(byCss('ul').textContent).toEqual('The min. allowed number of characters is 4');
+      expect(byCss('ul')?.textContent).toEqual('The min. allowed number of characters is 4');
+      await fakeTyping('book');
+      expect(byCss('ul')?.textContent || '').toEqual('');
+    });
+
+    it('should show double error for two validation failure', async () => {
+      formControl.control.addValidators([Validators.min(1000), Validators.pattern(/^[02468]+$/)]);
+      fixture.detectChanges();
+      await fakeTyping('321');
+      expect(byCss('ul')?.textContent).toEqual('The minimum allowed value is 1000The required pattern is: /^[02468]+$/');
+      await fakeTyping('4206');
+      expect(byCss('ul')?.textContent || '').toEqual('');
     });
   });
 });
