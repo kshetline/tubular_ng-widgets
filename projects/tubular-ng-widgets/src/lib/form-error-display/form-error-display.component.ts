@@ -2,9 +2,6 @@
 import { Component, Input } from '@angular/core';
 import { AbstractControl, AbstractControlDirective } from '@angular/forms';
 
-// eslint-disable-next-line prefer-const
-let This: typeof FormErrorDisplayComponent;
-
 // @dynamic
 @Component({
   selector: 'tbw-form-error-display',
@@ -28,14 +25,12 @@ export class FormErrorDisplayComponent {
   @Input() control: AbstractControlDirective | AbstractControl;
 
   shouldShowErrors(): boolean {
-    return this.control &&
-      this.control.errors &&
-      (this.control.dirty || this.control.touched);
+    return !!(this.control && this.control.errors && (this.control.dirty || this.control.touched));
   }
 
   listOfErrors(): string[] {
     if (this.shouldShowErrors())
-      return Object.keys(this.control.errors).map(field => This.getMessage(field, this.control.errors[field]));
+      return Object.keys(this.control.errors).map(field => FormErrorDisplayComponent.getMessage(field, this.control.errors[field]));
 
     return [];
   }
@@ -52,5 +47,3 @@ export class FormErrorDisplayComponent {
       return `Unknown validation error "${type}"`;
   }
 }
-
-This = FormErrorDisplayComponent;
