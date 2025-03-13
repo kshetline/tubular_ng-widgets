@@ -65,7 +65,9 @@ const NO_SELECTION = -1;
 const SPIN_UP      = -2;
 const SPIN_DOWN    = -3;
 
-const alternateClipboard = navigator.clipboard == null || isAndroid() || isChromeOS() || isIOS14OrEarlier() || isSamsung();
+const alternateClipboard = !navigator.clipboard ||
+  // Deprecated function only referenced below to check if it still exists
+  (document.execCommand && (isAndroid() || isChromeOS() || isIOS14OrEarlier() || isSamsung()));
 const checkForRepeatedKeyTimestamps = isIOS14OrEarlier();
 const disableContentEditable = isEdge();
 const useHiddenInput = isAndroid() || isChromeOS();
@@ -186,6 +188,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
   // ControlValueAccessor/Validator-related fields
 
   private afterViewInit = false;
+  private canWriteToClipboard: boolean | null = navigator.permissions ? null : true;
   private pendingValueChange = false;
 
   protected changed = noop;
@@ -1314,7 +1317,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     return false;
   }
 
-  private doPaste(text?: string): void {
+  doPaste(text?: string): void {
     if (text)
       this.applyPastedText(text);
     else if (alternateClipboard) {
@@ -1363,7 +1366,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     // Default implementation does nothing.
   }
 
-  private doCopy(): void {
+  async doCopy(): Promise<string> {
     const text = this.getClipboardText();
 
     if (text) {
@@ -1375,19 +1378,36 @@ export abstract class DigitSequenceEditorDirective<T> implements
         this.wrapper.appendChild(elem);
         elem.value = text;
         elem.select();
+        // Deprecated function only uses as a last resort after already checking that it still exists
         document.execCommand('copy');
         setTimeout(() => {
           this.wrapper.removeChild(elem);
           this.wrapper.focus();
         });
       }
-      else if (navigator.clipboard)
-        navigator.clipboard.writeText(text).finally(noop);
+      else if (navigator.clipboard) {
+        if (this.canWriteToClipboard)
+          await navigator.clipboard.writeText(text);
+        else {
+          const permission = await navigator.permissions.query({ name: 'clipboard-write' as any });
+
+          if (permission.state === 'denied')
+            this.errorFlash();
+          else {
+            if (permission.state === 'granted')
+              this.canWriteToClipboard = true;
+
+            navigator.clipboard.writeText(text).finally(noop);
+          }
+        }
+      }
       else
         this.errorFlash();
 
       this.confirmFlash();
     }
+
+    return text || '';
   }
 
   protected getClipboardText(): string {
@@ -1465,7 +1485,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
         break;
 
       case 'Copy': // Pseudo key
-        this.doCopy();
+        this.doCopy().finally(noop);
         break;
 
       case 'Paste': // Pseudo key

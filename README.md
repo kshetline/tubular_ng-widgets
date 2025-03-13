@@ -12,9 +12,9 @@ A demo of the above date/time components can be found at https://tzexplorer.org/
 
 Another widget is `<tbw-angle-editor>` (`AngleEditorComponent`), used for the input of angular values in either decimal or sexagesimal format, and particularly useful for the input of latitude and longitude. Together with the two time widgets this provides an input scheme particularly useful to astronomical applications.
 
-The forth widget currently available, `<tbw-shrink-wrap>` (`ShrinkWrapComponent`), is here, I will admit, simply because it's the only other Angular widget I've created worthy of broad use beyond the application for which it was originally created, and this was a convenient home for it.
+`<tbw-form-error-display>` (FormErrorDisplayComponent) is for displaying validation error messages produced by an associated form input component.
 
-`<tbw-shrink-wrap>` is a wrapper for other components that makes those components smoothly resizeable in a way that the CSS `scale` transform alone does not provide, as the CSS transform only changes the scale of rendering within a component without a corresponding change in the display real estate that the component demands.
+<tbw-shrink-wrap>` (`ShrinkWrapComponent`) is a wrapper for other components that makes those components smoothly resizeable in a way that the CSS `scale` transform alone does not provide, as the CSS transform only changes the scale of rendering within a component without a corresponding change in the display real estate that the component demands.
 
 If you tell `<tbw-shrink-wrap>` to scale by 90% the enclosed content will be rendered 10% smaller, and the entire wrapped set of components will also require 10% less width and height. Used judiciously (that is, without subjecting users to uncomfortably small or large text), `<tbw-shrink-wrap>` can be very helpful with responsive layouts, especially when you need something to be just a little bit smaller to fit a mobile display.
 

@@ -36,14 +36,13 @@ describe('FormErrorDisplayComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({}).compileComponents();
-
     fixture = TestBed.createComponent(FormControlComponent);
     input = fixture.debugElement.query(By.css('input')).nativeElement as HTMLInputElement;
     formControl = fixture.componentInstance;
     errorDisplay = formControl.errorDisplay;
   });
 
-  describe('shouldShowErrors', () => {
+  describe('FormErrorDisplayComponent', () => {
     it('should not try to show error if control is undefined', () => {
       errorDisplay.control = undefined;
       expect(errorDisplay.shouldShowErrors()).toBeFalse();

@@ -21,7 +21,8 @@ import { NgClass, NgStyle } from '@angular/common';
 export enum DateFieldOrder { PER_LOCALE, YMD, DMY, MDY }
 export enum DateTimeStyle { DATE_AND_TIME, DATE_ONLY, TIME_ONLY }
 export enum HourStyle { PER_LOCALE, HOURS_24, AM_PM }
-export enum MeridiemStyle { PER_LOCALE, TRAILING, LEADING }
+export enum MeridiemStyle { // noinspection JSUnusedGlobalSymbols
+  PER_LOCALE, TRAILING, LEADING }
 export enum YearStyle { POSITIVE_ONLY, AD_BC, SIGNED }
 
 export interface TimeEditorOptions {
