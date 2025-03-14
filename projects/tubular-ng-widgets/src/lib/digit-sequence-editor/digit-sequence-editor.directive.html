@@ -66,6 +66,7 @@
         }
         @if (!item.spinner && !item.divider) {
           <span class="tbw-dse-draggable dse-item-{{item.index}} {{getCursorMode(item)}}"
+                [attr.data-name]="'dse-item-' + item.index"
                 [style.animation-duration]="isSelected(item) && cursorRate"
                 [class.tbw-dse-sized]="!!item.sizer"
                 [ngStyle]="getStyleForItem(item, 0)"
