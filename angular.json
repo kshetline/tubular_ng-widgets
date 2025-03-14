@@ -51,15 +51,12 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": {
-              "base": "dist/ng-widgets-showcase"
-            },
+            "outputPath": "dist/ng-widgets-showcase",
             "index": "projects/ng-widgets-showcase/src/index.html",
-            "polyfills": [
-              "projects/ng-widgets-showcase/src/polyfills.ts"
-            ],
+            "main": "projects/ng-widgets-showcase/src/main.ts",
+            "polyfills": "projects/ng-widgets-showcase/src/polyfills.ts",
             "tsConfig": "projects/ng-widgets-showcase/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -70,8 +67,7 @@
               "projects/ng-widgets-showcase/src/styles.scss",
               "projects/tubular-ng-widgets/src/styles.scss"
             ],
-            "scripts": [],
-            "browser": "projects/ng-widgets-showcase/src/main.ts"
+            "scripts": []
           },
           "configurations": {
             "production": {
@@ -96,7 +92,9 @@
               "outputHashing": "all"
             },
             "development": {
+              "buildOptimizer": false,
               "optimization": false,
+              "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": {
                 "scripts": true,
