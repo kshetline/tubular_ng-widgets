@@ -3,6 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { sendTestKey, sendTextClick } from '../../test/test-utils';
 
 @Component({
   template: `
@@ -20,6 +21,7 @@ describe('TimeEditorComponent', () => {
   let timeComponent: TimeComponent;
   let timeEditor: TimeEditorComponent;
   let timeElement: HTMLElement;
+  let digits: HTMLElement[];
 
   function byCss(selector: string): HTMLElement {
     return fixture.debugElement.query(By.css(selector))?.nativeElement;
@@ -38,10 +40,22 @@ describe('TimeEditorComponent', () => {
     return av - bv;
   }
 
-  function readDisplayedText(): string {
-    const elems = Array.from(timeElement.querySelectorAll('[data-name^="dse-item-"]')).sort((a, b) => dseItemSort(a, b));
+  function collectDigits(): void {
+    digits = Array.from(timeElement.querySelectorAll('[data-name^="dse-item-"]'))
+      .sort((a, b) => dseItemSort(a, b)) as unknown as HTMLElement[];
+  }
 
-    return elems.map(elem => elem.textContent?.trim() || '').join('');
+  function readDisplayedText(): string {
+    collectDigits();
+    return digits.map(d => d.textContent?.trim() || '').join('');
+  }
+
+  function sendKey(key: string): Promise<void> {
+    return sendTestKey(key, timeElement, fixture);
+  }
+
+  function clickDigit(index: number): Promise<void> {
+    return sendTextClick(digits[index], fixture, () => (timeEditor.hasFocus = true));
   }
 
   beforeEach(async () => {
@@ -57,13 +71,28 @@ describe('TimeEditorComponent', () => {
 
   const sampleTime = '2012-03-04T05:06:07';
 
-  describe('should display correct time', () => {
-    it('should display correct time', async () => {
-      timeEditor.options = 'iso';
-      fixture.detectChanges();
-      await paste(sampleTime);
-      expect(timeEditor.value).toEqual(new Date(sampleTime).getTime());
-      expect(readDisplayedText()).toEqual(sampleTime);
-    });
+  it('should display correct time', async () => {
+    timeEditor.options = 'iso';
+    fixture.detectChanges();
+    await paste(sampleTime);
+    expect(timeEditor.value).toEqual(new Date(sampleTime).getTime());
+    expect(readDisplayedText()).toEqual(sampleTime);
+  });
+
+  it('should roll digits', async () => {
+    timeEditor.options = 'iso';
+    fixture.detectChanges();
+    await paste(sampleTime);
+    collectDigits();
+
+    await clickDigit(digits.length - 1); // Roll one second forward
+    await sendKey('ArrowUp');
+    expect(readDisplayedText()).toEqual('2012-03-04T05:06:08');
+    await sendKey('ArrowDown'); // Roll two seconds back
+    await sendKey('ArrowDown');
+    expect(readDisplayedText()).toEqual('2012-03-04T05:06:06');
+    await clickDigit(5); // Roll 10 months forward
+    await sendKey('ArrowUp');
+    expect(readDisplayedText()).toEqual('2013-01-04T05:06:06');
   });
 });

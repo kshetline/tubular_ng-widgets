@@ -42,46 +42,44 @@ describe('FormErrorDisplayComponent', () => {
     errorDisplay = formControl.errorDisplay;
   });
 
-  describe('FormErrorDisplayComponent', () => {
-    it('should not try to show error if control is undefined', () => {
-      errorDisplay.control = undefined;
-      expect(errorDisplay.shouldShowErrors()).toBeFalse();
-    });
+  it('should not try to show error if control is undefined', () => {
+    errorDisplay.control = undefined;
+    expect(errorDisplay.shouldShowErrors()).toBeFalse();
+  });
 
-    it('should show no error if control is valid', async () => {
-      expect(errorDisplay.shouldShowErrors()).toBeFalse();
-      formControl.control.addValidators([Validators.required, Validators.minLength(4)]);
-      fixture.detectChanges();
-      await fakeTyping('book');
-      expect(errorDisplay.shouldShowErrors()).toBeFalse();
-    });
+  it('should show no error if control is valid', async () => {
+    expect(errorDisplay.shouldShowErrors()).toBeFalse();
+    formControl.control.addValidators([Validators.required, Validators.minLength(4)]);
+    fixture.detectChanges();
+    await fakeTyping('book');
+    expect(errorDisplay.shouldShowErrors()).toBeFalse();
+  });
 
-    it('should show error if control empty but required', async () => {
-      formControl.control.addValidators(Validators.required);
-      fixture.detectChanges();
-      await fakeTyping('');
-      expect(errorDisplay.shouldShowErrors()).toBeTrue();
-      expect(byCss('ul')?.textContent).toEqual('This field is required');
-      await fakeTyping('x');
-      expect(byCss('ul')?.textContent || '').toEqual('');
-    });
+  it('should show error if control empty but required', async () => {
+    formControl.control.addValidators(Validators.required);
+    fixture.detectChanges();
+    await fakeTyping('');
+    expect(errorDisplay.shouldShowErrors()).toBeTrue();
+    expect(byCss('ul')?.textContent).toEqual('This field is required');
+    await fakeTyping('x');
+    expect(byCss('ul')?.textContent || '').toEqual('');
+  });
 
-    it('should show error if input is shorter than required', async () => {
-      formControl.control.addValidators(Validators.minLength(4));
-      fixture.detectChanges();
-      await fakeTyping('abc');
-      expect(byCss('ul')?.textContent).toEqual('The min. allowed number of characters is 4');
-      await fakeTyping('book');
-      expect(byCss('ul')?.textContent || '').toEqual('');
-    });
+  it('should show error if input is shorter than required', async () => {
+    formControl.control.addValidators(Validators.minLength(4));
+    fixture.detectChanges();
+    await fakeTyping('abc');
+    expect(byCss('ul')?.textContent).toEqual('The min. allowed number of characters is 4');
+    await fakeTyping('book');
+    expect(byCss('ul')?.textContent || '').toEqual('');
+  });
 
-    it('should show double error for two validation failure', async () => {
-      formControl.control.addValidators([Validators.min(1000), Validators.pattern(/^[02468]+$/)]);
-      fixture.detectChanges();
-      await fakeTyping('321');
-      expect(byCss('ul')?.textContent).toEqual('The minimum allowed value is 1000The required pattern is: /^[02468]+$/');
-      await fakeTyping('4206');
-      expect(byCss('ul')?.textContent || '').toEqual('');
-    });
+  it('should show double error for two validation failure', async () => {
+    formControl.control.addValidators([Validators.min(1000), Validators.pattern(/^[02468]+$/)]);
+    fixture.detectChanges();
+    await fakeTyping('321');
+    expect(byCss('ul')?.textContent).toEqual('The minimum allowed value is 1000The required pattern is: /^[02468]+$/');
+    await fakeTyping('4206');
+    expect(byCss('ul')?.textContent || '').toEqual('');
   });
 });

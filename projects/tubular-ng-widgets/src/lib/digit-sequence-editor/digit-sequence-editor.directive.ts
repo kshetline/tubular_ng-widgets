@@ -67,6 +67,7 @@ const SPIN_DOWN    = -3;
 
 const alternateClipboard = !navigator.clipboard ||
   // Deprecated function only referenced below to check if it still exists
+  // noinspection JSDeprecatedSymbols
   (document.execCommand && (isAndroid() || isChromeOS() || isIOS14OrEarlier() || isSamsung()));
 const checkForRepeatedKeyTimestamps = isIOS14OrEarlier();
 const disableContentEditable = isEdge();
@@ -1278,7 +1279,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     // With Android many on-screen keyboard key events carry no useful information about the key that was
     // pressed. They instead match the following test, and we have to grab a character out of the hidden
     // input field to find out what was actually typed in.
-    // noinspection JSDeprecatedSymbols (for `keyCode`)
+    // noinspection JSDeprecatedSymbols
     if (this.hiddenInput && key === 'Unidentified' && evt.keyCode === 229) {
       this.getCharFromInputEvent = true;
       This.lastKeyTimestamp = evt.timeStamp;
@@ -1292,7 +1293,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
       if (key.toLowerCase() === 'v')
         this.doPaste();
       else
-        this.doCopy();
+        this.doCopy().finally(noop);
 
       return false;
     }
@@ -1379,6 +1380,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
         elem.value = text;
         elem.select();
         // Deprecated function only uses as a last resort after already checking that it still exists
+        // noinspection JSDeprecatedSymbols
         document.execCommand('copy');
         setTimeout(() => {
           this.wrapper.removeChild(elem);
