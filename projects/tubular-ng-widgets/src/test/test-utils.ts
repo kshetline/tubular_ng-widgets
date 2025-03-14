@@ -10,7 +10,7 @@ export async function sendTestKey(key: string, element: HTMLElement, fixture: Co
       target.dispatchEvent(new KeyboardEvent('keyup', eventOpts));
       fixture.detectChanges();
       fixture.whenStable().then(resolve);
-    }, 100);
+    }, 25);
   });
 }
 
@@ -19,12 +19,14 @@ export async function sendTextClick(element: HTMLElement, fixture: ComponentFixt
   element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
 
   return new Promise<void>(resolve => {
-    element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-    fixture.detectChanges();
+    setTimeout(() => {
+      element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+      fixture.detectChanges();
 
-    if (focusHelp)
-      focusHelp();
+      if (focusHelp)
+        focusHelp();
 
-    fixture.whenStable().then(resolve);
+      fixture.whenStable().then(resolve);
+    }, 25);
   });
 }
