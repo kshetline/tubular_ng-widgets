@@ -7,7 +7,7 @@ import { sendTestKey, sendTextClick } from '../../test/test-utils';
 
 @Component({
   template: `
-    <tbw-time-editor #timeEditor></tbw-time-editor>
+    <tbw-time-editor #timeEditor options="iso" timezone="utc"></tbw-time-editor>
   `,
   imports: [TimeEditorComponent],
   standalone: true
@@ -22,6 +22,8 @@ describe('TimeEditorComponent', () => {
   let timeEditor: TimeEditorComponent;
   let timeElement: HTMLElement;
   let digits: HTMLElement[];
+  let upArrow: HTMLElement;
+  // let downArrow: HTMLElement;
 
   function byCss(selector: string): HTMLElement {
     return fixture.debugElement.query(By.css(selector))?.nativeElement;
@@ -43,6 +45,8 @@ describe('TimeEditorComponent', () => {
   function collectDigits(): void {
     digits = Array.from(timeElement.querySelectorAll('[data-name^="dse-item-"]'))
       .sort((a, b) => dseItemSort(a, b)) as unknown as HTMLElement[];
+    upArrow = timeElement.querySelector('[data-name="up"]') as HTMLElement;
+    // downArrow = timeElement.querySelectorAll('[data-name="down"]') as unknown as HTMLElement;
   }
 
   function readDisplayedText(): string {
@@ -50,13 +54,16 @@ describe('TimeEditorComponent', () => {
     return digits.map(d => d.textContent?.trim() || '').join('');
   }
 
-  function sendKey(key: string): Promise<void> {
-    return sendTestKey(key, timeElement, fixture);
+  function sendKey(key: string, duration?: number): Promise<void> {
+    return sendTestKey(key, timeElement, fixture, duration);
   }
 
-  function clickDigit(index: number): Promise<void> {
-    return sendTextClick(digits[index], fixture, () => (timeEditor.hasFocus = true));
+  function clickDigit(index: number, duration?: number): Promise<void> {
+    return sendTextClick(digits[index], fixture, duration);
   }
+
+  const sampleTime = '2012-03-04T05:06:07';
+  const sampleTimeMs = new Date(sampleTime + 'Z').getTime();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -66,25 +73,17 @@ describe('TimeEditorComponent', () => {
     timeComponent = fixture.componentInstance;
     timeEditor = timeComponent.timeEditor;
     timeElement = byCss('tbw-time-editor');
+    await paste(sampleTime);
+    collectDigits();
     timeElement.focus();
   });
 
-  const sampleTime = '2012-03-04T05:06:07';
-
   it('should display correct time', async () => {
-    timeEditor.options = 'iso';
-    fixture.detectChanges();
-    await paste(sampleTime);
-    expect(timeEditor.value).toEqual(new Date(sampleTime).getTime());
+    expect(timeEditor.value).toEqual(sampleTimeMs);
     expect(readDisplayedText()).toEqual(sampleTime);
   });
 
   it('should roll digits', async () => {
-    timeEditor.options = 'iso';
-    fixture.detectChanges();
-    await paste(sampleTime);
-    collectDigits();
-
     await clickDigit(digits.length - 1); // Roll one second forward
     await sendKey('ArrowUp');
     expect(readDisplayedText()).toEqual('2012-03-04T05:06:08');
@@ -95,4 +94,19 @@ describe('TimeEditorComponent', () => {
     await sendKey('ArrowUp');
     expect(readDisplayedText()).toEqual('2013-01-04T05:06:06');
   });
+
+  it('should do auto-repeated digit rolling', async () => {
+    await clickDigit(digits.length - 1); // Roll one second forward repeatedly
+    await sendKey('ArrowUp', 2000);
+    expect(timeEditor.value - (sampleTimeMs + 17000)).toBeLessThan(3000);
+    await paste(sampleTime);
+    await clickDigit(digits.length - 2); // Roll tens seconds backward repeatedly
+    await sendKey('ArrowDown', 2000);
+    expect(timeEditor.value - (sampleTimeMs - 170000)).toBeLessThan(30000);
+    await paste(sampleTime);
+    await clickDigit(digits.length - 1); // Roll one second forward repeatedly
+    await sendTextClick(upArrow, fixture, 2000);
+    console.log(readDisplayedText());
+    expect(timeEditor.value - (sampleTimeMs + 17000)).toBeLessThan(3000);
+  }, 10000);
 });
