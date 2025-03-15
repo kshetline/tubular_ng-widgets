@@ -16,11 +16,11 @@ export async function sendTestKey(key: string, element: HTMLElement, fixture: Co
   });
 }
 
-export async function sendTextClick(element: HTMLElement, fixture: ComponentFixture<any>,
+export async function sendTestClick(element: HTMLElement, fixture: ComponentFixture<any>,
                                     focusHelp?: null | (() => void)): Promise<void>;
-export async function sendTextClick(element: HTMLElement, fixture: ComponentFixture<any>,
+export async function sendTestClick(element: HTMLElement, fixture: ComponentFixture<any>,
                                     duration?: number, focusHelp?: null | (() => void)): Promise<void>;
-export async function sendTextClick(element: HTMLElement, fixture: ComponentFixture<any>,
+export async function sendTestClick(element: HTMLElement, fixture: ComponentFixture<any>,
                                     focusHelpOrDuration?: number| null | (() => void), focusHelp?: () => void): Promise<void> {
   let duration = 25;
 
