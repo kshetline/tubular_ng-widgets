@@ -3,7 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { sendTestKey, sendTextClick } from '../../test/test-utils';
+import { sendTestKey, sendTestClick } from '../../test/test-utils';
 
 @Component({
   template: `
@@ -59,7 +59,7 @@ describe('TimeEditorComponent', () => {
   }
 
   function clickDigit(index: number, duration?: number): Promise<void> {
-    return sendTextClick(digits[index], fixture, duration);
+    return sendTestClick(digits[index], fixture, duration);
   }
 
   const sampleTime = '2012-03-04T05:06:07';
@@ -105,7 +105,7 @@ describe('TimeEditorComponent', () => {
     expect(timeEditor.value - (sampleTimeMs - 170000)).toBeLessThan(30000);
     await paste(sampleTime);
     await clickDigit(digits.length - 1); // Roll one second forward repeatedly
-    await sendTextClick(upArrow, fixture, 2000);
+    await sendTestClick(upArrow, fixture, 2000);
     console.log(readDisplayedText());
     expect(timeEditor.value - (sampleTimeMs + 17000)).toBeLessThan(3000);
   }, 10000);
