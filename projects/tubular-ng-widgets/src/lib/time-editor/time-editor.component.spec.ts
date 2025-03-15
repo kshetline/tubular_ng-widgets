@@ -95,18 +95,21 @@ describe('TimeEditorComponent', () => {
     expect(readDisplayedText()).toEqual('2013-01-04T05:06:06');
   });
 
-  it('should do auto-repeated digit rolling', async () => {
+  it('should do upward auto-repeated digit rolling', async () => {
     await clickDigit(digits.length - 1); // Roll one second forward repeatedly
     await sendKey('ArrowUp', 2000);
     expect(timeEditor.value - (sampleTimeMs + 17000)).toBeLessThan(3000);
-    await paste(sampleTime);
+  });
+
+  it('should do downward auto-repeated digit rolling', async () => {
     await clickDigit(digits.length - 2); // Roll tens seconds backward repeatedly
     await sendKey('ArrowDown', 2000);
     expect(timeEditor.value - (sampleTimeMs - 170000)).toBeLessThan(30000);
-    await paste(sampleTime);
+  });
+
+  it('should do upward auto-repeated digit rolling via up-arrow icon', async () => {
     await clickDigit(digits.length - 1); // Roll one second forward repeatedly
     await sendTestClick(upArrow, fixture, 2000);
-    console.log(readDisplayedText());
     expect(timeEditor.value - (sampleTimeMs + 17000)).toBeLessThan(3000);
-  }, 10000);
+  });
 });
