@@ -28,6 +28,9 @@
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "tsConfig": "projects/tubular-ng-widgets/tsconfig.spec.json",
+            "styles": [
+              "projects/tubular-ng-widgets/src/styles.scss"
+            ],
             "polyfills": [
               "zone.js",
               "zone.js/testing"

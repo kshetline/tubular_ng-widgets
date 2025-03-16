@@ -3,7 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { sendTestKey, sendTestClick } from '../../test/test-utils';
+import { sendTestKey, sendTestClick, getCSSProperty } from '../../test/test-utils';
 
 @Component({
   template: `
@@ -148,6 +148,24 @@ describe('TimeEditorComponent', () => {
     expect(readDisplayedText()).toEqual('1996-03-04T05:06:07');
   });
 
+
+  it('should handle AM/PM switch', async () => {
+    timeEditor.options =
+      { 'locale': 'en-US', showSeconds: false, dateFieldOrder: 0, hourStyle: 0, meridiemStyle: 0, showDstSymbol: true };
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(readDisplayedText()).toEqual('03/04/12,05:06AM');
+    await clickDigit(digits.length - 2);
+    await sendKey('ArrowUp');
+    expect(readDisplayedText()).toEqual('03/04/12,05:06PM');
+    await sendKey('ArrowDown');
+    expect(readDisplayedText()).toEqual('03/04/12,05:06AM');
+    await sendKey('P');
+    expect(readDisplayedText()).toEqual('03/04/12,05:06PM');
+    await sendKey('A');
+    expect(readDisplayedText()).toEqual('03/04/12,05:06AM');
+  });
+
   it('should accept automatic adjust date to match length of month', async () => {
     await paste('2012-03-31T05:06:07');
     await clickDigit(6);
@@ -165,8 +183,26 @@ describe('TimeEditorComponent', () => {
     spyOn(TimeEditorComponent.prototype as any, 'errorFlash').and.callThrough();
     await clickDigit(0);
     await sendKey('X');
-    expect(stateIndicator.style.backgroundColor).toEqual('rgb(255, 102, 119)');
+    expect(stateIndicator.style.backgroundColor).toEqual(getCSSProperty('tbw-error-background', 'background-color'));
     expect((TimeEditorComponent.prototype as any).errorFlash).toHaveBeenCalled();
     expect(readDisplayedText()).toEqual(sampleTime);
+  });
+
+  fit('should display leap seconds', async () => {
+    timeEditor.tai = true;
+    await fixture.whenStable();
+    await paste('2016-12-31T23:59:59');
+    expect(readDisplayedText()).toEqual('2016-12-31T23:59:59');
+    await clickDigit(digits.length - 1);
+    await sendKey('ArrowUp');
+    expect(readDisplayedText()).toEqual('2016-12-31T23:59:60');
+    await sendTestClick(upArrow, fixture);
+    expect(readDisplayedText()).toEqual('2017-01-01T00:00:00');
+    await sendTestClick(downArrow, fixture);
+    await sendTestClick(downArrow, fixture);
+    expect(readDisplayedText()).toEqual('2016-12-31T23:59:59');
+    await clickDigit(digits.length - 2);
+    await sendKey('6');
+    expect(readDisplayedText()).toEqual('2016-12-31T23:59:60');
   });
 });
