@@ -24,6 +24,7 @@ describe('TimeEditorComponent', () => {
   let digits: HTMLElement[];
   let upArrow: HTMLElement;
   let downArrow: HTMLElement;
+  let stateIndicator: HTMLElement;
 
   function byCss(selector: string): HTMLElement {
     return fixture.debugElement.query(By.css(selector))?.nativeElement;
@@ -73,6 +74,7 @@ describe('TimeEditorComponent', () => {
     timeComponent = fixture.componentInstance;
     timeEditor = timeComponent.timeEditor;
     timeElement = byCss('tbw-time-editor');
+    stateIndicator = byCss('.tbw-dse-state-indicator');
     await paste(sampleTime);
     collectDigits();
     timeElement.focus();
@@ -135,5 +137,36 @@ describe('TimeEditorComponent', () => {
     await clickDigit(digits.length - 1); // Roll one minute forward
     await sendKey('ArrowUp');
     expect(readDisplayedText()).toEqual('11/02/25,01:00AM');
+  });
+
+  it('should accept typed-in input', async () => {
+    await clickDigit(0);
+    await sendKey('1');
+    await sendKey('9');
+    await sendKey('9');
+    await sendKey('6');
+    expect(readDisplayedText()).toEqual('1996-03-04T05:06:07');
+  });
+
+  it('should accept automatic adjust date to match length of month', async () => {
+    await paste('2012-03-31T05:06:07');
+    await clickDigit(6);
+    await sendKey('2');
+    expect(readDisplayedText()).toEqual('2012-02-29T05:06:07');
+  });
+
+  it('should reject invalid month, advance to highest month', async () => {
+    await clickDigit(5);
+    await sendKey('1');
+    expect(readDisplayedText()).toEqual('2012-12-04T05:06:07');
+  });
+
+  it('should reject bad input', async () => {
+    spyOn(TimeEditorComponent.prototype as any, 'errorFlash').and.callThrough();
+    await clickDigit(0);
+    await sendKey('X');
+    expect(stateIndicator.style.backgroundColor).toEqual('rgb(255, 102, 119)');
+    expect((TimeEditorComponent.prototype as any).errorFlash).toHaveBeenCalled();
+    expect(readDisplayedText()).toEqual(sampleTime);
   });
 });

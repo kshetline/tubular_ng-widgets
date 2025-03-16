@@ -52,3 +52,21 @@ export async function sendTestClick(element: HTMLElement, fixture: ComponentFixt
     }, duration);
   });
 }
+
+export function getCSSProperty(className: string, property: string): string {
+  className = '.' + className;
+
+  for (const styleSheet of document.styleSheets) {
+    try {
+      for (const rule of styleSheet.cssRules) {
+        if ((rule as CSSStyleRule).selectorText === className)
+          return (rule as CSSStyleRule).styleMap.get(property).toString();
+      }
+    }
+    catch (e) {
+      console.error('Error accessing stylesheet rules:', e);
+    }
+  }
+
+  return null;
+}
