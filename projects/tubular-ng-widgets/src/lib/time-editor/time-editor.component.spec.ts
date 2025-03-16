@@ -188,7 +188,7 @@ describe('TimeEditorComponent', () => {
     expect(readDisplayedText()).toEqual(sampleTime);
   });
 
-  fit('should display leap seconds', async () => {
+  it('should display leap seconds', async () => {
     timeEditor.tai = true;
     await fixture.whenStable();
     await paste('2016-12-31T23:59:59');
