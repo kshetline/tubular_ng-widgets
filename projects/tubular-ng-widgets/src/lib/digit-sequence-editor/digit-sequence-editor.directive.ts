@@ -857,7 +857,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.displayState = 'confirm';
     this.confirmTimer = timer(FLASH_DURATION).subscribe(() => {
       this.confirmTimer = undefined;
-      this.displayState = 'normal';
+      this.displayState = (this.errorTimer ? 'error' : this.warningTimer ? 'warning' : 'normal');
     });
   }
 

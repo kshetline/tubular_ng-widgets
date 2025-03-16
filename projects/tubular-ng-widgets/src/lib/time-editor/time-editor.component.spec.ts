@@ -65,6 +65,13 @@ describe('TimeEditorComponent', () => {
 
   const sampleTime = '2012-03-04T05:06:07';
   const sampleTimeMs = new Date(sampleTime + 'Z').getTime();
+  let errorObserver: MutationObserver;
+  let statusBackground: string;
+  let errorColor: string;
+
+  beforeAll(() => {
+    errorColor = getCSSProperty('tbw-error-background', 'background-color');
+  });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -76,8 +83,23 @@ describe('TimeEditorComponent', () => {
     timeElement = byCss('tbw-time-editor');
     stateIndicator = byCss('.tbw-dse-state-indicator');
     await paste(sampleTime);
+    errorObserver = new MutationObserver(mutations => {
+      for (const _mutation of mutations) {
+        if (stateIndicator.style.backgroundColor) {
+          statusBackground = stateIndicator.style.backgroundColor;
+          break;
+        }
+      }
+    });
+    errorObserver.observe(stateIndicator, { attributes: true, attributeFilter: ['style'] });
+    statusBackground = '';
+    spyOn(TimeEditorComponent.prototype as any, 'errorFlash').and.callThrough();
     collectDigits();
     timeElement.focus();
+  });
+
+  afterEach(() => {
+    errorObserver.disconnect();
   });
 
   it('should display correct time', async () => {
@@ -128,7 +150,7 @@ describe('TimeEditorComponent', () => {
     expect(readDisplayedText()).toEqual('03/09/25,01:59AM');
   });
 
-  it('should repeat over "fall back" hour', async () => {
+  it('should repeat "fall back" hour', async () => {
     timeEditor.timezone = 'America/New_York';
     timeEditor.options =
       { 'locale': 'en-US', showSeconds: false, dateFieldOrder: 0, hourStyle: 0, meridiemStyle: 0, showDstSymbol: true };
@@ -180,10 +202,9 @@ describe('TimeEditorComponent', () => {
   });
 
   it('should reject bad input', async () => {
-    spyOn(TimeEditorComponent.prototype as any, 'errorFlash').and.callThrough();
     await clickDigit(0);
     await sendKey('X');
-    expect(stateIndicator.style.backgroundColor).toEqual(getCSSProperty('tbw-error-background', 'background-color'));
+    expect(statusBackground).toEqual(errorColor);
     expect((TimeEditorComponent.prototype as any).errorFlash).toHaveBeenCalled();
     expect(readDisplayedText()).toEqual(sampleTime);
   });
@@ -204,5 +225,18 @@ describe('TimeEditorComponent', () => {
     await clickDigit(digits.length - 2);
     await sendKey('6');
     expect(readDisplayedText()).toEqual('2016-12-31T23:59:60');
+  });
+
+  it('should enforce minimum time value', async () => {
+    timeEditor.min = '2012-01-01T00:00:00';
+    await fixture.whenStable();
+    await clickDigit(6);
+    await sendKey('ArrowDown');
+    await sendKey('ArrowDown');
+    expect(readDisplayedText()).toEqual('2012-01-04T05:06:07');
+    await sendKey('ArrowDown');
+    // expect(statusBackground).toEqual(errorColor);
+    expect((TimeEditorComponent.prototype as any).errorFlash).toHaveBeenCalled();
+    expect(readDisplayedText()).toEqual('2012-01-04T05:06:07');
   });
 });

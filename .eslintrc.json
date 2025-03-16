@@ -81,8 +81,11 @@
           {
             "args": "after-used",
             "argsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_",
+            "destructuredArrayIgnorePattern": "^_",
             "ignoreRestSiblings": false,
-            "vars": "all"
+            "vars": "all",
+            "varsIgnorePattern": "^_"
           }
         ],
     "object-curly-newline": "off",
