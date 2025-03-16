@@ -23,7 +23,7 @@ describe('TimeEditorComponent', () => {
   let timeElement: HTMLElement;
   let digits: HTMLElement[];
   let upArrow: HTMLElement;
-  // let downArrow: HTMLElement;
+  let downArrow: HTMLElement;
 
   function byCss(selector: string): HTMLElement {
     return fixture.debugElement.query(By.css(selector))?.nativeElement;
@@ -46,7 +46,7 @@ describe('TimeEditorComponent', () => {
     digits = Array.from(timeElement.querySelectorAll('[data-name^="dse-item-"]'))
       .sort((a, b) => dseItemSort(a, b)) as unknown as HTMLElement[];
     upArrow = timeElement.querySelector('[data-name="up"]') as HTMLElement;
-    // downArrow = timeElement.querySelectorAll('[data-name="down"]') as unknown as HTMLElement;
+    downArrow = timeElement.querySelector('[data-name="down"]') as unknown as HTMLElement;
   }
 
   function readDisplayedText(): string {
@@ -111,5 +111,29 @@ describe('TimeEditorComponent', () => {
     await clickDigit(digits.length - 1); // Roll one second forward repeatedly
     await sendTestClick(upArrow, fixture, 2000);
     expect(timeEditor.value - (sampleTimeMs + 17000)).toBeLessThan(3000);
+  });
+
+  it('should skip over "spring ahead" hour', async () => {
+    timeEditor.timezone = 'America/New_York';
+    timeEditor.options =
+      { 'locale': 'en-US', showSeconds: false, dateFieldOrder: 0, hourStyle: 0, meridiemStyle: 0, showDstSymbol: true };
+    await paste('03/09/25, 01:59 AM');
+    expect(readDisplayedText()).toEqual('03/09/25,01:59AM');
+    await clickDigit(digits.length - 1); // Roll one minute forward
+    await sendKey('ArrowUp');
+    expect(readDisplayedText()).toEqual('03/09/25,03:00AM§');
+    await sendTestClick(downArrow, fixture); // And back again
+    expect(readDisplayedText()).toEqual('03/09/25,01:59AM');
+  });
+
+  it('should repeat over "fall back" hour', async () => {
+    timeEditor.timezone = 'America/New_York';
+    timeEditor.options =
+      { 'locale': 'en-US', showSeconds: false, dateFieldOrder: 0, hourStyle: 0, meridiemStyle: 0, showDstSymbol: true };
+    await paste('11/02/25, 01:59 AM');
+    expect(readDisplayedText()).toEqual('11/02/25,01:59AM§');
+    await clickDigit(digits.length - 1); // Roll one minute forward
+    await sendKey('ArrowUp');
+    expect(readDisplayedText()).toEqual('11/02/25,01:00AM');
   });
 });

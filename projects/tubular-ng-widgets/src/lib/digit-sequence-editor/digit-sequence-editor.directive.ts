@@ -920,23 +920,31 @@ export abstract class DigitSequenceEditorDirective<T> implements
       evt.stopPropagation();
 
     if (this.items[index]?.spinner && evt?.target) {
-      const r = (evt.target as HTMLElement).getBoundingClientRect();
+      const name = (evt.target as HTMLElement).getAttribute('data-name');
 
-      if (this.wideSpinner) {
-        const x = ((evt as any).clientX ?? getClientXYForTouchEvent(evt as any).x);
-
-        if (x < r.left + r.width / 2)
-          index = SPIN_UP;
-        else
-          index = SPIN_DOWN;
-      }
+      if (name === 'up')
+        index = SPIN_UP;
+      else if (name === 'down')
+        index = SPIN_DOWN;
       else {
-        const y = ((evt as any).clientY ?? getClientXYForTouchEvent(evt as any).y);
+        const r = (evt.target as HTMLElement).getBoundingClientRect();
 
-        if (y < r.top + r.height / 2)
-          index = SPIN_UP;
-        else
-          index = SPIN_DOWN;
+        if (this.wideSpinner) {
+          const x = ((evt as any).clientX ?? getClientXYForTouchEvent(evt as any).x);
+
+          if (x < r.left + r.width / 2)
+            index = SPIN_UP;
+          else
+            index = SPIN_DOWN;
+        }
+        else {
+          const y = ((evt as any).clientY ?? getClientXYForTouchEvent(evt as any).y);
+
+          if (y < r.top + r.height / 2)
+            index = SPIN_UP;
+          else
+            index = SPIN_DOWN;
+        }
       }
     }
 

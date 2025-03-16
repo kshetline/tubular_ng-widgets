@@ -29,15 +29,10 @@ export async function sendTestClick(element: HTMLElement, fixture: ComponentFixt
   else
     focusHelp = focusHelpOrDuration;
 
-  const eventOpts = { bubbles: true, cancelable: true } as MouseEventInit;
-
-  if (!element.dispatchEvent) {
-    const rect = element.getBoundingClientRect();
-
-    eventOpts.screenX = rect.left + rect.width / 2;
-    eventOpts.screenY = rect.top + rect.height / 2;
-    element = document.body;
-  }
+  const rect = element.getBoundingClientRect();
+  const eventOpts = { view: window, button: 0, bubbles: true, cancelable: true,
+                      screenX: rect.x + rect.width / 2, screenY: rect.y + rect.height / 2,
+                      clientX: rect.width / 2, clientY: rect.height / 2} as MouseEventInit;
 
   element.dispatchEvent(new MouseEvent('mousedown', eventOpts));
 
