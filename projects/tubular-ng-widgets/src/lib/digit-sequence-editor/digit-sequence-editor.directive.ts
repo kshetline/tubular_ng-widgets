@@ -51,7 +51,8 @@ export const FORWARD_TAB_DELAY = 250;
 const FALSE_REPEAT_THRESHOLD = 50;
 const KEY_REPEAT_DELAY = 500;
 const KEY_REPEAT_RATE  = 100;
-const FLASH_DURATION = 250;
+// Make flashes longer when testing, otherwise they're sometimes too fast to catch.
+const FLASH_DURATION = (window as any).jasmine ? 2500 : 250;
 const LONG_WARNING_DURATION = 2000;
 
 const DIGIT_SWIPE_THRESHOLD = 6;
@@ -425,6 +426,7 @@ export abstract class DigitSequenceEditorDirective<T> implements
     this.adjustState();
   }
 
+  // noinspection JSUnusedGlobalSymbols
   onBlur(): void {
     this.touched();
   }

@@ -83,15 +83,11 @@ describe('TimeEditorComponent', () => {
     timeElement = byCss('tbw-time-editor');
     stateIndicator = byCss('.tbw-dse-state-indicator');
     await paste(sampleTime);
-    errorObserver = new MutationObserver(mutations => {
-      for (const _mutation of mutations) {
-        if (stateIndicator.style.backgroundColor) {
-          statusBackground = stateIndicator.style.backgroundColor;
-          break;
-        }
-      }
+    errorObserver = new MutationObserver(() => {
+      if (stateIndicator.style.backgroundColor)
+        statusBackground = stateIndicator.style.backgroundColor;
     });
-    errorObserver.observe(stateIndicator, { attributes: true, attributeFilter: ['style'] });
+    errorObserver.observe(stateIndicator, { attributes: true, attributeFilter: ['style', 'class'] });
     statusBackground = '';
     spyOn(TimeEditorComponent.prototype as any, 'errorFlash').and.callThrough();
     collectDigits();
@@ -211,6 +207,7 @@ describe('TimeEditorComponent', () => {
 
   it('should display leap seconds', async () => {
     timeEditor.tai = true;
+    fixture.detectChanges();
     await fixture.whenStable();
     await paste('2016-12-31T23:59:59');
     expect(readDisplayedText()).toEqual('2016-12-31T23:59:59');
@@ -229,14 +226,30 @@ describe('TimeEditorComponent', () => {
 
   it('should enforce minimum time value', async () => {
     timeEditor.min = '2012-01-01T00:00:00';
+    fixture.detectChanges();
     await fixture.whenStable();
     await clickDigit(6);
     await sendKey('ArrowDown');
     await sendKey('ArrowDown');
     expect(readDisplayedText()).toEqual('2012-01-04T05:06:07');
     await sendKey('ArrowDown');
-    // expect(statusBackground).toEqual(errorColor);
+    expect(statusBackground).toEqual(errorColor);
     expect((TimeEditorComponent.prototype as any).errorFlash).toHaveBeenCalled();
     expect(readDisplayedText()).toEqual('2012-01-04T05:06:07');
+  });
+
+  it('should enforce maximum time value', async () => {
+    await paste('2028-02-27T00:00:00');
+    timeEditor.max = '2028-02-29T23:59:59';
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await clickDigit(9);
+    await sendKey('ArrowUp');
+    await sendKey('ArrowUp');
+    expect(readDisplayedText()).toEqual('2028-02-29T00:00:00');
+    await sendKey('ArrowUp');
+    expect(statusBackground).toEqual(errorColor);
+    expect((TimeEditorComponent.prototype as any).errorFlash).toHaveBeenCalled();
+    expect(readDisplayedText()).toEqual('2028-02-29T00:00:00');
   });
 });
