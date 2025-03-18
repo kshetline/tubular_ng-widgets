@@ -26,9 +26,11 @@ export class CommonTestEnvironment<T, U extends DigitSequenceSuperclass> {
   upArrow: HTMLElement;
   downArrow: HTMLElement;
   errorColor: string;
+  warningColor: string;
 
   constructor() {
     this.errorColor = getCSSProperty('tbw-error-background', 'background-color');
+    this.warningColor = getCSSProperty('tbw-warning-background', 'background-color');
   }
 
   collectDigits(): void {
@@ -100,6 +102,7 @@ export async function sharedBeforeEach<T, U extends DigitSequenceSuperclass>(qla
   cte.errorObserver.observe(cte.stateIndicator, { attributes: true, attributeFilter: ['style', 'class'] });
   cte.statusBackground = '';
   spyOn((innerClass as any).prototype, 'errorFlash').and.callThrough();
+  spyOn((innerClass as any).prototype, 'warningFlash').and.callThrough();
 
   cte.collectDigits();
   cte.element.focus();
