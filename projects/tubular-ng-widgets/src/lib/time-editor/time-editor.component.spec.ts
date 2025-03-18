@@ -15,7 +15,6 @@ class TimeComponent {
 }
 
 describe('TimeEditorComponent', () => {
-  // @ts-ignore
   let cte: CommonTestEnvironment<TimeComponent, TimeEditorComponent>;
   let timeEditor: TimeEditorComponent;
 
@@ -23,7 +22,6 @@ describe('TimeEditorComponent', () => {
   const sampleTimeMs = new Date(sampleTime + 'Z').getTime();
 
   beforeEach(async () => {
-    // @ts-ignore
     cte = await sharedBeforeEach(TimeComponent, TimeEditorComponent, 'tbw-time-editor', sampleTime);
     timeEditor = cte.component.inner;
   });

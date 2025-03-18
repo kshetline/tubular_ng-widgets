@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { Type } from '@angular/core';
-import { DigitSequenceEditorDirective } from 'tubular-ng-widgets';
+import { DigitSequenceEditorDirective } from './digit-sequence-editor.directive';
 import { getCSSProperty, sendTestClick, sendTestKey } from '../../test/test-utils';
 
 function dseItemSort(a: Element, b: Element): number {
@@ -77,7 +77,7 @@ export class CommonTestEnvironment<T, U extends DigitSequenceSuperclass> {
   }
 }
 
-export async function sharedBeforeEach<T, U extends DigitSequenceSuperclass>(qlass: Type<T>, innerClass: U,
+export async function sharedBeforeEach<T, U extends DigitSequenceSuperclass>(qlass: Type<T>, innerClass: Type<U>,
                                           selector: string, initValue: string): Promise<CommonTestEnvironment<T, U>> {
   await TestBed.configureTestingModule({
     providers: [provideAnimations()]
