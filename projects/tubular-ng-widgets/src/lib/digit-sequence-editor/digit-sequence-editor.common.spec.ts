@@ -101,8 +101,8 @@ export async function sharedBeforeEach<T, U extends DigitSequenceSuperclass>(qla
 
   cte.errorObserver.observe(cte.stateIndicator, { attributes: true, attributeFilter: ['style', 'class'] });
   cte.statusBackground = '';
-  spyOn((innerClass as any).prototype, 'errorFlash').and.callThrough();
-  spyOn((innerClass as any).prototype, 'warningFlash').and.callThrough();
+  spyOn(innerClass.prototype, 'errorFlash').and.callThrough();
+  spyOn(innerClass.prototype, 'warningFlash').and.callThrough();
 
   cte.collectDigits();
   cte.element.focus();
