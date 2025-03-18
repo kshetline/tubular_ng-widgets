@@ -26,7 +26,6 @@ export interface AngleEditorOptions extends Record<string, any> {
   wrapAround?: boolean;
 }
 
-// @dynamic
 @Component({
   selector: 'tbw-angle-editor',
   animations: [BACKGROUND_ANIMATIONS],

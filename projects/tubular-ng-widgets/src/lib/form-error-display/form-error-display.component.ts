@@ -2,7 +2,6 @@
 import { Component, Input } from '@angular/core';
 import { AbstractControl, AbstractControlDirective } from '@angular/forms';
 
-// @dynamic
 @Component({
   selector: 'tbw-form-error-display',
   templateUrl: './form-error-display.component.html',

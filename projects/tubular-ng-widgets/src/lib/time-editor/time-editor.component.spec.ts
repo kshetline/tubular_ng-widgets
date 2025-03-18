@@ -1,6 +1,7 @@
 import { TimeEditorComponent } from './time-editor.component';
 import { Component, ViewChild } from '@angular/core';
 import { CommonTestEnvironment, sharedBeforeEach } from '../digit-sequence-editor/digit-sequence-editor.common.spec';
+import { DayOfWeek } from '@tubular/time';
 
 @Component({
   template: `
@@ -14,13 +15,15 @@ class TimeComponent {
 }
 
 describe('TimeEditorComponent', () => {
-  let cte: CommonTestEnvironment<TimeComponent>;
+  // @ts-ignore
+  let cte: CommonTestEnvironment<TimeComponent, TimeEditorComponent>;
   let timeEditor: TimeEditorComponent;
 
   const sampleTime = '2012-03-04T05:06:07';
   const sampleTimeMs = new Date(sampleTime + 'Z').getTime();
 
   beforeEach(async () => {
+    // @ts-ignore
     cte = await sharedBeforeEach(TimeComponent, TimeEditorComponent, 'tbw-time-editor', sampleTime);
     timeEditor = cte.component.inner;
   });
@@ -32,6 +35,11 @@ describe('TimeEditorComponent', () => {
   it('should display correct time', async () => {
     expect(timeEditor.value).toEqual(sampleTimeMs);
     expect(cte.readDisplayedText()).toEqual(sampleTime);
+    const wallTime = timeEditor.wallTime;
+    expect(wallTime.year).toEqual(2012);
+    expect(wallTime.month).toEqual(3);
+    expect(wallTime.day).toEqual(4);
+    expect(wallTime.dayOfWeek).toEqual(DayOfWeek.SUNDAY);
   });
 
   it('should roll digits', async () => {
@@ -52,7 +60,7 @@ describe('TimeEditorComponent', () => {
     const currentValue = cte.readDisplayedText();
     expect(timeEditor.value - (sampleTimeMs + 17000)).toBeLessThan(3000);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    await cte.fixture.whenStable();
+    await cte.whenStable();
     expect(cte.readDisplayedText()).toEqual(currentValue); // Make sure rolling stopped
   }, 7500);
 
@@ -62,13 +70,13 @@ describe('TimeEditorComponent', () => {
     const currentValue = cte.readDisplayedText();
     expect(timeEditor.value - (sampleTimeMs - 170000)).toBeLessThan(30000);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    await cte.fixture.whenStable();
+    await cte.whenStable();
     expect(cte.readDisplayedText()).toEqual(currentValue); // Make sure rolling stopped
   }, 7500);
 
   it('should do upward auto-repeated digit rolling via up-arrow icon', async () => {
     await cte.clickDigit(-1); // Roll one second forward repeatedly
-    await cte.sendTestClick(cte.upArrow, 2000);
+    await cte.clickElement(cte.upArrow, 2000);
     expect(timeEditor.value - (sampleTimeMs + 17000)).toBeLessThan(3000);
   });
 
@@ -81,7 +89,7 @@ describe('TimeEditorComponent', () => {
     await cte.clickDigit(-1); // Roll one minute forward
     await cte.sendKey('ArrowUp');
     expect(cte.readDisplayedText()).toEqual('03/09/25,03:00AM§');
-    await cte.sendTestClick(cte.downArrow); // And back again
+    await cte.clickElement(cte.downArrow); // And back again
     expect(cte.readDisplayedText()).toEqual('03/09/25,01:59AM');
   });
 
@@ -109,8 +117,8 @@ describe('TimeEditorComponent', () => {
   it('should handle AM/PM switch', async () => {
     timeEditor.options =
       { 'locale': 'en-US', showSeconds: false, dateFieldOrder: 0, hourStyle: 0, meridiemStyle: 0, showDstSymbol: true };
-    cte.fixture.detectChanges();
-    await cte.fixture.whenStable();
+    cte.detectChanges();
+    await cte.whenStable();
     expect(cte.readDisplayedText()).toEqual('03/04/12,05:06AM');
     await cte.clickDigit(-2);
     await cte.sendKey('ArrowUp');
@@ -146,17 +154,17 @@ describe('TimeEditorComponent', () => {
 
   it('should display leap seconds', async () => {
     timeEditor.tai = true;
-    cte.fixture.detectChanges();
-    await cte.fixture.whenStable();
+    cte.detectChanges();
+    await cte.whenStable();
     await cte.paste('2016-12-31T23:59:59');
     expect(cte.readDisplayedText()).toEqual('2016-12-31T23:59:59');
     await cte.clickDigit(-1);
     await cte.sendKey('ArrowUp');
     expect(cte.readDisplayedText()).toEqual('2016-12-31T23:59:60');
-    await cte.sendTestClick(cte.upArrow);
+    await cte.clickElement(cte.upArrow);
     expect(cte.readDisplayedText()).toEqual('2017-01-01T00:00:00');
-    await cte.sendTestClick(cte.downArrow);
-    await cte.sendTestClick(cte.downArrow);
+    await cte.clickElement(cte.downArrow);
+    await cte.clickElement(cte.downArrow);
     expect(cte.readDisplayedText()).toEqual('2016-12-31T23:59:59');
     await cte.clickDigit(-2);
     await cte.sendKey('6');
@@ -165,8 +173,8 @@ describe('TimeEditorComponent', () => {
 
   it('should enforce minimum time value', async () => {
     timeEditor.min = '2012-01-01T00:00:00';
-    cte.fixture.detectChanges();
-    await cte.fixture.whenStable();
+    cte.detectChanges();
+    await cte.whenStable();
     await cte.clickDigit(6);
     await cte.sendKey('ArrowDown');
     await cte.sendKey('ArrowDown');
@@ -180,8 +188,8 @@ describe('TimeEditorComponent', () => {
   it('should enforce maximum time value', async () => {
     await cte.paste('2028-02-27T00:00:00');
     timeEditor.max = '2028-02-29T23:59:59';
-    cte.fixture.detectChanges();
-    await cte.fixture.whenStable();
+    cte.detectChanges();
+    await cte.whenStable();
     await cte.clickDigit(9);
     await cte.sendKey('ArrowUp');
     await cte.sendKey('ArrowUp');

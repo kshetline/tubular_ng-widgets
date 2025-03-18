@@ -5,7 +5,6 @@ import { Type } from '@angular/core';
 import { DigitSequenceEditorDirective } from 'tubular-ng-widgets';
 import { getCSSProperty, sendTestClick, sendTestKey } from '../../test/test-utils';
 
-
 function dseItemSort(a: Element, b: Element): number {
   const av = parseInt(a.getAttribute('data-name').substring(9));
   const bv = parseInt(b.getAttribute('data-name').substring(9));
@@ -13,10 +12,12 @@ function dseItemSort(a: Element, b: Element): number {
   return av - bv;
 }
 
-export class CommonTestEnvironment<T> {
+type DigitSequenceSuperclass = DigitSequenceEditorDirective<any>;
+
+export class CommonTestEnvironment<T, U extends DigitSequenceSuperclass> {
   fixture: ComponentFixture<T>;
   component: T;
-  editor: DigitSequenceEditorDirective<any>;
+  editor: U;
   element: HTMLElement;
   stateIndicator: HTMLElement;
   statusBackground: string;
@@ -63,18 +64,26 @@ export class CommonTestEnvironment<T> {
     return sendTestClick(this.digits[index], this.fixture, duration);
   }
 
-  async sendTestClick(element: HTMLElement, duration?: number): Promise<void> {
+  async clickElement(element: HTMLElement, duration?: number): Promise<void> {
     return sendTestClick(element, this.fixture, duration);
+  }
+
+  detectChanges(): void {
+    this.fixture.detectChanges();
+  }
+
+  whenStable(): Promise<void> {
+    return this.fixture.whenStable();
   }
 }
 
-export async function sharedBeforeEach<T>(qlass: Type<T>, innerClass: any,
-                                          selector: string, initValue: string): Promise<CommonTestEnvironment<T>> {
+export async function sharedBeforeEach<T, U extends DigitSequenceSuperclass>(qlass: Type<T>, innerClass: U,
+                                          selector: string, initValue: string): Promise<CommonTestEnvironment<T, U>> {
   await TestBed.configureTestingModule({
     providers: [provideAnimations()]
   }).compileComponents();
 
-  const cte = new CommonTestEnvironment<T>;
+  const cte = new CommonTestEnvironment<T, U>;
 
   cte.fixture = TestBed.createComponent(qlass);
   cte.component = cte.fixture.componentInstance;
@@ -90,7 +99,7 @@ export async function sharedBeforeEach<T>(qlass: Type<T>, innerClass: any,
 
   cte.errorObserver.observe(cte.stateIndicator, { attributes: true, attributeFilter: ['style', 'class'] });
   cte.statusBackground = '';
-  spyOn(innerClass.prototype as any, 'errorFlash').and.callThrough();
+  spyOn((innerClass as any).prototype, 'errorFlash').and.callThrough();
 
   cte.collectDigits();
   cte.element.focus();

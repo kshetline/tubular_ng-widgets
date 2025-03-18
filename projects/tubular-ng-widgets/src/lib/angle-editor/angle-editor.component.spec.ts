@@ -14,9 +14,11 @@ class AngleComponent {
 }
 
 describe('AngleEditorComponent', () => {
-  let cte: CommonTestEnvironment<AngleComponent>;
+  // @ts-ignore
+  let cte: CommonTestEnvironment<AngleComponent, AngleEditorComponent>;
 
   beforeEach(async () => {
+    // @ts-ignore
     cte = await sharedBeforeEach(AngleComponent, AngleEditorComponent, 'tbw-angle-editor', '0');
   });
 
